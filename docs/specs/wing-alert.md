@@ -184,6 +184,7 @@ Branch `feat/wind-map`.
 - **FR-3.3** The base map comes from OpenStreetMap coastline data, with attribution on the image.
 - **FR-3.4** Each run writes one map per date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD.png`, overwriting the earlier one, and the workflow commits it. Past maps never need re-rendering. At about 115 KB per map and a few versions per date in git history, that's roughly 125 MB a year.
 - **FR-3.5** The coastline is a simplified OpenStreetMap extract stored in the repo (`wing_alert/assets/coastline.json`), so no map tiles are fetched at run time.
+- **FR-3.6** Land and sea have different colours (sand and blue), so the coast is easy to read. Land shapes are built from the same coastline lines: OpenStreetMap keeps land on the left of each way, and this coast faces east, so each open stretch is closed off far inland to the west. Small closed rings are islands.
 
 ## Slice 4: Tides, swell, shore break warning
 
