@@ -67,7 +67,13 @@ def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, 
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     whatsapp = respx.get(CallMeBotSender.URL).respond(text="ok")
     state = tmp_path / "state.json"
-    assert main(["--config", str(REPO_CONFIG), "--state", str(state)], now=MORNING) == 0
+    assert (
+        main(
+            ["--config", str(REPO_CONFIG), "--state", str(state), "--data", str(tmp_path / "d")],
+            now=MORNING,
+        )
+        == 0
+    )
     assert whatsapp.called
     assert json.loads(state.read_text())["sent"]
     assert "999" not in capsys.readouterr().out
@@ -78,8 +84,14 @@ def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsy
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     state = tmp_path / "state.json"
-    assert main(["--config", str(REPO_CONFIG), "--state", str(state)], now=MORNING) == 0
-    assert "Dry run" in capsys.readouterr().out
+    assert (
+        main(
+            ["--config", str(REPO_CONFIG), "--state", str(state), "--data", str(tmp_path / "d")],
+            now=MORNING,
+        )
+        == 0
+    )
+    assert "Not sending" in capsys.readouterr().out
     assert not state.exists()
 
 
@@ -88,10 +100,35 @@ def test_fr_1_8_main_fails_cleanly_when_forecast_is_down(tmp_path, monkeypatch, 
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(503)
     assert (
-        main(["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json")], now=MORNING) == 1
+        main(
+            [
+                "--config",
+                str(REPO_CONFIG),
+                "--state",
+                str(tmp_path / "s.json"),
+                "--data",
+                str(tmp_path / "d"),
+            ],
+            now=MORNING,
+        )
+        == 1
     )
     assert "wing-alert failed" in capsys.readouterr().err
 
 
 def _windy_day():
     return open_meteo_payload(MORNING.replace(hour=0), [18] * 24, direction=70)
+
+
+@respx.mock
+def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
+    respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    data = tmp_path / "data"
+    args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json"), "--data", str(data)]
+    assert main(args, now=MORNING) == 0
+    assert list(data.glob("*/*/*.json"))
+    assert "days/2026-11-06.html" in capsys.readouterr().out
+    other = tmp_path / "other"
+    assert main([*args[:-1], str(other), "--dry-run"], now=MORNING) == 0
+    assert not other.exists()

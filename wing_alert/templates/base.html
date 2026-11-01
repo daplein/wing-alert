@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Wing alert{% endblock %}</title>
+<link rel="stylesheet" href="{{ root }}style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="{{ root }}index.html">🪁 Wing alert</a>
+  <nav><a href="{{ root }}index.html">Today</a> <a href="{{ root }}spots.html">Spots</a></nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer>
+  Forecast from <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).
+  Wicklow wingfoiling crew · <a href="https://github.com/daplein/wing-alert">source</a>
+</footer>
+</body>
+</html>

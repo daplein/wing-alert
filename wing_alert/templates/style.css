@@ -1,0 +1,37 @@
+:root { --bg: #fff; --fg: #1d1d1f; --muted: #6b6b70; --line: #e3e3e8; --accent: #0e7c86;
+  --light: #eef0f2; --good: #c8efd1; --strong: #ffd9a8; --wild: #ffb3b3; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16171a; --fg: #ececf0; --muted: #9a9aa3; --line: #2c2d33; --accent: #4fc3cc;
+    --light: #23252a; --good: #1f4a2b; --strong: #5a3d14; --wild: #5c1f22; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.45 system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--fg); }
+header, main, footer { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+header { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+header .brand { font-weight: 700; font-size: 1.15rem; }
+nav a { margin-left: 14px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1 { font-size: 1.35rem; margin: 28px 0 10px; }
+.issued, .legend, footer { color: var(--muted); font-size: 0.85rem; }
+.best { background: var(--good); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 1.05rem; }
+.best .label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.best a { font-weight: 700; }
+.best.none { background: var(--light); color: var(--muted); }
+.scroll { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 2px; font-size: 0.85rem; }
+th { text-align: left; font-weight: 600; white-space: nowrap; padding: 4px 8px 4px 0; }
+th small { display: block; font-weight: 400; color: var(--muted); }
+thead th { color: var(--muted); font-weight: 500; text-align: center; }
+td { min-width: 42px; text-align: center; border-radius: 6px; padding: 4px 2px; border: 2px solid transparent; }
+td small { display: block; color: var(--muted); font-size: 0.7rem; }
+td.ok { border-color: var(--fg); font-weight: 700; }
+.light { background: var(--light); } .good { background: var(--good); }
+.strong { background: var(--strong); } .wild { background: var(--wild); }
+.arrow { display: inline-block; margin-right: 2px; }
+.legend span { padding: 1px 6px; border-radius: 4px; }
+.pager { display: flex; justify-content: space-between; margin: 20px 0; }
+.past ul, .toc { columns: 3 140px; padding-left: 18px; }
+.spot { border-top: 1px solid var(--line); margin-top: 24px; }
+.spot table { border-collapse: collapse; } .spot td, .spot th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; min-width: 0; border-radius: 0; }
+footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px; padding-bottom: 24px; }
