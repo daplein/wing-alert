@@ -1,0 +1,44 @@
+{
+ "start": "2026-10-26",
+ "end": "2026-11-01",
+ "days": [
+  {
+   "date": "2026-10-26",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-10-27",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-10-28",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-10-29",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-10-30",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-10-31",
+   "forecast": false,
+   "windows": []
+  },
+  {
+   "date": "2026-11-01",
+   "forecast": true,
+   "windows": []
+  }
+ ],
+ "good_days": 0,
+ "missed": 0,
+ "best": null
+}
