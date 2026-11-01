@@ -7,7 +7,9 @@ from typing import Any
 
 from wing_alert.config import Settings
 from wing_alert.forecast import SpotForecast
+from wing_alert.marine import SeaHour
 from wing_alert.scoring import Window, find_windows, is_good_hour, rank
+from wing_alert.shorebreak import rate_window
 
 
 class Archive:
@@ -27,7 +29,11 @@ def build_snapshot(
 ) -> dict[str, Any]:
     """Windows here cover whole days (past hours included), unlike the alert."""
     start_of_day = issued.replace(hour=0, minute=0, second=0, microsecond=0)
-    windows = [w for f in forecasts for w in find_windows(f, settings, start_of_day)]
+    windows = [
+        rate_window(window, forecast, settings)
+        for forecast in forecasts
+        for window in find_windows(forecast, settings, start_of_day)
+    ]
     return {
         "issued": issued.isoformat(timespec="minutes"),
         "settings": vars(settings),
@@ -69,10 +75,21 @@ def _spot(forecast: SpotForecast, settings: Settings) -> dict[str, Any]:
                 "gust": hour.gust,
                 "direction": hour.direction,
                 "good": is_good_hour(hour, spot, settings, forecast.daylight.get(hour.time.date())),
+                **_sea(forecast.sea.get(hour.time)),
             }
             for hour in forecast.hours
         ],
+        "tides": [
+            {"time": tide.time.isoformat(timespec="minutes"), "kind": tide.kind}
+            for tide in forecast.tides
+        ],
     }
+
+
+def _sea(sea: SeaHour | None) -> dict[str, float | None]:
+    if sea is None:
+        return {}
+    return {"wave_height": sea.wave_height, "wave_period": sea.wave_period}
 
 
 def _window(window: Window) -> dict[str, Any]:
@@ -86,4 +103,6 @@ def _window(window: Window) -> dict[str, Any]:
         "wind_max": round(window.wind_max),
         "gust_max": round(window.gust_max),
         "direction": window.direction,
+        "shore_break": window.shore_break,
+        "shore_break_reason": window.shore_break_reason,
     }

@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
@@ -13,8 +14,10 @@ import httpx
 from wing_alert.archive import Archive, build_snapshot
 from wing_alert.config import ConfigError, Settings, Spot, load_settings, load_spots
 from wing_alert.forecast import ForecastError, OpenMeteoClient, SpotForecast
+from wing_alert.marine import MarineClient, MarineError, find_tides
 from wing_alert.message import format_alert
 from wing_alert.scoring import Window, find_windows, rank
+from wing_alert.shorebreak import rate_window
 from wing_alert.site import SITE_URL, day_url
 from wing_alert.state import AlertState
 from wing_alert.whatsapp import CallMeBotSender, DeliveryError, DrySender, parse_recipients
@@ -39,6 +42,7 @@ class DailyJob:
         archive: Archive | None = None,
         maps: MapWriter | None = None,
         site_url: str | None = None,
+        marine: MarineClient | None = None,
     ) -> None:
         self._spots = spots
         self._settings = settings
@@ -49,14 +53,31 @@ class DailyJob:
         self._archive = archive
         self._maps = maps
         self._site_url = site_url
+        self._marine = marine
 
     def run(self, now: datetime) -> str | None:
         """Archive the forecast, then alert on new or changed windows.
         Returns the message, or None if there was nothing to send."""
-        forecasts = [self._forecasts.fetch(spot) for spot in self._spots]
+        forecasts = [self._conditions(spot) for spot in self._spots]
         self._keep_record(now, forecasts)
-        windows = [w for f in forecasts for w in find_windows(f, self._settings, now)]
+        windows = [
+            rate_window(window, forecast, self._settings)
+            for forecast in forecasts
+            for window in find_windows(forecast, self._settings, now)
+        ]
         return self._alert(windows, now)
+
+    def _conditions(self, spot: Spot) -> SpotForecast:
+        """Wind is required; sea data only adds warnings, so it may be missing (FR-4.4)."""
+        forecast = self._forecasts.fetch(spot)
+        if not self._marine:
+            return forecast
+        try:
+            sea = self._marine.fetch(spot)
+        except MarineError as error:
+            print(f"No shore break warning for {spot.id}: {error}", file=sys.stderr)
+            return forecast
+        return replace(forecast, sea=sea, tides=find_tides(sea))
 
     def _keep_record(self, now: datetime, forecasts: list[SpotForecast]) -> None:
         if not self._archive:
@@ -111,6 +132,7 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
         archive=None if args.dry_run else Archive(args.data),
         maps=None if args.dry_run else MapWriter(args.data),
         site_url=args.site_url,
+        marine=MarineClient(http),
     )
 
 

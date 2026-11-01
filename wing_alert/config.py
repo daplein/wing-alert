@@ -20,6 +20,9 @@ class Spot:
     direction_from: float
     direction_to: float
     sheltered: bool = False
+    worse_at: str = "none"  # tide state when the shore break is worse (FR-4.3)
+    watch_wave_m: float | None = None
+    danger_wave_m: float | None = None
 
 
 @dataclass(frozen=True)
@@ -30,6 +33,9 @@ class Settings:
     ideal_wind: float = 20
     min_window_hours: int = 2
     daylight_margin_minutes: int = 30
+    watch_wave_m: float = 0.8
+    danger_wave_m: float = 1.5
+    long_period_s: float = 10
 
 
 def load_spots(path: Path) -> list[Spot]:
@@ -74,6 +80,9 @@ def _parse_spot(item: Any, path: Path) -> Spot:
             direction_from=_number(direction_from, "directions", path),
             direction_to=_number(direction_to, "directions", path),
             sheltered=bool(item.get("sheltered", False)),
+            worse_at=str(item.get("worse_at", "none")),
+            watch_wave_m=_optional_number(item.get("watch_wave_m"), "watch_wave_m", path),
+            danger_wave_m=_optional_number(item.get("danger_wave_m"), "danger_wave_m", path),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ConfigError(f"{path}: spot {spot_id!r} is invalid ({error})") from error
@@ -87,7 +96,13 @@ def _number(value: Any, name: str, path: Path) -> float:
     return value
 
 
+def _optional_number(value: Any, name: str, path: Path) -> float | None:
+    return None if value is None else _number(value, name, path)
+
+
 def _check_spot(spot: Spot, path: Path) -> None:
+    if spot.worse_at not in ("high", "low", "none"):
+        raise ConfigError(f"{path}: spot {spot.id!r} worse_at must be high, low or none")
     if not (-90 <= spot.lat <= 90 and -180 <= spot.lon <= 180):
         raise ConfigError(f"{path}: spot {spot.id!r} has an invalid position")
     for direction in (spot.direction_from, spot.direction_to):
@@ -107,5 +122,7 @@ def _check_settings(settings: Settings, path: Path) -> None:
         raise ConfigError(f"{path}: need 0 <= min_wind < max_wind")
     if settings.max_gust < settings.min_wind:
         raise ConfigError(f"{path}: max_gust must be at least min_wind")
+    if not 0 < settings.watch_wave_m <= settings.danger_wave_m:
+        raise ConfigError(f"{path}: need 0 < watch_wave_m <= danger_wave_m")
     if settings.min_window_hours < 1 or settings.daylight_margin_minutes < 0:
         raise ConfigError(f"{path}: min_window_hours >= 1 and daylight_margin_minutes >= 0")

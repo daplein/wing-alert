@@ -1,5 +1,7 @@
 # Good directions: where the wind blows FROM, clockwise from the first value
 # to the second (N = 0, E = 90, S = 180, W = 270). See docs/specs/wing-alert.md.
+# Optional: worse_at (high | low | none) = the tide when the shore break is worse;
+# watch_wave_m / danger_wave_m override the shore break wave heights for a spot.
 - id: arklow
   name: Arklow South Beach
   lat: 52.7878

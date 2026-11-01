@@ -113,7 +113,7 @@ All spots, thresholds and directions live in `config/spots.yaml` and `config/set
 | Wave height and period, swell height and period, sea level (tide) | [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) | No | Slice 4 |
 | WhatsApp delivery | [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/): free, unofficial, text only, personal use | API key (secret) | Slice 1 |
 
-Checked on 2026-11-01: both Open-Meteo APIs answer for Arklow with no key. The marine API snaps to a grid point about 7 km offshore, which is fine for swell. Sea level there is a model value and not for navigation.
+Checked on 2026-11-01: both Open-Meteo APIs answer for every spot with no key. The marine grid is coarse: Arklow to Magheramore share one point about 7 km offshore, and Seapoint uses one out in Dublin Bay. That's fine for swell. Sea level there is a model value and not for navigation.
 
 ---
 
@@ -187,12 +187,14 @@ Branch `feat/wind-map`.
 Branch `feat/shore-break`.
 
 - **FR-4.1** For each spot, fetch hourly wave height and period, swell height and period, and sea level from the Marine API.
-- **FR-4.2** Find high and low tide times for the day from the sea level curve, and show them in the alert and on the day page.
+- **FR-4.2** Find high and low tide times from the sea level curve (local peaks and troughs of the hourly values) and show them on the day page. They stay out of the alert to keep it short. Tide times barely differ along this coast, so the page shows the first spot's.
 - **FR-4.3** Give each window a **shore break level**: none, ⚠️ watch out, or 🚨 dangerous. It's based on the worst hour in the window:
   - wave height above the spot's `watch_wave_m` / `danger_wave_m` (defaults 0.8 m / 1.5 m)
   - one level up if the swell period is 10 s or longer (long swell dumps harder)
-  - one level up if the tide is at the spot's `worse_at` state (`high`, `low` or `none`; default `none` until the crew tells us)
-- **FR-4.4** The warning never removes a window. In the alert it's just the ⚠️ or 🚨 emoji on that window's line; the reasons (swell, period, tide times) are on the day page.
+  - one level up if the tide is at the spot's `worse_at` state (`high`, `low` or `none`; default `none` until the crew tells us). "At high tide" means within 1.5 h of it.
+  - the two step-ups only apply when the waves are at least half of `watch_wave_m`, so a flat sea never warns
+  - spots can override `watch_wave_m` / `danger_wave_m`; `long_period_s` (10 s) is in the settings
+- **FR-4.4** The warning never removes a window. If the Marine API fails, alerts still go out, just without warnings. In the alert it's just the ⚠️ or 🚨 emoji on that window's line; the reasons (swell, period, tide times) are on the day page.
 - **FR-4.5** When a day has a 🚨 window at an exposed spot and a `sheltered` spot also has a window that day, the alert adds one line: `Sheltered option: Seapoint 12:00–16:00`.
 
 ## Slice 5: Weekly summary

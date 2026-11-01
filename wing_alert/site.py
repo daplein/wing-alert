@@ -95,9 +95,17 @@ def _forecast_day(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
     return {
         "date": date.fromisoformat(day),
         "best": windows[0] if windows else None,
+        "tides": _tides(snapshot["spots"], day),
         "hours": hours,
         "rows": [_row(spot, day, hours, windows) for spot in _ranked_spots(snapshot, windows)],
     }
+
+
+def _tides(spots: list[dict], day: str) -> list[dict]:
+    """Tide times barely differ along this coast, so the first spot's stand for all."""
+    if not spots:
+        return []
+    return [tide for tide in spots[0].get("tides", []) if tide["time"][:10] == day]
 
 
 def _daylight_hours(daylight: dict[str, str] | None) -> list[int]:
@@ -119,7 +127,13 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
         "name": spot["name"],
         "windows": [window for window in windows if window["spot"] == spot["id"]],
         "cells": [_cell(by_hour.get(hour)) for hour in hours],
+        "waves": _max_waves([by_hour.get(hour) for hour in hours]),
     }
+
+
+def _max_waves(readings: list[dict | None]) -> float | None:
+    heights = [r["wave_height"] for r in readings if r and r.get("wave_height") is not None]
+    return max(heights) if heights else None
 
 
 def _cell(hour: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -148,6 +162,7 @@ def make_env() -> jinja2.Environment:
         loader=jinja2.FileSystemLoader(TEMPLATES), autoescape=True, trim_blocks=True
     )
     env.filters["day_label"] = lambda d: f"{d:%A} {d.day} {d:%B}"
+    env.filters["warning"] = lambda level: {1: "⚠️", 2: "🚨"}.get(level, "")
     return env
 
 

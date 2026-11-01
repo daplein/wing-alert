@@ -15,6 +15,8 @@ COMPASS = "N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW".split()
 class Window:
     spot: Spot
     hours: list[HourForecast]
+    shore_break: int = 0  # 0 none, 1 watch out, 2 dangerous (FR-4.3)
+    shore_break_reason: str = ""
 
     @property
     def start(self) -> datetime:
