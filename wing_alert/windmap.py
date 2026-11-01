@@ -1,6 +1,5 @@
-"""Wind map PNG for each forecast date (FR-3.1 to FR-3.4)."""
+"""Wind map PNG for each forecast date (FR-3.1 to FR-3.6)."""
 
-import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,11 +11,13 @@ matplotlib.use("Agg")  # no display on GitHub Actions
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.axes import Axes  # noqa: E402
 
+from wing_alert.coast import Coast, load_coast  # noqa: E402
 from wing_alert.site import forecast_days, wind_band  # noqa: E402
 
 PANEL_HOURS = (9, 12, 15, 18)
 COLOURS = {"light": "#9aa0a6", "good": "#2e9e4f", "strong": "#f08c00", "wild": "#d62828"}
 LABEL_GAP = 0.03  # label distance from the dot as a share of the map's width
+SEA, LAND, SHORE = "#a9cfe8", "#efe6cf", "#3b4650"
 BOX = {"facecolor": "white", "alpha": 0.75, "edgecolor": "none", "pad": 1}
 
 
@@ -34,15 +35,14 @@ class Extent:
 
 # Wicklow Harbour to Arklow; Seapoint is 40 km north, so it gets an inset (FR-3.1).
 WICKLOW = Extent(lon=(-6.24, -5.93), lat=(52.76, 53.01), arrow_share=0.07)
-DUBLIN_BAY = Extent(lon=(-6.22, -6.08), lat=(53.265, 53.325), arrow_share=0.3)
+DUBLIN_BAY = Extent(lon=(-6.2, -6.06), lat=(53.27, 53.333), arrow_share=0.3)
 INSET_BOX = (0.5, 0.02, 0.48, 0.26)  # bottom right, open sea (axes fraction)
-COASTLINE = Path(__file__).parent / "assets" / "coastline.json"
 
 
 class MapWriter:
     def __init__(self, root: Path) -> None:
         self._root = root
-        self._coast = json.loads(COASTLINE.read_text())["lines"]
+        self._coast = load_coast()
 
     def write(self, snapshot: dict[str, Any]) -> list[Path]:
         """One map per date the run covers; a later run overwrites it."""
@@ -55,7 +55,7 @@ class MapWriter:
         return paths
 
 
-def render(snapshot: dict[str, Any], day: str, coast: list, path: Path) -> None:
+def render(snapshot: dict[str, Any], day: str, coast: Coast, path: Path) -> None:
     figure, axes = plt.subplots(2, 2, figsize=(10, 12.4), dpi=80)
     for ax, hour in zip(axes.flat, PANEL_HOURS, strict=True):
         _draw_panel(ax, snapshot["spots"], day, hour, coast)
@@ -66,7 +66,7 @@ def render(snapshot: dict[str, Any], day: str, coast: list, path: Path) -> None:
     plt.close(figure)
 
 
-def _draw_panel(ax: Axes, spots: list[dict], day: str, hour: int, coast: list) -> None:
+def _draw_panel(ax: Axes, spots: list[dict], day: str, hour: int, coast: Coast) -> None:
     ax.set_title(f"{hour:02d}:00", fontsize=14, fontweight="bold")
     _draw_map(ax, WICKLOW, spots, day, hour, coast)
     inset = ax.inset_axes(INSET_BOX)
@@ -77,7 +77,7 @@ def _draw_panel(ax: Axes, spots: list[dict], day: str, hour: int, coast: list) -
 
 
 def _draw_map(
-    ax: Axes, extent: Extent, spots: list[dict], day: str, hour: int, coast: list
+    ax: Axes, extent: Extent, spots: list[dict], day: str, hour: int, coast: Coast
 ) -> None:
     _draw_base(ax, extent, coast)
     for spot in filter(extent.contains, spots):
@@ -86,11 +86,12 @@ def _draw_map(
             _draw_spot(ax, extent, spot, reading)
 
 
-def _draw_base(ax: Axes, extent: Extent, coast: list) -> None:
-    ax.set_facecolor("#dcecf5")
-    for line in coast:
-        lons, lats = zip(*line, strict=True)
-        ax.plot(lons, lats, color="#4a5560", linewidth=0.8)
+def _draw_base(ax: Axes, extent: Extent, coast: Coast) -> None:
+    ax.set_facecolor(SEA)
+    for shape in coast.land:
+        ax.fill(*zip(*shape, strict=True), color=LAND, linewidth=0)
+    for line in coast.lines:
+        ax.plot(*zip(*line, strict=True), color=SHORE, linewidth=0.9)
     ax.set_xlim(*extent.lon)
     ax.set_ylim(*extent.lat)
     ax.set_aspect(1 / math.cos(math.radians(sum(extent.lat) / 2)))
