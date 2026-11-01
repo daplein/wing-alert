@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: daily
@@ -17,19 +19,31 @@ concurrency:
 jobs:
   alert:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked --no-dev
-      - name: Check the wind and send alerts
+      - name: Check the wind, archive it, send alerts
         run: uv run python -m wing_alert
         env:
           WHATSAPP_RECIPIENTS: ${{ secrets.WHATSAPP_RECIPIENTS }}
-      - name: Commit state.json
+      - name: Commit data and state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state.json 2>/dev/null || exit 0
+          git add data
+          [ -f state.json ] && git add state.json
           git diff --cached --quiet && exit 0
-          git commit -m "Update alert state"
+          git commit -m "Forecast $(date -u +%Y-%m-%dT%H:%M)"
           git push
+      - name: Build the site
+        run: uv run python -m wing_alert.site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

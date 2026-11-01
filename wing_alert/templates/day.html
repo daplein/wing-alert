@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Wing alert · {{ days[0].date | day_label if days else "" }}{% endblock %}
+{% block content %}
+<p class="issued">Forecast issued {{ issued | replace("T", " ") }}</p>
+{% for day in days %}
+<section class="day">
+  <h1>{{ day.date | day_label }}</h1>
+  {% if day.best %}
+  <div class="best">
+    <span class="label">Best spot</span>
+    <a href="{{ root }}spots.html#{{ day.best.spot }}">{{ day.best.spot_name }}</a>
+    {{ day.best.start[11:] }}–{{ day.best.end[11:] }} ·
+    {{ day.best.wind_min }}{% if day.best.wind_max != day.best.wind_min %}–{{ day.best.wind_max }}{% endif %} kn {{ day.best.direction }}, gusts {{ day.best.gust_max }}
+  </div>
+  {% else %}
+  <div class="best none">Nothing rideable</div>
+  {% endif %}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Spot</th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in day.rows %}
+      <tr>
+        <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>
+          {% for w in row.windows %}<small>{{ w.start[11:] }}–{{ w.end[11:] }}</small>{% endfor %}</th>
+        {% for cell in row.cells %}
+          {% if cell %}
+          <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
+            <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
+          </td>
+          {% else %}<td></td>{% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endfor %}
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · arrow = where the wind blows to · small number = gusts</p>
+<nav class="pager">
+  {% if previous %}<a href="{{ root }}days/{{ previous }}.html">← {{ previous }}</a>{% endif %}
+  {% if next %}<a href="{{ root }}days/{{ next }}.html">{{ next }} →</a>{% endif %}
+</nav>
+{% if past %}
+<section class="past">
+  <h2>Past days</h2>
+  <ul>{% for d in past | reverse %}<li><a href="{{ root }}days/{{ d }}.html">{{ d }}</a></li>{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Wing alert · Spots{% endblock %}
+{% block content %}
+<h1>Spots</h1>
+<ul class="toc">{% for spot, _ in guides %}<li><a href="#{{ spot.id }}">{{ spot.name }}</a></li>{% endfor %}</ul>
+{% for spot, guide in guides %}
+<section class="spot" id="{{ spot.id }}">
+  {% if guide %}{{ guide | safe }}{% else %}<h1>{{ spot.name }}</h1><p>No guide yet.</p>{% endif %}
+</section>
+{% endfor %}
+{% endblock %}

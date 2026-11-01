@@ -6,13 +6,16 @@ from itertools import groupby
 from wing_alert.scoring import Window
 
 
-def format_alert(ranked: list[Window]) -> str:
-    """Group by day (earliest first), keeping the ranked order inside each day."""
+def format_alert(ranked: list[Window], link: str | None = None) -> str:
+    """Group by day (earliest first), keeping the ranked order inside each day.
+    The link to the day page goes last (FR-2.5)."""
     lines = ["🪁 Wing alert"]
     by_day = sorted(ranked, key=lambda window: window.date)
     for day, windows in groupby(by_day, key=lambda window: window.date):
         lines.append(day_label(day))
         lines.extend(window_line(window) for window in windows)
+    if link:
+        lines.append(link)
     return "\n".join(lines)
 
 

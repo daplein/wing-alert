@@ -137,7 +137,7 @@ Branch `feat/wind-alert`.
 - **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed, and list only those days. A window that changes by an hour at either end counts as changed. A day whose windows disappear is not reported. Entries older than 14 days are pruned. The workflow commits `state.json` back to the repo.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
-- **FR-1.10** With no recipients configured, or with `--dry-run`, the job prints the message instead of sending it and doesn't update `state.json`. So it can run safely before the secret exists.
+- **FR-1.10** With no recipients configured, the job prints the message instead of sending it and doesn't update `state.json`, so it can run safely before the secret exists. `--dry-run` also skips the archive (FR-2.1): nothing is written at all.
 
 **Example message**
 
@@ -158,14 +158,14 @@ From slice 2 the message ends with the day page link, and from slice 4 risky win
 
 Branch `feat/site`.
 
-- **FR-2.1** Every daily run writes `data/YYYY/MM/YYYY-MM-DDTHH.json`: the forecast as issued, every hour's scores, and the windows. Plain JSON, easy to scrape.
+- **FR-2.1** Every daily run writes `data/YYYY/MM/YYYY-MM-DDTHH.json`: the forecast as issued, every hour's scores, and the windows (whole days, including hours already past, ranked as in FR-1.5). Plain JSON, easy to scrape. The workflow commits it.
 - **FR-2.2** Every run builds a static site from `data/` (Python + Jinja templates, no framework) and deploys it with GitHub's official Pages actions. The built site is not committed.
 - **FR-2.3** **Day page:**
   - top: "Best spot" with its window, or "Nothing rideable"
   - the wind map (from slice 3)
   - a table of all spots ranked, with hourly wind and good hours highlighted
   - links to the previous and next day
-- **FR-2.4** **Front page** is today's day page, plus a list of past days.
+- **FR-2.4** **Front page** is today's day page, plus a list of past days. A day page is built from the last run issued that day, and shows every date that run covers (today and tomorrow).
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
 - **FR-2.6** The site shows "Forecast from Open-Meteo" with a link (required by their terms).
 - **FR-2.7** **Spots page:** one section per spot, rendered from `docs/spots/<id>.md` (launch points, parking by wind direction, hazards, seasonal notes, map link). The day page links each spot name to its section. Editing a spot's Markdown file is all it takes to update the page.
