@@ -27,9 +27,25 @@ def test_fr_1_1_parses_a_spot(tmp_path):
     assert (spot.direction_from, spot.direction_to, spot.sheltered) == (280, 20, False)
 
 
+def test_fr_1_11_wind_at_defaults_to_the_beach(tmp_path):
+    path = write(tmp_path, "- {id: a, name: A, lat: 52.1, lon: -6, directions: [0, 90]}")
+    assert load_spots(path)[0].wind_point == (52.1, -6)
+    path = write(
+        tmp_path, "- {id: a, name: A, lat: 52, lon: -6, directions: [0, 90], wind_at: [52, -5.9]}"
+    )
+    assert load_spots(path)[0].wind_point == (52, -5.9)
+
+
+def test_fr_1_11_every_real_spot_reads_wind_out_at_sea():
+    spots = load_spots(REPO_CONFIG / "spots.yaml")
+    assert all(spot.wind_at and spot.wind_at != (spot.lat, spot.lon) for spot in spots)
+
+
 @pytest.mark.parametrize(
     "text",
     [
+        "- {id: a, name: A, lat: 52, lon: -6, directions: [0, 90], wind_at: [52]}",
+        "- {id: a, name: A, lat: 52, lon: -6, directions: [0, 90], wind_at: [95, -6]}",
         "[]",
         "- just a string",
         "- {id: a, name: A, lat: 52, lon: -6}",

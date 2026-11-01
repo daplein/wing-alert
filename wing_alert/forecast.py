@@ -56,9 +56,10 @@ class OpenMeteoClient:
             raise ForecastError(f"{spot.id}: unexpected forecast format ({error})") from error
 
     def _params(self, spot: Spot) -> dict[str, Any]:
+        latitude, longitude = spot.wind_point
         return {
-            "latitude": spot.lat,
-            "longitude": spot.lon,
+            "latitude": latitude,
+            "longitude": longitude,
             "hourly": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
             "daily": "sunrise,sunset",
             "wind_speed_unit": "kn",

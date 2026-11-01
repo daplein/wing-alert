@@ -2,6 +2,7 @@
 
 import json
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -15,9 +16,26 @@ from wing_alert.site import forecast_days, wind_band  # noqa: E402
 
 PANEL_HOURS = (9, 12, 15, 18)
 COLOURS = {"light": "#9aa0a6", "good": "#2e9e4f", "strong": "#f08c00", "wild": "#d62828"}
-LON = (-6.32, -5.93)
-LAT = (52.74, 53.33)
-ARROW_DEGREES = 0.045
+LABEL_GAP = 0.03  # label distance from the dot as a share of the map's width
+BOX = {"facecolor": "white", "alpha": 0.75, "edgecolor": "none", "pad": 1}
+
+
+@dataclass(frozen=True)
+class Extent:
+    lon: tuple[float, float]
+    lat: tuple[float, float]
+    arrow_share: float  # arrow length as a share of the map's height
+
+    def contains(self, spot: dict) -> bool:
+        return (
+            self.lat[0] <= spot["lat"] <= self.lat[1] and self.lon[0] <= spot["lon"] <= self.lon[1]
+        )
+
+
+# Wicklow Harbour to Arklow; Seapoint is 40 km north, so it gets an inset (FR-3.1).
+WICKLOW = Extent(lon=(-6.24, -5.93), lat=(52.76, 53.01), arrow_share=0.07)
+DUBLIN_BAY = Extent(lon=(-6.22, -6.08), lat=(53.265, 53.325), arrow_share=0.3)
+INSET_BOX = (0.5, 0.02, 0.48, 0.26)  # bottom right, open sea (axes fraction)
 COASTLINE = Path(__file__).parent / "assets" / "coastline.json"
 
 
@@ -38,50 +56,64 @@ class MapWriter:
 
 
 def render(snapshot: dict[str, Any], day: str, coast: list, path: Path) -> None:
-    figure, axes = plt.subplots(1, len(PANEL_HOURS), figsize=(11, 7.2), dpi=80)
-    for index, (ax, hour) in enumerate(zip(axes, PANEL_HOURS, strict=True)):
-        _draw_panel(ax, snapshot["spots"], day, hour, coast, names=index == 0)
-    figure.suptitle(f"Wind forecast {day}", fontsize=15, fontweight="bold")
-    figure.text(0.5, 0.01, _footer(), ha="center", fontsize=8, color="#555")
-    figure.subplots_adjust(left=0.01, right=0.99, top=0.9, bottom=0.05, wspace=0.04)
+    figure, axes = plt.subplots(2, 2, figsize=(10, 12.4), dpi=80)
+    for ax, hour in zip(axes.flat, PANEL_HOURS, strict=True):
+        _draw_panel(ax, snapshot["spots"], day, hour, coast)
+    figure.suptitle(f"Wind forecast {day}", fontsize=16, fontweight="bold")
+    figure.text(0.5, 0.012, _footer(), ha="center", fontsize=8, color="#555", wrap=True)
+    figure.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.04, wspace=0.03, hspace=0.06)
     figure.savefig(path, facecolor="white")
     plt.close(figure)
 
 
-def _draw_panel(ax: Axes, spots: list[dict], day: str, hour: int, coast: list, names: bool) -> None:
-    _draw_base(ax, coast)
-    ax.set_title(f"{hour:02d}:00", fontsize=13, fontweight="bold")
-    for spot in spots:
+def _draw_panel(ax: Axes, spots: list[dict], day: str, hour: int, coast: list) -> None:
+    ax.set_title(f"{hour:02d}:00", fontsize=14, fontweight="bold")
+    _draw_map(ax, WICKLOW, spots, day, hour, coast)
+    inset = ax.inset_axes(INSET_BOX)
+    _draw_map(inset, DUBLIN_BAY, spots, day, hour, coast)
+    inset.set_title("Dublin Bay", fontsize=9, pad=2)
+    for side in inset.spines.values():
+        side.set_linewidth(1.5)
+
+
+def _draw_map(
+    ax: Axes, extent: Extent, spots: list[dict], day: str, hour: int, coast: list
+) -> None:
+    _draw_base(ax, extent, coast)
+    for spot in filter(extent.contains, spots):
         reading = _reading(spot, day, hour)
         if reading:
-            _draw_spot(ax, spot, reading, names)
+            _draw_spot(ax, extent, spot, reading)
 
 
-def _draw_base(ax: Axes, coast: list) -> None:
+def _draw_base(ax: Axes, extent: Extent, coast: list) -> None:
     ax.set_facecolor("#dcecf5")
     for line in coast:
         lons, lats = zip(*line, strict=True)
         ax.plot(lons, lats, color="#4a5560", linewidth=0.8)
-    ax.set_xlim(*LON)
-    ax.set_ylim(*LAT)
-    ax.set_aspect(1 / math.cos(math.radians(sum(LAT) / 2)))
+    ax.set_xlim(*extent.lon)
+    ax.set_ylim(*extent.lat)
+    ax.set_aspect(1 / math.cos(math.radians(sum(extent.lat) / 2)))
     ax.set_xticks([])
     ax.set_yticks([])
 
 
-def _draw_spot(ax: Axes, spot: dict, reading: dict, names: bool) -> None:
+def _draw_spot(ax: Axes, extent: Extent, spot: dict, reading: dict) -> None:
     lon, lat = spot["lon"], spot["lat"]
     colour = COLOURS[wind_band(reading["wind"])]
     blows_to = math.radians((reading["direction"] + 180) % 360)
-    dx = ARROW_DEGREES * math.sin(blows_to) / math.cos(math.radians(lat))
-    dy = ARROW_DEGREES * math.cos(blows_to)
+    length = extent.arrow_share * (extent.lat[1] - extent.lat[0])
+    dx = length * math.sin(blows_to) / math.cos(math.radians(lat))
+    dy = length * math.cos(blows_to)
     arrow = {"arrowstyle": "-|>", "color": colour, "lw": 2.8, "mutation_scale": 16}
     ax.annotate("", xy=(lon + dx, lat + dy), xytext=(lon, lat), arrowprops=arrow)
     ax.plot(lon, lat, "o", color="black", markersize=4)
     label = f"{round(reading['wind'])}/{round(reading['gust'])}"
-    ax.text(lon + 0.03, lat - 0.012, label, fontsize=9, fontweight="bold", color=colour)
-    if names:
-        ax.text(lon - 0.025, lat, spot["name"], fontsize=7, ha="right", va="center")
+    gap = LABEL_GAP * (extent.lon[1] - extent.lon[0])
+    ax.text(
+        lon + gap, lat, label, fontsize=11, fontweight="bold", color=colour, va="center", bbox=BOX
+    )
+    ax.text(lon - gap, lat, spot["name"], fontsize=9, ha="right", va="center", bbox=BOX)
 
 
 def _reading(spot: dict, day: str, hour: int) -> dict | None:
