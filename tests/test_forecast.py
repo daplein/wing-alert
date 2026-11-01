@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import date, datetime
 
 import httpx
@@ -30,6 +31,14 @@ def test_fr_1_2_fetches_hourly_wind_in_knots_for_today_and_tomorrow(client):
         (datetime(2026, 11, 6, 8), 15, 21),
     ]
     assert forecast.daylight[date(2026, 11, 6)].sunrise == SUNRISE
+
+
+@respx.mock
+def test_fr_1_11_reads_the_wind_at_the_sea_point(client):
+    route = respx.get(URL).respond(json=open_meteo_payload(MORNING, [12]))
+    client.fetch(replace(ARKLOW, wind_at=(52.79, -6.07)))
+    params = route.calls.last.request.url.params
+    assert (params["latitude"], params["longitude"]) == ("52.79", "-6.07")
 
 
 @respx.mock

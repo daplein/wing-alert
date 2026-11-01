@@ -2,45 +2,54 @@
 # to the second (N = 0, E = 90, S = 180, W = 270). See docs/specs/wing-alert.md.
 # Optional: worse_at (high | low | none) = the tide when the shore break is worse;
 # watch_wave_m / danger_wave_m override the shore break wave heights for a spot.
+# wind_at: where the wind is read, a sea point 3–5 km out. The model's beach cell
+# counts as land and reads far too light (FR-1.11).
 - id: arklow
   name: Arklow South Beach
   lat: 52.7878
   lon: -6.1434
   directions: [337, 202] # NNW → E → SSW
+  wind_at: [52.7878, -6.07]
 
 - id: ennereilly
   name: Ennereilly
   lat: 52.837
   lon: -6.105
   directions: [45, 225] # NE → E → SW
+  wind_at: [52.837, -6.05]
 
 - id: buckroney
   name: Buckroney
   lat: 52.8462
   lon: -6.0931
   directions: [90, 248] # E → S → WSW
+  wind_at: [52.8462, -6.04]
 
 - id: brittas
   name: Brittas Bay
   lat: 52.8831
   lon: -6.0575
   directions: [20, 200] # NNE → E → SSW
+  wind_at: [52.8831, -5.98]
 
 - id: magheramore
   name: Magheramore
   lat: 52.9310
   lon: -6.0225
   directions: [20, 200] # NNE → E → SSW
+  wind_at: [52.931, -5.97]
 
 - id: wicklow_harbour
   name: Wicklow Harbour
   lat: 52.982
   lon: -6.035
   directions: [280, 20] # NW → N
+  wind_at: [52.982, -6.00]
 
 - id: seapoint
   name: Seapoint
   lat: 53.2972
   lon: -6.1589
   directions: [260, 90] # W → N → E
+  wind_at: [53.31, -6.12]
   sheltered: true

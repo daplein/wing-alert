@@ -23,6 +23,11 @@ class Spot:
     worse_at: str = "none"  # tide state when the shore break is worse (FR-4.3)
     watch_wave_m: float | None = None
     danger_wave_m: float | None = None
+    wind_at: tuple[float, float] | None = None  # a sea point off the beach (FR-1.11)
+
+    @property
+    def wind_point(self) -> tuple[float, float]:
+        return self.wind_at or (self.lat, self.lon)
 
 
 @dataclass(frozen=True)
@@ -83,6 +88,7 @@ def _parse_spot(item: Any, path: Path) -> Spot:
             worse_at=str(item.get("worse_at", "none")),
             watch_wave_m=_optional_number(item.get("watch_wave_m"), "watch_wave_m", path),
             danger_wave_m=_optional_number(item.get("danger_wave_m"), "danger_wave_m", path),
+            wind_at=_optional_point(item.get("wind_at"), path),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ConfigError(f"{path}: spot {spot_id!r} is invalid ({error})") from error
@@ -100,14 +106,25 @@ def _optional_number(value: Any, name: str, path: Path) -> float | None:
     return None if value is None else _number(value, name, path)
 
 
+def _optional_point(value: Any, path: Path) -> tuple[float, float] | None:
+    if value is None:
+        return None
+    lat, lon = value
+    return _number(lat, "wind_at", path), _number(lon, "wind_at", path)
+
+
 def _check_spot(spot: Spot, path: Path) -> None:
     if spot.worse_at not in ("high", "low", "none"):
         raise ConfigError(f"{path}: spot {spot.id!r} worse_at must be high, low or none")
-    if not (-90 <= spot.lat <= 90 and -180 <= spot.lon <= 180):
+    if not all(-90 <= lat <= 90 and -180 <= lon <= 180 for lat, lon in _points(spot)):
         raise ConfigError(f"{path}: spot {spot.id!r} has an invalid position")
     for direction in (spot.direction_from, spot.direction_to):
         if not 0 <= direction <= 360:
             raise ConfigError(f"{path}: spot {spot.id!r} directions must be 0–360")
+
+
+def _points(spot: Spot) -> list[tuple[float, float]]:
+    return [(spot.lat, spot.lon), spot.wind_point]
 
 
 def _check_unique_ids(spots: list[Spot], path: Path) -> None:

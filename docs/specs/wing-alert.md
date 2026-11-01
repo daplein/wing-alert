@@ -90,17 +90,19 @@ Coordinates come from David's spot guide where it has them, otherwise from OpenS
 
 > **To confirm.** Arklow, Buckroney and Seapoint come from David. Ennereilly, Brittas and Magheramore are proposed from the OpenStreetMap coastline: the range runs from cross-shore on one side, through onshore, to cross-shore on the other. Ennereilly faces SE (no northerly, per David); Brittas and Magheramore face ESE.
 
-| ID | Spot | Lat, Lon | Good directions (wind from) | Notes |
-|---|---|---|---|---|
-| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
-| `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
-| `buckroney` | Buckroney | 52.8462, -6.0931 | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
-| `brittas` | Brittas Bay | 52.8831, -6.0575 | NNE → E → SSW (20–200°) | |
-| `magheramore` | Magheramore | 52.9310, -6.0225 | NNE → E → SSW (20–200°) | Tricky, on the wish list |
-| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | NW → N (280–20°) | Launch from the harbour |
-| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
+| ID | Spot | Lat, Lon | Wind read at (FR-1.11) | Good directions (wind from) | Notes |
+|---|---|---|---|---|---|
+| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | 52.7878, -6.07 | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
+| `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | 52.837, -6.05 | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
+| `buckroney` | Buckroney | 52.8462, -6.0931 | 52.8462, -6.04 | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
+| `brittas` | Brittas Bay | 52.8831, -6.0575 | 52.8831, -5.98 | NNE → E → SSW (20–200°) | |
+| `magheramore` | Magheramore | 52.9310, -6.0225 | 52.931, -5.97 | NNE → E → SSW (20–200°) | Tricky, on the wish list |
+| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 52.982, -6.00 | NW → N (280–20°) | Launch from the harbour |
+| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 53.31, -6.12 | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
 
 A spot can be marked `sheltered: true` (Seapoint). See FR-4.5.
+
+Each "wind read at" point is the first sea cell of the forecast model off that beach, 3–5 km out (checked 1 Nov 2026 by moving east until the wind jumped).
 
 All spots, thresholds and directions live in `config/spots.yaml` and `config/settings.yaml`, so changing them needs no code change.
 
@@ -138,6 +140,7 @@ Branch `feat/wind-alert`.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
 - **FR-1.10** With no recipients configured, the job prints the message instead of sending it and doesn't update `state.json`, so it can run safely before the secret exists. `--dry-run` also skips the archive (FR-2.1): nothing is written at all.
+- **FR-1.11** Wind is read at a **sea point** a few km off each beach (`wind_at` in `config/spots.yaml`), not at the beach itself. The forecast model's cell on the beach counts as land, which slows the wind: on 1 Nov 2026 it said 8–9 kn at Arklow while David rode 14–20 kn, and the first sea cell said 17 kn. The beach position is still used for the map and the marine data.
 
 **Example message**
 
@@ -176,10 +179,10 @@ Branch `feat/site`.
 
 Branch `feat/wind-map`.
 
-- **FR-3.1** One PNG per day: a strip of 4 small maps (09:00, 12:00, 15:00, 18:00) of the coast from Seapoint to Arklow.
-- **FR-3.2** Each spot has a dot and an arrow pointing where the wind blows **to**, coloured by strength: grey < 10 kn, green 10–20, orange 20–30, red > 30. Each is labelled with mean and gust in knots.
+- **FR-3.1** One PNG per day: a 2×2 grid of maps (09:00, 12:00, 15:00, 18:00) of the coast from Wicklow Harbour to Arklow, big enough to read on a phone. Seapoint is 40 km further north, so it gets its own small inset map in the corner of each panel; otherwise the Wicklow spots end up squashed together.
+- **FR-3.2** Each spot has a dot and an arrow pointing where the wind blows **to**, coloured by strength: grey < 10 kn, green 10–20, orange 20–30, red > 30. Each is labelled with its name and with mean and gust in knots.
 - **FR-3.3** The base map comes from OpenStreetMap coastline data, with attribution on the image.
-- **FR-3.4** Each run writes one map per date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD.png`, overwriting the earlier one, and the workflow commits it. Past maps never need re-rendering. At about 70 KB per map and a few versions per date in git history, that's roughly 75 MB a year.
+- **FR-3.4** Each run writes one map per date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD.png`, overwriting the earlier one, and the workflow commits it. Past maps never need re-rendering. At about 115 KB per map and a few versions per date in git history, that's roughly 125 MB a year.
 - **FR-3.5** The coastline is a simplified OpenStreetMap extract stored in the repo (`wing_alert/assets/coastline.json`), so no map tiles are fetched at run time.
 
 ## Slice 4: Tides, swell, shore break warning
