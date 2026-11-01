@@ -76,19 +76,19 @@ flowchart LR
 
 ## Spots
 
-Coordinates come from David's spot guide where it has them, otherwise from OpenStreetMap. Wicklow Harbour is approximate. Good wind directions are where the wind blows **from**, as a range read **clockwise** from the first value to the second (e.g. 337–202° is NNW → N → E → S → SSW).
+Coordinates come from David's spot guide where it has them, otherwise from OpenStreetMap. Wicklow Harbour is approximate. Good wind directions are where the wind blows **from**, read clockwise round the compass (N → E → S → W). Degrees are for the config: N = 0°, E = 90°, S = 180°, W = 270°.
 
 > **To confirm.** Arklow and Buckroney come from the spot guide. The other beaches get a proposed N through E to S, because west is offshore there.
 
-| ID | Spot | Lat, Lon | Good directions (from) | Notes |
+| ID | Spot | Lat, Lon | Good directions (wind from) | Notes |
 |---|---|---|---|---|
-| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | 337–202° (NNW→E→SSW) | The main spot. Sheltered corner by Arklow Rock |
-| `ennereilly` | Ennereilly | 52.8461, -6.0973 | 0–190° | |
-| `buckroney` | Buckroney | 52.8462, -6.0931 | 247–90° (WSW→N→E) | Takes westerly. Rocks to the north |
-| `brittas` | Brittas Bay | 52.8831, -6.0575 | 0–190° | |
-| `magheramore` | Magheramore | 52.9310, -6.0225 | 0–190° | Tricky, on the wish list |
-| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 280–20° (NW→N) | Launch from the harbour |
-| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 260–90° (W→N→E) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
+| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
+| `ennereilly` | Ennereilly | 52.8461, -6.0973 | N → E → S (0–190°) | |
+| `buckroney` | Buckroney | 52.8462, -6.0931 | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
+| `brittas` | Brittas Bay | 52.8831, -6.0575 | N → E → S (0–190°) | |
+| `magheramore` | Magheramore | 52.9310, -6.0225 | N → E → S (0–190°) | Tricky, on the wish list |
+| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | NW → N (280–20°) | Launch from the harbour |
+| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
 
 A spot can be marked `sheltered: true` (Seapoint). See FR-4.5.
 

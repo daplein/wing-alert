@@ -2,7 +2,7 @@
 
 [Google Maps](https://maps.app.goo.gl/i2gcyacrq77MrT9u9)
 
-**Works from:** WSW to E.
+**Works from:** WSW round through south to E. WSW is cross-shore. Northerly doesn't work.
 
 ## Hazards
 
