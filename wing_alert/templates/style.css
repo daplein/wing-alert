@@ -35,3 +35,4 @@ td.ok { border-color: var(--fg); font-weight: 700; }
 .spot { border-top: 1px solid var(--line); margin-top: 24px; }
 .spot table { border-collapse: collapse; } .spot td, .spot th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; min-width: 0; border-radius: 0; }
 footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px; padding-bottom: 24px; }
+.map { width: 100%; max-width: 900px; height: auto; border-radius: 10px; margin: 0 0 14px; display: block; }
