@@ -76,19 +76,21 @@ flowchart LR
 
 ## Spots
 
-Coordinates are from OpenStreetMap, except Wicklow Harbour, which is approximate. Good wind directions are where the wind blows **from**, in degrees.
+Coordinates come from David's spot guide where it has them, otherwise from OpenStreetMap. Wicklow Harbour is approximate. Good wind directions are where the wind blows **from**, as a range read **clockwise** from the first value to the second (e.g. 337–202° is NNW → N → E → S → SSW).
 
-> **Proposed directions, to confirm.** The east-facing beaches get N through E to S (cross-shore to onshore). Anything with west in it is offshore there and dangerous.
+> **To confirm.** Arklow and Buckroney come from the spot guide. The other beaches get a proposed N through E to S, because west is offshore there.
 
 | ID | Spot | Lat, Lon | Good directions (from) | Notes |
 |---|---|---|---|---|
-| `arklow` | Arklow South Beach | 52.7871, -6.1437 | 0–190° (N→E→S) | The main spot |
+| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | 337–202° (NNW→E→SSW) | The main spot. Sheltered corner by Arklow Rock |
 | `ennereilly` | Ennereilly | 52.8461, -6.0973 | 0–190° | |
-| `buckroney` | Buckroney | 52.8517, -6.0827 | TBD, takes more westerly | Orientation to work out together |
+| `buckroney` | Buckroney | 52.8462, -6.0931 | 247–90° (WSW→N→E) | Takes westerly. Rocks to the north |
 | `brittas` | Brittas Bay | 52.8831, -6.0575 | 0–190° | |
 | `magheramore` | Magheramore | 52.9310, -6.0225 | 0–190° | Tricky, on the wish list |
 | `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 280–20° (NW→N) | Launch from the harbour |
-| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 240–300° (W) | The full-westerly option |
+| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 260–90° (W→N→E) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
+
+A spot can be marked `sheltered: true` (Seapoint). See FR-4.5.
 
 All spots, thresholds and directions live in `config/spots.yaml` and `config/settings.yaml`, so changing them needs no code change.
 
@@ -152,6 +154,7 @@ Branch `feat/site`.
 - **FR-2.4** **Front page** is today's day page, plus a list of past days.
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
 - **FR-2.6** The site shows "Forecast from Open-Meteo" with a link (required by their terms).
+- **FR-2.7** **Spots page:** one section per spot, rendered from `docs/spots/<id>.md` (launch points, parking by wind direction, hazards, seasonal notes, map link). The day page links each spot name to its section. Editing a spot's Markdown file is all it takes to update the page.
 
 **Size check:** about 20 KB of JSON per run plus a 150 KB map per day is roughly 70 MB a year. That's far under the 1 GB Pages and repo guidance.
 
@@ -175,6 +178,7 @@ Branch `feat/shore-break`.
   - one level up if the swell period is 10 s or longer (long swell dumps harder)
   - one level up if the tide is at the spot's `worse_at` state (`high`, `low` or `none`; default `none` until the crew tells us)
 - **FR-4.4** The warning never removes a window. It adds a line to the alert, for example `🚨 Shore break: 1.6 m swell at 11 s, high tide 15:10`.
+- **FR-4.5** When a day has a 🚨 window at an exposed spot and a `sheltered` spot also has a window that day, the alert adds `Sheltered option: Seapoint 12:00–16:00`.
 
 ## Slice 5: Weekly summary
 
@@ -227,5 +231,7 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 - Marine Institute tide predictions for Arklow and Wicklow, replacing the modelled sea level.
 - **Patterns:** explore the archive and years of Open-Meteo historical data, e.g. "the wind backs northerly in spring afternoons" (likely sea breeze).
 - Crew session log (where, when, how it was) to tune thresholds per spot.
+- Suggest where to park and launch by wind direction (e.g. Arklow: P1 in north-easterly, P2 in southerly, P3 when it's 20 kn+ or the shore break is big).
+- Seasonal notes from the spot guide to test against the data, e.g. Arklow spring north-westerlies that last for weeks, mostly southerly summers.
 - Animated wind map, or a full wind field over the sea.
 - WhatsApp images and groups through Meta's official Cloud API.
