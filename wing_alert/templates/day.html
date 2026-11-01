@@ -11,9 +11,13 @@
     <a href="{{ root }}spots.html#{{ day.best.spot }}">{{ day.best.spot_name }}</a>
     {{ day.best.start[11:] }}–{{ day.best.end[11:] }} ·
     {{ day.best.wind_min }}{% if day.best.wind_max != day.best.wind_min %}–{{ day.best.wind_max }}{% endif %} kn {{ day.best.direction }}, gusts {{ day.best.gust_max }}
+    {% if day.best.shore_break %}<div class="warn level{{ day.best.shore_break }}">{{ day.best.shore_break | warning }} Shore break{% if day.best.shore_break == 2 %}: dangerous{% else %}: watch out{% endif %} · {{ day.best.shore_break_reason }}</div>{% endif %}
   </div>
   {% else %}
   <div class="best none">Nothing rideable</div>
+  {% endif %}
+  {% if day.tides %}
+  <p class="tides">Tides: {% for tide in day.tides %}{{ tide.kind | capitalize }} {{ tide.time[11:] }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
   {% endif %}
   {% if day.date.isoformat() in maps %}
   <img class="map" src="{{ root }}maps/{{ day.date.isoformat() }}.png" alt="Wind map for {{ day.date | day_label }}">
@@ -25,7 +29,8 @@
     {% for row in day.rows %}
       <tr>
         <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>
-          {% for w in row.windows %}<small>{{ w.start[11:] }}–{{ w.end[11:] }}</small>{% endfor %}</th>
+          {% for w in row.windows %}<small>{{ w.start[11:] }}–{{ w.end[11:] }} {{ w.shore_break | warning }}</small>{% endfor %}
+          {% if row.waves is not none %}<small>Waves up to {{ "%.1f" | format(row.waves) }} m</small>{% endif %}</th>
         {% for cell in row.cells %}
           {% if cell %}
           <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">

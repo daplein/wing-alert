@@ -52,3 +52,16 @@ def open_meteo_payload(start: datetime, winds: list[float | None], direction: fl
             "sunset": [SUNSET.strftime("%Y-%m-%dT%H:%M")],
         },
     }
+
+
+def sea_payload(start: datetime, waves: list[float | None], period: float = 6, levels=None):
+    times = [(start + timedelta(hours=i)).strftime("%Y-%m-%dT%H:%M") for i in range(len(waves))]
+    return {
+        "hourly": {
+            "time": times,
+            "wave_height": waves,
+            "wave_period": [period] * len(waves),
+            "swell_wave_period": [period] * len(waves),
+            "sea_level_height_msl": levels or [0.0] * len(waves),
+        }
+    }

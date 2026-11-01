@@ -1,12 +1,15 @@
 """Hourly wind forecast per spot from Open-Meteo (FR-1.2, FR-1.8)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from wing_alert.config import Spot
+
+if TYPE_CHECKING:
+    from wing_alert.marine import SeaHour, Tide
 
 
 class ForecastError(Exception):
@@ -32,6 +35,8 @@ class SpotForecast:
     spot: Spot
     hours: list[HourForecast]
     daylight: dict[date, Daylight]
+    sea: dict[datetime, "SeaHour"] = field(default_factory=dict)
+    tides: list["Tide"] = field(default_factory=list)
 
 
 class OpenMeteoClient:

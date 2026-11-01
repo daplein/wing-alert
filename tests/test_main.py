@@ -3,9 +3,18 @@ from pathlib import Path
 
 import respx
 
-from tests.helpers import ARKLOW, MORNING, SETTINGS, forecast, hours, open_meteo_payload
+from tests.helpers import (
+    ARKLOW,
+    MORNING,
+    SETTINGS,
+    forecast,
+    hours,
+    open_meteo_payload,
+    sea_payload,
+)
 from wing_alert.forecast import OpenMeteoClient
 from wing_alert.main import DailyJob, main
+from wing_alert.marine import MarineClient
 from wing_alert.state import AlertState
 from wing_alert.whatsapp import CallMeBotSender
 
@@ -65,6 +74,7 @@ def test_fr_1_7_dry_run_does_not_save_state(tmp_path):
 def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("WHATSAPP_RECIPIENTS", "+353861234567:999")
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    respx.get(MarineClient.URL).respond(json=_sea_day())
     whatsapp = respx.get(CallMeBotSender.URL).respond(text="ok")
     state = tmp_path / "state.json"
     assert (
@@ -83,6 +93,7 @@ def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, 
 def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    respx.get(MarineClient.URL).respond(json=_sea_day())
     state = tmp_path / "state.json"
     assert (
         main(
@@ -124,6 +135,7 @@ def _windy_day():
 def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    respx.get(MarineClient.URL).respond(json=_sea_day())
     data = tmp_path / "data"
     args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json"), "--data", str(data)]
     assert main(args, now=MORNING) == 0
@@ -132,3 +144,7 @@ def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, ca
     other = tmp_path / "other"
     assert main([*args[:-1], str(other), "--dry-run"], now=MORNING) == 0
     assert not other.exists()
+
+
+def _sea_day():
+    return sea_payload(MORNING.replace(hour=0), [1.0] * 24)

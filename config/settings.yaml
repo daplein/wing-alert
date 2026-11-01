@@ -5,3 +5,8 @@ max_gust: 45
 ideal_wind: 20
 min_window_hours: 2
 daylight_margin_minutes: 30
+
+# Shore break warning (FR-4.3). Metres and seconds; spots can override the wave heights.
+watch_wave_m: 0.8
+danger_wave_m: 1.5
+long_period_s: 10
