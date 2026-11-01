@@ -129,13 +129,15 @@ Branch `feat/wind-alert`.
   - mean wind between `min_wind` and `max_wind` (defaults 10 and 40 kn)
   - gusts at or below `max_gust` (default 45 kn)
   - direction inside the spot's good range (ranges may wrap through north, e.g. 280–20°)
-  - the hour is between sunrise + 30 min and sunset − 30 min
-- **FR-1.4** A **window** is at least `min_window_hours` (default 2) consecutive good hours at one spot. It reports the start, end, wind range, max gust and main direction (compass point, e.g. ENE).
+  - the whole hour fits between sunrise + 30 min and sunset − 30 min (the 13:00 forecast stands for 13:00–14:00)
+  - the hour hasn't already ended (the current hour still counts)
+- **FR-1.4** A **window** is at least `min_window_hours` (default 2) consecutive good hours at one spot. It reports the start (first good hour), end (last good hour + 1 h), wind range, max gust and main direction (the circular mean as a 16-point compass name, e.g. ENE).
 - **FR-1.5** Rank windows by length, then by mean wind closest to `ideal_wind` (default 20 kn). The best one goes first in the message.
 - **FR-1.6** Send one WhatsApp message per run, to each configured recipient, with one short line per window (spot, hours, wind range, direction), grouped by day, best first. No hourly detail: that's on the site. If there are no new windows, send nothing.
-- **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed. A window that changes by an hour at either end counts as changed. The workflow commits `state.json` back to the repo.
+- **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed, and list only those days. A window that changes by an hour at either end counts as changed. A day whose windows disappear is not reported. Entries older than 14 days are pruned. The workflow commits `state.json` back to the repo.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
-- **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site.
+- **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
+- **FR-1.10** With no recipients configured, or with `--dry-run`, the job prints the message instead of sending it and doesn't update `state.json`. So it can run safely before the secret exists.
 
 **Example message**
 

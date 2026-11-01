@@ -1,0 +1,7 @@
+# Thresholds for a good hour (FR-1.3) and a window (FR-1.4). Knots.
+min_wind: 10
+max_wind: 40
+max_gust: 45
+ideal_wind: 20
+min_window_hours: 2
+daylight_margin_minutes: 30

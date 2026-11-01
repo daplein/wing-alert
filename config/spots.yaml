@@ -1,0 +1,44 @@
+# Good directions: where the wind blows FROM, clockwise from the first value
+# to the second (N = 0, E = 90, S = 180, W = 270). See docs/specs/wing-alert.md.
+- id: arklow
+  name: Arklow South Beach
+  lat: 52.7878
+  lon: -6.1434
+  directions: [337, 202] # NNW → E → SSW
+
+- id: ennereilly
+  name: Ennereilly
+  lat: 52.837
+  lon: -6.105
+  directions: [45, 225] # NE → E → SW
+
+- id: buckroney
+  name: Buckroney
+  lat: 52.8462
+  lon: -6.0931
+  directions: [90, 248] # E → S → WSW
+
+- id: brittas
+  name: Brittas Bay
+  lat: 52.8831
+  lon: -6.0575
+  directions: [20, 200] # NNE → E → SSW
+
+- id: magheramore
+  name: Magheramore
+  lat: 52.9310
+  lon: -6.0225
+  directions: [20, 200] # NNE → E → SSW
+
+- id: wicklow_harbour
+  name: Wicklow Harbour
+  lat: 52.982
+  lon: -6.035
+  directions: [280, 20] # NW → N
+
+- id: seapoint
+  name: Seapoint
+  lat: 53.2972
+  lon: -6.1589
+  directions: [260, 90] # W → N → E
+  sheltered: true
