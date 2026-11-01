@@ -11,14 +11,13 @@ from wing_alert.scoring import Window, find_windows, is_good_hour, rank
 
 
 class Archive:
-    def __init__(self, root: Path, settings: Settings) -> None:
+    def __init__(self, root: Path) -> None:
         self._root = root
-        self._settings = settings
 
-    def write(self, issued: datetime, forecasts: list[SpotForecast]) -> Path:
+    def save(self, snapshot: dict[str, Any]) -> Path:
+        issued = datetime.fromisoformat(snapshot["issued"])
         path = self._root / f"{issued:%Y/%m/%Y-%m-%dT%H}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        snapshot = build_snapshot(issued, forecasts, self._settings)
         path.write_text(json.dumps(snapshot, indent=1, ensure_ascii=False) + "\n")
         return path
 
@@ -59,6 +58,8 @@ def _spot(forecast: SpotForecast, settings: Settings) -> dict[str, Any]:
     return {
         "id": spot.id,
         "name": spot.name,
+        "lat": spot.lat,
+        "lon": spot.lon,
         "directions": [spot.direction_from, spot.direction_to],
         "sheltered": spot.sheltered,
         "hours": [

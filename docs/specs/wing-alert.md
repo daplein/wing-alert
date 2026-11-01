@@ -178,8 +178,9 @@ Branch `feat/wind-map`.
 
 - **FR-3.1** One PNG per day: a strip of 4 small maps (09:00, 12:00, 15:00, 18:00) of the coast from Seapoint to Arklow.
 - **FR-3.2** Each spot has a dot and an arrow pointing where the wind blows **to**, coloured by strength: grey < 10 kn, green 10–20, orange 20–30, red > 30. Each is labelled with mean and gust in knots.
-- **FR-3.3** The base map comes from OpenStreetMap data, with attribution on the image.
-- **FR-3.4** The map for a day is committed once (by the last run of that day) as `data/YYYY/MM/YYYY-MM-DD.png`, so past maps don't need re-rendering.
+- **FR-3.3** The base map comes from OpenStreetMap coastline data, with attribution on the image.
+- **FR-3.4** Each run writes one map per date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD.png`, overwriting the earlier one, and the workflow commits it. Past maps never need re-rendering. At about 70 KB per map and a few versions per date in git history, that's roughly 75 MB a year.
+- **FR-3.5** The coastline is a simplified OpenStreetMap extract stored in the repo (`wing_alert/assets/coastline.json`), so no map tiles are fetched at run time.
 
 ## Slice 4: Tides, swell, shore break warning
 

@@ -15,6 +15,9 @@
   {% else %}
   <div class="best none">Nothing rideable</div>
   {% endif %}
+  {% if day.date.isoformat() in maps %}
+  <img class="map" src="{{ root }}maps/{{ day.date.isoformat() }}.png" alt="Wind map for {{ day.date | day_label }}">
+  {% endif %}
   <div class="scroll">
   <table>
     <thead><tr><th>Spot</th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>

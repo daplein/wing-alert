@@ -17,11 +17,12 @@ def forecasts(start=NOON):
 
 
 def test_fr_2_1_writes_one_json_file_per_run(tmp_path):
-    path = Archive(tmp_path, SETTINGS).write(MORNING, forecasts())
+    path = Archive(tmp_path).save(build_snapshot(MORNING, forecasts(), SETTINGS))
     assert path == tmp_path / "2026/11/2026-11-06T07.json"
     data = json.loads(path.read_text())
     assert data["issued"] == "2026-11-06T07:00"
     assert data["settings"]["min_wind"] == 10
+    assert (data["spots"][0]["lat"], data["spots"][0]["lon"]) == (52.79, -6.14)
     assert data["spots"][0]["hours"][0] == {
         "time": "2026-11-06T12:00",
         "wind": 18,
@@ -54,7 +55,7 @@ def test_fr_2_3_latest_run_of_each_day_wins():
 def build(tmp_path, issued_list, guides=None):
     data = tmp_path / "data"
     for issued in issued_list:
-        Archive(data, SETTINGS).write(issued, forecasts(issued.replace(hour=12)))
+        Archive(data).save(build_snapshot(issued, forecasts(issued.replace(hour=12)), SETTINGS))
     guides_dir = tmp_path / "guides"
     guides_dir.mkdir()
     for spot_id, text in (guides or {}).items():
@@ -77,7 +78,7 @@ def test_fr_2_3_day_page_shows_best_spot_table_and_neighbours(tmp_path):
 def test_fr_2_3_day_without_windows_says_nothing_rideable(tmp_path):
     data = tmp_path / "data"
     calm = [forecast(ARKLOW, hours(NOON, [5, 5]))]
-    Archive(data, SETTINGS).write(MORNING, calm)
+    Archive(data).save(build_snapshot(MORNING, calm, SETTINGS))
     out = tmp_path / "site"
     SiteBuilder(make_env(), [ARKLOW], tmp_path).build(load_snapshots(data), out)
     assert "Nothing rideable" in (out / "index.html").read_text()
@@ -128,7 +129,7 @@ def test_fr_2_2_site_command_builds_from_the_archive(tmp_path, capsys):
     from wing_alert.site import main
 
     data = tmp_path / "data"
-    Archive(data, SETTINGS).write(MORNING, forecasts())
+    Archive(data).save(build_snapshot(MORNING, forecasts(), SETTINGS))
     repo = Path(__file__).parents[1]
     out = tmp_path / "site"
     args = [

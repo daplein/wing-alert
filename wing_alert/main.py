@@ -10,14 +10,15 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from wing_alert.archive import Archive
+from wing_alert.archive import Archive, build_snapshot
 from wing_alert.config import ConfigError, Settings, Spot, load_settings, load_spots
-from wing_alert.forecast import ForecastError, OpenMeteoClient
+from wing_alert.forecast import ForecastError, OpenMeteoClient, SpotForecast
 from wing_alert.message import format_alert
 from wing_alert.scoring import Window, find_windows, rank
 from wing_alert.site import SITE_URL, day_url
 from wing_alert.state import AlertState
 from wing_alert.whatsapp import CallMeBotSender, DeliveryError, DrySender, parse_recipients
+from wing_alert.windmap import MapWriter
 
 DUBLIN = ZoneInfo("Europe/Dublin")
 
@@ -36,6 +37,7 @@ class DailyJob:
         state: AlertState,
         persist: bool,
         archive: Archive | None = None,
+        maps: MapWriter | None = None,
         site_url: str | None = None,
     ) -> None:
         self._spots = spots
@@ -45,16 +47,24 @@ class DailyJob:
         self._state = state
         self._persist = persist
         self._archive = archive
+        self._maps = maps
         self._site_url = site_url
 
     def run(self, now: datetime) -> str | None:
         """Archive the forecast, then alert on new or changed windows.
         Returns the message, or None if there was nothing to send."""
         forecasts = [self._forecasts.fetch(spot) for spot in self._spots]
-        if self._archive:
-            self._archive.write(now, forecasts)
+        self._keep_record(now, forecasts)
         windows = [w for f in forecasts for w in find_windows(f, self._settings, now)]
         return self._alert(windows, now)
+
+    def _keep_record(self, now: datetime, forecasts: list[SpotForecast]) -> None:
+        if not self._archive:
+            return
+        snapshot = build_snapshot(now, forecasts, self._settings)
+        self._archive.save(snapshot)
+        if self._maps:
+            self._maps.write(snapshot)
 
     def _alert(self, windows: list[Window], now: datetime) -> str | None:
         changed = self._state.changed_days(windows)
@@ -98,7 +108,8 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
         sender=CallMeBotSender(http, recipients) if live else DrySender(),
         state=AlertState(args.state),
         persist=live,
-        archive=None if args.dry_run else Archive(args.data, settings),
+        archive=None if args.dry_run else Archive(args.data),
+        maps=None if args.dry_run else MapWriter(args.data),
         site_url=args.site_url,
     )
 

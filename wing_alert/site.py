@@ -26,10 +26,13 @@ class SiteBuilder:
         self._spots = spots
         self._guides = guides
 
-    def build(self, snapshots: list[dict[str, Any]], out: Path) -> None:
+    def build(
+        self, snapshots: list[dict[str, Any]], out: Path, maps: dict[str, Path] | None = None
+    ) -> None:
         latest = latest_per_day(snapshots)
         days = sorted(latest)
         (out / "days").mkdir(parents=True, exist_ok=True)
+        self._maps = self._copy_maps(maps or {}, out)
         for index, day in enumerate(days):
             links = _neighbours(days, index)
             self._render("day.html", out / "days" / f"{day}.html", "../", latest[day], links)
@@ -42,9 +45,20 @@ class SiteBuilder:
 
     def _render(self, template: str, path: Path, root: str, snapshot: dict, links: dict) -> None:
         html = self._env.get_template(template).render(
-            root=root, issued=snapshot["issued"], days=forecast_days(snapshot), **links
+            root=root,
+            issued=snapshot["issued"],
+            days=forecast_days(snapshot),
+            maps=self._maps,
+            **links,
         )
         self._write(path, html)
+
+    @staticmethod
+    def _copy_maps(maps: dict[str, Path], out: Path) -> set[str]:
+        (out / "maps").mkdir(parents=True, exist_ok=True)
+        for day, path in maps.items():
+            shutil.copy(path, out / "maps" / f"{day}.png")
+        return set(maps)
 
     def _spots_page(self) -> str:
         guides = [(spot, self._guide_html(spot)) for spot in self._spots]
@@ -145,7 +159,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("_site"))
     args = parser.parse_args(argv)
     builder = SiteBuilder(make_env(), load_spots(args.config / "spots.yaml"), args.guides)
-    builder.build(load_snapshots(args.data), args.out)
+    maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
+    builder.build(load_snapshots(args.data), args.out, maps)
     print(f"Site built in {args.out}")
     return 0
 
