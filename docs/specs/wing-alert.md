@@ -6,9 +6,9 @@ Status: **draft, in review**. Slices are built one PR at a time, in order.
 
 Tell the Wicklow wingfoiling crew when the wind is good, where to go, and how dangerous the shore break is. Keep a record of every day so we can look back at what we missed and spot patterns.
 
-- **Push:** a WhatsApp alert to David when a spot has a rideable window.
+- **Push:** a short WhatsApp alert when a spot has a rideable window, with a link to the site. WhatsApp only ever gets alerts and links, never the full report.
 - **Pull:** a GitHub Pages site with today's report, a map, and every past day.
-- **Look back:** a weekly summary.
+- **Look back:** a weekly page on the site. WhatsApp gets a one-line link to it.
 
 It runs entirely on GitHub Actions and free data. There's no server and no app.
 
@@ -132,7 +132,7 @@ Branch `feat/wind-alert`.
   - the hour is between sunrise + 30 min and sunset − 30 min
 - **FR-1.4** A **window** is at least `min_window_hours` (default 2) consecutive good hours at one spot. It reports the start, end, wind range, max gust and main direction (compass point, e.g. ENE).
 - **FR-1.5** Rank windows by length, then by mean wind closest to `ideal_wind` (default 20 kn). The best one goes first in the message.
-- **FR-1.6** Send one WhatsApp message per run, to each configured recipient, listing the windows, grouped by day, best first. If there are no windows, send nothing.
+- **FR-1.6** Send one WhatsApp message per run, to each configured recipient, with one short line per window (spot, hours, wind range, direction), grouped by day, best first. No hourly detail: that's on the site. If there are no new windows, send nothing.
 - **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed. A window that changes by an hour at either end counts as changed. The workflow commits `state.json` back to the repo.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site.
@@ -147,6 +147,8 @@ Thu 6 Nov
 Fri 7 Nov
 • Seapoint 10:00–12:00 · 15–18 kn W, gusts 26
 ```
+
+From slice 2 the message ends with the day page link, and from slice 4 risky windows get ⚠️ or 🚨.
 
 **Schedule:** GitHub cron runs in UTC, so 06:00 and 16:00 UTC is 06:00/16:00 in winter and 07:00/17:00 in summer. GitHub can start scheduled runs 10–30 minutes late; that's acceptable. A `workflow_dispatch` trigger allows manual runs.
 
@@ -187,8 +189,8 @@ Branch `feat/shore-break`.
   - wave height above the spot's `watch_wave_m` / `danger_wave_m` (defaults 0.8 m / 1.5 m)
   - one level up if the swell period is 10 s or longer (long swell dumps harder)
   - one level up if the tide is at the spot's `worse_at` state (`high`, `low` or `none`; default `none` until the crew tells us)
-- **FR-4.4** The warning never removes a window. It adds a line to the alert, for example `🚨 Shore break: 1.6 m swell at 11 s, high tide 15:10`.
-- **FR-4.5** When a day has a 🚨 window at an exposed spot and a `sheltered` spot also has a window that day, the alert adds `Sheltered option: Seapoint 12:00–16:00`.
+- **FR-4.4** The warning never removes a window. In the alert it's just the ⚠️ or 🚨 emoji on that window's line; the reasons (swell, period, tide times) are on the day page.
+- **FR-4.5** When a day has a 🚨 window at an exposed spot and a `sheltered` spot also has a window that day, the alert adds one line: `Sheltered option: Seapoint 12:00–16:00`.
 
 ## Slice 5: Weekly summary
 
@@ -197,7 +199,7 @@ Branch `feat/weekly`.
 - **FR-5.1** On Sundays, read the last 7 days of `data/` and `state.json`.
 - **FR-5.2** For each day, take the windows from that day's **morning run** (the shortest-range, most accurate forecast). List the best days and spots of the week.
 - **FR-5.3** Mark each window as **alerted** if a sent alert listed an overlapping window at that spot, otherwise **missed** (the forecast didn't see it coming).
-- **FR-5.4** Send a short WhatsApp summary and publish a week page on the site.
+- **FR-5.4** Publish a week page on the site, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
 
 ---
 
