@@ -1,0 +1,97 @@
+import json
+from pathlib import Path
+
+import respx
+
+from tests.helpers import ARKLOW, MORNING, SETTINGS, forecast, hours, open_meteo_payload
+from wing_alert.forecast import OpenMeteoClient
+from wing_alert.main import DailyJob, main
+from wing_alert.state import AlertState
+from wing_alert.whatsapp import CallMeBotSender
+
+REPO_CONFIG = Path(__file__).parents[1] / "config"
+NOON = MORNING.replace(hour=12)
+
+
+class FakeForecasts:
+    def __init__(self, winds: list[float]) -> None:
+        self.winds = winds
+
+    def fetch(self, spot):
+        return forecast(spot, hours(NOON, self.winds))
+
+
+class FakeSender:
+    def __init__(self) -> None:
+        self.sent: list[str] = []
+
+    def send(self, text: str) -> None:
+        self.sent.append(text)
+
+
+def job(tmp_path, winds, persist=True):
+    sender = FakeSender()
+    state = AlertState(tmp_path / "state.json")
+    return DailyJob([ARKLOW], SETTINGS, FakeForecasts(winds), sender, state, persist), sender
+
+
+def test_fr_1_6_sends_one_message_when_there_is_a_window(tmp_path):
+    daily, sender = job(tmp_path, [18, 20])
+    assert daily.run(MORNING) == sender.sent[0]
+    assert "Arklow South Beach 12:00–14:00" in sender.sent[0]
+
+
+def test_fr_1_6_sends_nothing_without_windows(tmp_path):
+    daily, sender = job(tmp_path, [5, 5])
+    assert daily.run(MORNING) is None
+    assert sender.sent == []
+
+
+def test_fr_1_7_second_run_with_same_windows_sends_nothing(tmp_path):
+    daily, sender = job(tmp_path, [18, 20])
+    daily.run(MORNING)
+    again, again_sender = job(tmp_path, [18, 20])
+    assert again.run(MORNING) is None
+    assert again_sender.sent == []
+
+
+def test_fr_1_7_dry_run_does_not_save_state(tmp_path):
+    daily, _ = job(tmp_path, [18, 20], persist=False)
+    daily.run(MORNING)
+    assert not (tmp_path / "state.json").exists()
+
+
+@respx.mock
+def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("WHATSAPP_RECIPIENTS", "+353861234567:999")
+    respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    whatsapp = respx.get(CallMeBotSender.URL).respond(text="ok")
+    state = tmp_path / "state.json"
+    assert main(["--config", str(REPO_CONFIG), "--state", str(state)], now=MORNING) == 0
+    assert whatsapp.called
+    assert json.loads(state.read_text())["sent"]
+    assert "999" not in capsys.readouterr().out
+
+
+@respx.mock
+def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
+    respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    state = tmp_path / "state.json"
+    assert main(["--config", str(REPO_CONFIG), "--state", str(state)], now=MORNING) == 0
+    assert "Dry run" in capsys.readouterr().out
+    assert not state.exists()
+
+
+@respx.mock
+def test_fr_1_8_main_fails_cleanly_when_forecast_is_down(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
+    respx.get(OpenMeteoClient.URL).respond(503)
+    assert (
+        main(["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json")], now=MORNING) == 1
+    )
+    assert "wing-alert failed" in capsys.readouterr().err
+
+
+def _windy_day():
+    return open_meteo_payload(MORNING.replace(hour=0), [18] * 24, direction=70)

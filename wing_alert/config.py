@@ -1,0 +1,111 @@
+"""Load and validate spots and thresholds from YAML (FR-1.1)."""
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+class ConfigError(Exception):
+    """The config files are missing or invalid."""
+
+
+@dataclass(frozen=True)
+class Spot:
+    id: str
+    name: str
+    lat: float
+    lon: float
+    direction_from: float
+    direction_to: float
+    sheltered: bool = False
+
+
+@dataclass(frozen=True)
+class Settings:
+    min_wind: float = 10
+    max_wind: float = 40
+    max_gust: float = 45
+    ideal_wind: float = 20
+    min_window_hours: int = 2
+    daylight_margin_minutes: int = 30
+
+
+def load_spots(path: Path) -> list[Spot]:
+    raw = _read_yaml(path)
+    if not isinstance(raw, list) or not raw:
+        raise ConfigError(f"{path}: expected a non-empty list of spots")
+    spots = [_parse_spot(item, path) for item in raw]
+    _check_unique_ids(spots, path)
+    return spots
+
+
+def load_settings(path: Path) -> Settings:
+    raw = _read_yaml(path)
+    if not isinstance(raw, dict):
+        raise ConfigError(f"{path}: expected a mapping of settings")
+    unknown = set(raw) - set(Settings.__dataclass_fields__)
+    if unknown:
+        raise ConfigError(f"{path}: unknown settings {sorted(unknown)}")
+    settings = Settings(**{key: _number(value, key, path) for key, value in raw.items()})
+    _check_settings(settings, path)
+    return settings
+
+
+def _read_yaml(path: Path) -> Any:
+    try:
+        return yaml.safe_load(path.read_text())
+    except (OSError, yaml.YAMLError) as error:
+        raise ConfigError(f"{path}: {error}") from error
+
+
+def _parse_spot(item: Any, path: Path) -> Spot:
+    if not isinstance(item, dict):
+        raise ConfigError(f"{path}: each spot must be a mapping")
+    spot_id = item.get("id", "?")
+    try:
+        direction_from, direction_to = item["directions"]
+        spot = Spot(
+            id=str(item["id"]),
+            name=str(item["name"]),
+            lat=_number(item["lat"], "lat", path),
+            lon=_number(item["lon"], "lon", path),
+            direction_from=_number(direction_from, "directions", path),
+            direction_to=_number(direction_to, "directions", path),
+            sheltered=bool(item.get("sheltered", False)),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ConfigError(f"{path}: spot {spot_id!r} is invalid ({error})") from error
+    _check_spot(spot, path)
+    return spot
+
+
+def _number(value: Any, name: str, path: Path) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ConfigError(f"{path}: {name} must be a number, got {value!r}")
+    return value
+
+
+def _check_spot(spot: Spot, path: Path) -> None:
+    if not (-90 <= spot.lat <= 90 and -180 <= spot.lon <= 180):
+        raise ConfigError(f"{path}: spot {spot.id!r} has an invalid position")
+    for direction in (spot.direction_from, spot.direction_to):
+        if not 0 <= direction <= 360:
+            raise ConfigError(f"{path}: spot {spot.id!r} directions must be 0–360")
+
+
+def _check_unique_ids(spots: list[Spot], path: Path) -> None:
+    ids = [spot.id for spot in spots]
+    duplicates = sorted({spot_id for spot_id in ids if ids.count(spot_id) > 1})
+    if duplicates:
+        raise ConfigError(f"{path}: duplicate spot ids {duplicates}")
+
+
+def _check_settings(settings: Settings, path: Path) -> None:
+    if not 0 <= settings.min_wind < settings.max_wind:
+        raise ConfigError(f"{path}: need 0 <= min_wind < max_wind")
+    if settings.max_gust < settings.min_wind:
+        raise ConfigError(f"{path}: max_gust must be at least min_wind")
+    if settings.min_window_hours < 1 or settings.daylight_margin_minutes < 0:
+        raise ConfigError(f"{path}: min_window_hours >= 1 and daylight_margin_minutes >= 0")
