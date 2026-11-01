@@ -5,7 +5,14 @@ on:
     # UTC: 06:00/16:00 in winter, 07:00/17:00 Irish summer time.
     - cron: "0 6 * * *"
     - cron: "0 16 * * *"
+    # Sunday 18:00 UTC: the weekly summary instead.
+    - cron: "0 18 * * 0"
   workflow_dispatch:
+    inputs:
+      job:
+        type: choice
+        options: [daily, weekly]
+        default: daily
 
 permissions:
   contents: write
@@ -27,7 +34,13 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked --no-dev
       - name: Check the wind, archive it, send alerts
+        if: github.event.schedule != '0 18 * * 0' && inputs.job != 'weekly'
         run: uv run python -m wing_alert
+        env:
+          WHATSAPP_RECIPIENTS: ${{ secrets.WHATSAPP_RECIPIENTS }}
+      - name: Weekly summary
+        if: github.event.schedule == '0 18 * * 0' || inputs.job == 'weekly'
+        run: uv run python -m wing_alert.weekly
         env:
           WHATSAPP_RECIPIENTS: ${{ secrets.WHATSAPP_RECIPIENTS }}
       - name: Commit data and state
@@ -37,7 +50,7 @@ jobs:
           git add data
           [ -f state.json ] && git add state.json
           git diff --cached --quiet && exit 0
-          git commit -m "Forecast $(date -u +%Y-%m-%dT%H:%M)"
+          git commit -m "Data $(date -u +%Y-%m-%dT%H:%M)"
           git push
       - name: Build the site
         run: uv run python -m wing_alert.site

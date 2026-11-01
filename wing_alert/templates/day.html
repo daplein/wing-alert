@@ -50,6 +50,12 @@
   {% if previous %}<a href="{{ root }}days/{{ previous }}.html">← {{ previous }}</a>{% endif %}
   {% if next %}<a href="{{ root }}days/{{ next }}.html">{{ next }} →</a>{% endif %}
 </nav>
+{% if weeks %}
+<section class="past">
+  <h2>Weekly reports</h2>
+  <ul>{% for w in weeks | reverse %}<li><a href="{{ root }}weeks/{{ w }}.html">Week of {{ w }}</a></li>{% endfor %}</ul>
+</section>
+{% endif %}
 {% if past %}
 <section class="past">
   <h2>Past days</h2>

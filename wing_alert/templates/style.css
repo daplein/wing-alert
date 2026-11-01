@@ -39,3 +39,6 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px;
 .tides { margin: 0 0 12px; }
 .warn { margin-top: 6px; font-size: 0.95rem; font-weight: 600; }
 .warn.level2 { color: #d62828; }
+table.week td { text-align: left; min-width: 0; padding: 6px 8px; }
+table.week th { padding: 6px 12px 6px 0; vertical-align: top; }
+.muted { color: var(--muted); }

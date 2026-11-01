@@ -1,6 +1,7 @@
 """Build the static GitHub Pages site from the data/ archive (FR-2.2 to FR-2.7)."""
 
 import argparse
+import json
 import shutil
 from datetime import date
 from pathlib import Path
@@ -27,7 +28,11 @@ class SiteBuilder:
         self._guides = guides
 
     def build(
-        self, snapshots: list[dict[str, Any]], out: Path, maps: dict[str, Path] | None = None
+        self,
+        snapshots: list[dict[str, Any]],
+        out: Path,
+        maps: dict[str, Path] | None = None,
+        weeks: list[dict[str, Any]] | None = None,
     ) -> None:
         latest = latest_per_day(snapshots)
         days = sorted(latest)
@@ -37,10 +42,12 @@ class SiteBuilder:
             links = _neighbours(days, index)
             self._render("day.html", out / "days" / f"{day}.html", "../", latest[day], links)
         if days:
-            self._render("day.html", out / "index.html", "", latest[days[-1]], {"past": days})
+            front = {"past": days, "weeks": [week["start"] for week in weeks or []]}
+            self._render("day.html", out / "index.html", "", latest[days[-1]], front)
         else:
             self._write(out / "index.html", self._env.get_template("empty.html").render(root=""))
         self._write(out / "spots.html", self._spots_page())
+        self._week_pages(weeks or [], out)
         shutil.copy(TEMPLATES / "style.css", out / "style.css")
 
     def _render(self, template: str, path: Path, root: str, snapshot: dict, links: dict) -> None:
@@ -52,6 +59,13 @@ class SiteBuilder:
             **links,
         )
         self._write(path, html)
+
+    def _week_pages(self, weeks: list[dict[str, Any]], out: Path) -> None:
+        (out / "weeks").mkdir(parents=True, exist_ok=True)
+        template = self._env.get_template("week.html")
+        for week in weeks:
+            html = template.render(root="../", week=week)
+            self._write(out / "weeks" / f"{week['start']}.html", html)
 
     @staticmethod
     def _copy_maps(maps: dict[str, Path], out: Path) -> set[str]:
@@ -162,6 +176,7 @@ def make_env() -> jinja2.Environment:
         loader=jinja2.FileSystemLoader(TEMPLATES), autoescape=True, trim_blocks=True
     )
     env.filters["day_label"] = lambda d: f"{d:%A} {d.day} {d:%B}"
+    env.filters["iso_label"] = lambda text: env.filters["day_label"](date.fromisoformat(text))
     env.filters["warning"] = lambda level: {1: "⚠️", 2: "🚨"}.get(level, "")
     return env
 
@@ -175,7 +190,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     builder = SiteBuilder(make_env(), load_spots(args.config / "spots.yaml"), args.guides)
     maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
-    builder.build(load_snapshots(args.data), args.out, maps)
+    weeks = [json.loads(path.read_text()) for path in sorted(args.data.glob("weeks/*.json"))]
+    builder.build(load_snapshots(args.data), args.out, maps, weeks)
     print(f"Site built in {args.out}")
     return 0
 

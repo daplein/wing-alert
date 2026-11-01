@@ -201,10 +201,10 @@ Branch `feat/shore-break`.
 
 Branch `feat/weekly`.
 
-- **FR-5.1** On Sundays, read the last 7 days of `data/` and `state.json`.
+- **FR-5.1** On Sundays at 18:00 UTC (same workflow, its own cron; also runnable by hand), read the last 7 days of `data/` (Monday to the run day) and `state.json`.
 - **FR-5.2** For each day, take the windows from that day's **morning run** (the shortest-range, most accurate forecast). List the best days and spots of the week.
-- **FR-5.3** Mark each window as **alerted** if a sent alert listed an overlapping window at that spot, otherwise **missed** (the forecast didn't see it coming).
-- **FR-5.4** Publish a week page on the site, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
+- **FR-5.3** Mark each window as **alerted** if a sent alert listed an overlapping window at that spot, otherwise **missed** (the forecast didn't see it coming). Alerts are only recorded once `WHATSAPP_RECIPIENTS` is set, so until then every window shows as missed.
+- **FR-5.4** Save the summary as `data/weeks/<monday>.json` (state.json forgets after 14 days, so the week is computed once and kept). Publish a week page on the site, linked from the front page, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
 
 ---
 

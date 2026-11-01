@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Wing alert · Week of {{ week.start }}{% endblock %}
+{% block content %}
+<h1>Week of {{ week.start | iso_label }}</h1>
+<div class="best{% if not week.best %} none{% endif %}">
+  {{ week.good_days }} good day{% if week.good_days != 1 %}s{% endif %} · {{ week.missed }} missed
+  {% if week.best %}<br><span class="label">Best session</span>
+  <a href="{{ root }}spots.html#{{ week.best.spot }}">{{ week.best.spot_name }}</a>,
+  {{ week.best.date | iso_label }} {{ week.best.start[11:] }}–{{ week.best.end[11:] }} ·
+  {{ week.best.wind_min }}–{{ week.best.wind_max }} kn {{ week.best.direction }}{% endif %}
+</div>
+<table class="week">
+  <tbody>
+  {% for day in week.days %}
+    <tr>
+      <th><a href="{{ root }}days/{{ day.date }}.html">{{ day.date | iso_label }}</a></th>
+      <td>
+      {% if not day.forecast %}<span class="muted">No forecast</span>
+      {% elif not day.windows %}<span class="muted">Nothing rideable</span>
+      {% else %}
+        {% for w in day.windows %}
+        <div>{{ "✅" if w.alerted else "❌ missed" }} {{ w.spot_name }} {{ w.start[11:] }}–{{ w.end[11:] }} · {{ w.wind_min }}–{{ w.wind_max }} kn {{ w.direction }} {{ w.shore_break | warning }}</div>
+        {% endfor %}
+      {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="legend">From each day's morning forecast. ✅ = we sent an alert for it, ❌ = it never made it into an alert.</p>
+{% endblock %}
