@@ -12,6 +12,16 @@ Tell the Wicklow wingfoiling crew when the wind is good, where to go, and how da
 
 It runs entirely on GitHub Actions and free data. There's no server and no app.
 
+## For the crew: how you'll get the alerts
+
+**The bot can't post in our WhatsApp group.** WhatsApp only lets automated messages into groups through Meta's official business platform. That means a registered business account, approved message templates and paid messages: too much hassle for a hobby project.
+
+What we can do for free:
+
+- **Alerts go to individuals.** Each message goes to one person's WhatsApp, using a free service called CallMeBot. David gets them first. Anyone in the crew who wants their own alerts can register with CallMeBot (about a minute) and give David the key it sends back.
+- **A website for everyone.** The daily report, map and spot guide live on a public web page. The link gets pinned in the group, so anyone can check it anytime.
+- **Later: Telegram.** A Telegram bot *can* post into a group, with the map image, for free. If the crew is up for a Telegram group, that's the next step.
+
 ## Overview
 
 ### Daily job (twice a day)
@@ -78,15 +88,15 @@ flowchart LR
 
 Coordinates come from David's spot guide where it has them, otherwise from OpenStreetMap. Wicklow Harbour is approximate. Good wind directions are where the wind blows **from**, read clockwise round the compass (N → E → S → W). Degrees are for the config: N = 0°, E = 90°, S = 180°, W = 270°.
 
-> **To confirm.** Arklow and Buckroney come from the spot guide. The other beaches get a proposed N through E to S, because west is offshore there.
+> **To confirm.** Arklow, Buckroney and Seapoint come from David. Ennereilly, Brittas and Magheramore are proposed from the OpenStreetMap coastline: the range runs from cross-shore on one side, through onshore, to cross-shore on the other. Ennereilly faces SE (no northerly, per David); Brittas and Magheramore face ESE.
 
 | ID | Spot | Lat, Lon | Good directions (wind from) | Notes |
 |---|---|---|---|---|
 | `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
-| `ennereilly` | Ennereilly | 52.8461, -6.0973 | N → E → S (0–190°) | |
+| `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
 | `buckroney` | Buckroney | 52.8462, -6.0931 | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
-| `brittas` | Brittas Bay | 52.8831, -6.0575 | N → E → S (0–190°) | |
-| `magheramore` | Magheramore | 52.9310, -6.0225 | N → E → S (0–190°) | Tricky, on the wish list |
+| `brittas` | Brittas Bay | 52.8831, -6.0575 | NNE → E → SSW (20–200°) | |
+| `magheramore` | Magheramore | 52.9310, -6.0225 | NNE → E → SSW (20–200°) | Tricky, on the wish list |
 | `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | NW → N (280–20°) | Launch from the harbour |
 | `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
 
@@ -122,10 +132,10 @@ Branch `feat/wind-alert`.
   - the hour is between sunrise + 30 min and sunset − 30 min
 - **FR-1.4** A **window** is at least `min_window_hours` (default 2) consecutive good hours at one spot. It reports the start, end, wind range, max gust and main direction (compass point, e.g. ENE).
 - **FR-1.5** Rank windows by length, then by mean wind closest to `ideal_wind` (default 20 kn). The best one goes first in the message.
-- **FR-1.6** Send one WhatsApp message per run listing the windows, grouped by day, best first. If there are no windows, send nothing.
+- **FR-1.6** Send one WhatsApp message per run, to each configured recipient, listing the windows, grouped by day, best first. If there are no windows, send nothing.
 - **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed. A window that changes by an hour at either end counts as changed. The workflow commits `state.json` back to the repo.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
-- **FR-1.9** Secrets (`WHATSAPP_PHONE`, `CALLMEBOT_API_KEY`) come from environment variables only and never appear in logs, files or the site.
+- **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site.
 
 **Example message**
 
@@ -213,7 +223,7 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 ## Setup David does once
 
 1. Register with CallMeBot: add their number, send "I allow callmebot to send me messages", and receive the API key.
-2. Add the repo secrets `WHATSAPP_PHONE` and `CALLMEBOT_API_KEY`.
+2. Add the repo secret `WHATSAPP_RECIPIENTS`: one `phone:apikey` pair per line (David first, crew members as they register).
 3. Turn on GitHub Pages with "GitHub Actions" as the source (slice 2).
 
 ## Non-goals

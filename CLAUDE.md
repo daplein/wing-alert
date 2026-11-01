@@ -6,7 +6,7 @@ Personal, open-source project: a scheduled GitHub Action that checks wingfoiling
 
 - **Spec first.** Behaviour changes go into the spec (and get agreed) before code. If the code needs to differ from the spec, say so and update the spec in the same PR.
 - **One branch and one PR per slice** (see the spec's slice table). Merge with a merge commit, not squash.
-- **Never merge a PR unless David explicitly says "merge" for that PR.** Passing tests or silence are not approval.
+- **Merge as you go.** David gave standing approval (2026-11-01): once a PR's work is done and tests pass, merge it (merge commit) without asking. Say what was merged in the wrap-up.
 - **Keep it simple.** Build what the spec asks; put ideas in the spec's "Future work" instead of building them.
 - David dictates by voice: expect speech-to-text slips (spot names especially) and read for intent.
 
@@ -29,7 +29,7 @@ Personal, open-source project: a scheduled GitHub Action that checks wingfoiling
 ## Secrets and GitHub
 
 - The repo is `daplein/wing-alert` (personal account, **public**). Pushes go over HTTPS with the `daplein` gh token (set in the repo's local git config). Use `GH_TOKEN=$(gh auth token --user daplein)` for `gh` commands.
-- The WhatsApp phone number and CallMeBot API key live only in GitHub Actions secrets and a git-ignored `.env`. Never write them into any file, commit, PR, log or the published site.
+- WhatsApp phone numbers and CallMeBot API keys live only in GitHub Actions secrets and a git-ignored `.env`. Never write them into any file, commit, PR, log or the published site.
 
 ## Docs
 
