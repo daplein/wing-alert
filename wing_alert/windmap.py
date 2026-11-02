@@ -10,13 +10,16 @@ import matplotlib
 matplotlib.use("Agg")  # no display on GitHub Actions
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.axes import Axes  # noqa: E402
+from matplotlib.transforms import Transform, offset_copy  # noqa: E402
 
 from wing_alert.coast import Coast, load_coast  # noqa: E402
 from wing_alert.site import forecast_days, wind_band  # noqa: E402
 
 PANEL_HOURS = (9, 12, 15, 18)
 COLOURS = {"light": "#9aa0a6", "good": "#2e9e4f", "strong": "#f08c00", "wild": "#d62828"}
-LABEL_GAP = 0.03  # label distance from the dot as a share of the map's width
+# In points, so every map draws the same size. The arrow sits out at sea, clear of
+# the dot and the label, whichever way the wind blows (FR-3.2).
+ARROW_OFFSET, ARROW_HALF, LABEL_GAP = 22, 14, 7
 SEA, LAND, SHORE = "#a9cfe8", "#efe6cf", "#3b4650"
 BOX = {"facecolor": "white", "alpha": 0.75, "edgecolor": "none", "pad": 1}
 
@@ -25,7 +28,7 @@ BOX = {"facecolor": "white", "alpha": 0.75, "edgecolor": "none", "pad": 1}
 class Extent:
     lon: tuple[float, float]
     lat: tuple[float, float]
-    arrow_share: float  # arrow length as a share of the map's height
+    sea: tuple[int, int]  # which way the sea is from the spots: (1, 0) east, (0, 1) north
 
     def contains(self, spot: dict) -> bool:
         return (
@@ -34,9 +37,9 @@ class Extent:
 
 
 # Wicklow Harbour to Arklow; Seapoint is 40 km north, so it gets an inset (FR-3.1).
-WICKLOW = Extent(lon=(-6.24, -5.93), lat=(52.76, 53.01), arrow_share=0.07)
-DUBLIN_BAY = Extent(lon=(-6.2, -6.06), lat=(53.27, 53.333), arrow_share=0.3)
-INSET_BOX = (0.5, 0.02, 0.48, 0.26)  # bottom right, open sea (axes fraction)
+WICKLOW = Extent(lon=(-6.3, -5.95), lat=(52.76, 53.01), sea=(1, 0))
+DUBLIN_BAY = Extent(lon=(-6.2, -6.06), lat=(53.27, 53.333), sea=(0, 1))
+INSET_BOX = (0.6, 0.02, 0.38, 0.24)  # bottom right, open sea (axes fraction)
 
 
 class MapWriter:
@@ -100,21 +103,35 @@ def _draw_base(ax: Axes, extent: Extent, coast: Coast) -> None:
 
 
 def _draw_spot(ax: Axes, extent: Extent, spot: dict, reading: dict) -> None:
-    lon, lat = spot["lon"], spot["lat"]
-    colour = COLOURS[wind_band(reading["wind"])]
-    blows_to = math.radians((reading["direction"] + 180) % 360)
-    length = extent.arrow_share * (extent.lat[1] - extent.lat[0])
-    dx = length * math.sin(blows_to) / math.cos(math.radians(lat))
-    dy = length * math.cos(blows_to)
-    arrow = {"arrowstyle": "-|>", "color": colour, "lw": 2.8, "mutation_scale": 16}
-    ax.annotate("", xy=(lon + dx, lat + dy), xytext=(lon, lat), arrowprops=arrow)
-    ax.plot(lon, lat, "o", color="black", markersize=4)
-    label = f"{round(reading['wind'])}/{round(reading['gust'])}"
-    gap = LABEL_GAP * (extent.lon[1] - extent.lon[0])
-    ax.text(
-        lon + gap, lat, label, fontsize=11, fontweight="bold", color=colour, va="center", bbox=BOX
+    dot = (spot["lon"], spot["lat"])
+    _draw_arrow(ax, extent, dot, reading)
+    ax.plot(*dot, "o", color="black", markersize=4)
+    _draw_label(
+        ax, extent, dot, f"{spot['name']} {round(reading['wind'])}/{round(reading['gust'])}"
     )
-    ax.text(lon - gap, lat, spot["name"], fontsize=9, ha="right", va="center", bbox=BOX)
+
+
+def _draw_arrow(ax: Axes, extent: Extent, dot: tuple[float, float], reading: dict) -> None:
+    blows_to = math.radians((reading["direction"] + 180) % 360)
+    along = (math.sin(blows_to) * ARROW_HALF, math.cos(blows_to) * ARROW_HALF)
+    centre = (extent.sea[0] * ARROW_OFFSET, extent.sea[1] * ARROW_OFFSET)
+    tail = _shifted(ax, centre[0] - along[0], centre[1] - along[1])
+    head = _shifted(ax, centre[0] + along[0], centre[1] + along[1])
+    colour = COLOURS[wind_band(reading["wind"])]
+    arrow = {"arrowstyle": "-|>", "color": colour, "lw": 2.8, "mutation_scale": 16}
+    ax.annotate("", xy=dot, xycoords=head, xytext=dot, textcoords=tail, arrowprops=arrow)
+
+
+def _draw_label(ax: Axes, extent: Extent, dot: tuple[float, float], text: str) -> None:
+    """On the land side of the dot, away from the arrow."""
+    east, north = extent.sea
+    offset = (-east * LABEL_GAP, -north * LABEL_GAP)
+    align = {"ha": "right" if east else "center", "va": "top" if north else "center"}
+    ax.annotate(text, dot, xytext=offset, textcoords="offset points", fontsize=9, bbox=BOX, **align)
+
+
+def _shifted(ax: Axes, x: float, y: float) -> Transform:
+    return offset_copy(ax.transData, fig=ax.figure, x=x, y=y, units="points")
 
 
 def _reading(spot: dict, day: str, hour: int) -> dict | None:
