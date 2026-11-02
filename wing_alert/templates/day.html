@@ -16,14 +16,17 @@
   {% else %}
   <div class="best none">Nothing rideable</div>
   {% endif %}
-  {% if day.tides %}
-  <p class="tides">Tides: {% for tide in day.tides %}{{ tide.kind | capitalize }} {{ tide.time[11:] }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
-  {% endif %}
   {% set hourly = maps.get(day.date.isoformat(), []) %}
   {% if hourly %}
   <div class="maps">
     {% for name in hourly %}<img src="{{ root }}maps/{{ name }}.png" alt="Wind map for {{ day.date | day_label }} at {{ name[11:] }}:00" loading="lazy">{% endfor %}
   </div>
+  {% endif %}
+  {% if day.tide_chart %}
+  <figure class="tides">
+    {{ day.tide_chart | safe }}
+    <figcaption>Tide height above chart datum · shaded = rideable hours · predictions from the Marine Institute</figcaption>
+  </figure>
   {% endif %}
   <div class="scroll">
   <table>
@@ -33,7 +36,9 @@
       <tr>
         <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>
           {% for w in row.windows %}<small>{{ w.start[11:] }}–{{ w.end[11:] }} {{ w.shore_break | warning }}</small>{% endfor %}
-          {% if row.waves is not none %}<small>Waves up to {{ "%.1f" | format(row.waves) }} m</small>{% endif %}</th>
+          {% if row.waves is not none %}<small>Waves up to {{ "%.1f" | format(row.waves) }} m</small>{% endif %}
+          {% if row.tides.high %}<small>HW {{ row.tides.high | join(" ") }}</small>{% endif %}
+          {% if row.tides.low %}<small>LW {{ row.tides.low | join(" ") }}</small>{% endif %}</th>
         {% for cell in row.cells %}
           {% if cell %}
           <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">

@@ -11,11 +11,13 @@ from tests.helpers import (
     hours,
     open_meteo_payload,
     sea_payload,
+    tide_csv,
 )
 from wing_alert.forecast import OpenMeteoClient
 from wing_alert.main import DailyJob, main
 from wing_alert.marine import MarineClient
 from wing_alert.state import AlertState
+from wing_alert.tides import TideClient
 from wing_alert.whatsapp import CallMeBotSender
 
 REPO_CONFIG = Path(__file__).parents[1] / "config"
@@ -75,6 +77,7 @@ def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, 
     monkeypatch.setenv("WHATSAPP_RECIPIENTS", "+353861234567:999")
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
+    respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
     whatsapp = respx.get(CallMeBotSender.URL).respond(text="ok")
     state = tmp_path / "state.json"
     assert (
@@ -94,6 +97,7 @@ def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsy
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
+    respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
     state = tmp_path / "state.json"
     assert (
         main(
@@ -110,6 +114,7 @@ def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsy
 def test_fr_1_8_main_fails_cleanly_when_forecast_is_down(tmp_path, monkeypatch, capsys):
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(503)
+    respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
     assert (
         main(
             [
@@ -136,10 +141,17 @@ def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, ca
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
+    respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
     data = tmp_path / "data"
     args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json"), "--data", str(data)]
     assert main(args, now=MORNING) == 0
-    assert list(data.glob("*/*/*.json"))
+    (archived,) = data.glob("*/*/*.json")
+    snapshot = json.loads(archived.read_text())
+    assert sorted(snapshot["tide_stations"]) == ["Arklow", "Dublin_Port", "Wicklow_MODELLED"]
+    assert snapshot["tide_stations"]["Wicklow_MODELLED"]["name"] == "Wicklow"
+    arklow = next(spot for spot in snapshot["spots"] if spot["id"] == "arklow")
+    assert arklow["tide_station"] == "Arklow"
+    assert [tide["kind"] for tide in arklow["tides"]][:2] == ["low", "high"]
     assert "days/2026-11-06.html" in capsys.readouterr().out
     other = tmp_path / "other"
     assert main([*args[:-1], str(other), "--dry-run"], now=MORNING) == 0
@@ -148,3 +160,22 @@ def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, ca
 
 def _sea_day():
     return sea_payload(MORNING.replace(hour=0), [1.0] * 24)
+
+
+def _tide_day():
+    # Every 30 min from midnight: low at 06:00, high at 12:00 (UTC = Irish time in November).
+    levels = [abs(((i % 24) - 12) / 12) * 2 for i in range(40)]
+    return tide_csv(MORNING.replace(hour=0), levels)
+
+
+@respx.mock
+def test_fr_6_7_tide_outage_still_alerts(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
+    respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
+    respx.get(MarineClient.URL).respond(json=_sea_day())
+    respx.get(url__startswith=TideClient.URL).respond(500)
+    args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json")]
+    assert main([*args, "--data", str(tmp_path / "d")], now=MORNING) == 0
+    captured = capsys.readouterr()
+    assert "No tides for Arklow" in captured.err
+    assert "Arklow South Beach" in captured.out

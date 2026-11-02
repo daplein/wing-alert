@@ -69,3 +69,13 @@ def test_fr_3_2_close_arrows_are_spread_apart_around_their_middle():
 
 def test_fr_3_2_arrows_far_enough_apart_stay_put():
     assert spread([300.0, 100.0, 200.0], spacing=30) == [0.0, 0.0, 0.0]
+
+
+def test_fr_6_6_map_label_shows_the_tide_at_that_hour():
+    from wing_alert.windmap import _label
+
+    spot = {"name": "Arklow", "tides": [{"time": "2026-11-06T12:30", "kind": "high"}]}
+    reading = {"time": "2026-11-06T12:00", "wind": 14.4, "gust": 19.2}
+    assert _label(spot, reading) == "Arklow 14/19 · HW"
+    assert _label(spot, {**reading, "time": "2026-11-06T09:00"}) == "Arklow 14/19 · ↑"
+    assert _label({"name": "Arklow"}, reading) == "Arklow 14/19"

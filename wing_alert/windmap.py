@@ -2,7 +2,7 @@
 
 import math
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +16,7 @@ from matplotlib.transforms import Transform, offset_copy  # noqa: E402
 from wing_alert.coast import Coast, load_coast  # noqa: E402
 from wing_alert.message import day_label  # noqa: E402
 from wing_alert.site import forecast_days, wind_band  # noqa: E402
+from wing_alert.tides import Tide, tide_tag  # noqa: E402
 
 PANEL_HOURS = (9, 12, 15, 18)
 COLOURS = {"light": "#9aa0a6", "good": "#2e9e4f", "strong": "#f08c00", "wild": "#d62828"}
@@ -40,7 +41,7 @@ class Extent:
 
 
 # Wicklow Harbour to Arklow; Seapoint is 40 km north, so it gets an inset (FR-3.1).
-WICKLOW = Extent(lon=(-6.33, -5.95), lat=(52.76, 53.01), sea=(1, 0))
+WICKLOW = Extent(lon=(-6.37, -5.95), lat=(52.76, 53.01), sea=(1, 0))
 DUBLIN_BAY = Extent(lon=(-6.2, -6.06), lat=(53.27, 53.333), sea=(0, 1))
 INSET_BOX = (0.6, 0.02, 0.38, 0.24)  # bottom right, open sea (axes fraction)
 
@@ -144,9 +145,7 @@ def _draw_spot(ax: Axes, extent: Extent, spot: dict, reading: dict, nudge: float
     dot = (spot["lon"], spot["lat"])
     _draw_arrow(ax, extent, dot, reading, nudge)
     ax.plot(*dot, "o", color="black", markersize=4)
-    _draw_label(
-        ax, extent, dot, f"{spot['name']} {round(reading['wind'])}/{round(reading['gust'])}"
-    )
+    _draw_label(ax, extent, dot, _label(spot, reading))
 
 
 def _draw_arrow(
@@ -175,6 +174,14 @@ def _draw_label(ax: Axes, extent: Extent, dot: tuple[float, float], text: str) -
 
 def _shifted(ax: Axes, x: float, y: float) -> Transform:
     return offset_copy(ax.transData, fig=ax.figure, x=x, y=y, units="points")
+
+
+def _label(spot: dict, reading: dict) -> str:
+    """ "Arklow South Beach 14/19 · HW": name, mean/gust, tide at that hour (FR-6.6)."""
+    text = f"{spot['name']} {round(reading['wind'])}/{round(reading['gust'])}"
+    tides = [Tide(datetime.fromisoformat(t["time"]), t["kind"]) for t in spot.get("tides", [])]
+    tag = tide_tag(datetime.fromisoformat(reading["time"]), tides)
+    return f"{text} · {tag}" if tag else text
 
 
 def _reading(spot: dict, day: str, hour: int) -> dict | None:

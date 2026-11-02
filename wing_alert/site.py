@@ -12,6 +12,7 @@ import markdown
 
 from wing_alert.archive import load_snapshots
 from wing_alert.config import Spot, load_spots
+from wing_alert.tidechart import tide_chart
 
 SITE_URL = "https://daplein.github.io/wing-alert/"
 TEMPLATES = Path(__file__).parent / "templates"
@@ -112,17 +113,32 @@ def _forecast_day(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
     return {
         "date": date.fromisoformat(day),
         "best": windows[0] if windows else None,
-        "tides": _tides(snapshot["spots"], day),
+        "tide_chart": tide_chart(_stations_in_spot_order(snapshot), day, _rideable(windows)),
         "hours": hours,
         "rows": [_row(spot, day, hours, windows) for spot in _ranked_spots(snapshot, windows)],
     }
 
 
-def _tides(spots: list[dict], day: str) -> list[dict]:
-    """Tide times barely differ along this coast, so the first spot's stand for all."""
-    if not spots:
-        return []
-    return [tide for tide in spots[0].get("tides", []) if tide["time"][:10] == day]
+def _stations_in_spot_order(snapshot: dict[str, Any]) -> dict[str, dict]:
+    """South to north, as the spots are listed: Arklow, Wicklow, Dublin Port."""
+    stations = snapshot.get("tide_stations", {})
+    order = dict.fromkeys(spot.get("tide_station") for spot in snapshot["spots"])
+    return {key: stations[key] for key in order if key in stations}
+
+
+def _rideable(windows: list[dict]) -> set[int]:
+    """Hours of the day when any spot has a window: shaded on the tide chart."""
+    return {
+        hour
+        for window in windows
+        for hour in range(int(window["start"][11:13]), int(window["end"][11:13]))
+    }
+
+
+def _day_tides(spot: dict, day: str) -> dict[str, list[str]]:
+    """The spot's station tides that day as HH:MM lists (FR-6.5)."""
+    tides = [tide for tide in spot.get("tides", []) if tide["time"][:10] == day]
+    return {kind: [t["time"][11:] for t in tides if t["kind"] == kind] for kind in ("high", "low")}
 
 
 def _daylight_hours(daylight: dict[str, str] | None) -> list[int]:
@@ -145,6 +161,7 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
         "windows": [window for window in windows if window["spot"] == spot["id"]],
         "cells": [_cell(by_hour.get(hour)) for hour in hours],
         "waves": _max_waves([by_hour.get(hour) for hour in hours]),
+        "tides": _day_tides(spot, day),
     }
 
 

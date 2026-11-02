@@ -51,7 +51,12 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
   td { min-width: 34px; font-size: 0.8rem; }
   .best { font-size: 1rem; }
 }
-.tides { margin: 0 0 12px; }
+/* Tide chart (FR-6.4): inline SVG, so it follows the page colours. */
+.tides { margin: 0 0 16px; max-width: 900px; }
+.tidechart { width: 100%; max-width: 640px; height: auto; display: block; font-size: 13px; fill: var(--fg); }
+.tidechart .grid { stroke: var(--line); stroke-width: 1; }
+.tidechart .ride { fill: var(--good); opacity: .7; }
+.tides figcaption { color: var(--muted); font-size: 0.8rem; }
 .warn { margin-top: 6px; font-size: 0.95rem; font-weight: 600; }
 .warn.level2 { color: #d62828; }
 table.week td { text-align: left; min-width: 0; padding: 6px 8px; }

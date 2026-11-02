@@ -14,12 +14,13 @@ import httpx
 from wing_alert.archive import Archive, build_snapshot
 from wing_alert.config import ConfigError, Settings, Spot, load_settings, load_spots
 from wing_alert.forecast import ForecastError, OpenMeteoClient, SpotForecast
-from wing_alert.marine import MarineClient, MarineError, find_tides
+from wing_alert.marine import MarineClient, MarineError
 from wing_alert.message import format_alert
 from wing_alert.scoring import Window, find_windows, rank
 from wing_alert.shorebreak import rate_window
 from wing_alert.site import SITE_URL, day_url
 from wing_alert.state import AlertState
+from wing_alert.tides import StationTides, TideClient, TideError
 from wing_alert.whatsapp import CallMeBotSender, DeliveryError, DrySender, parse_recipients
 from wing_alert.windmap import MapWriter
 
@@ -43,6 +44,7 @@ class DailyJob:
         maps: MapWriter | None = None,
         site_url: str | None = None,
         marine: MarineClient | None = None,
+        tides: TideClient | None = None,
     ) -> None:
         self._spots = spots
         self._settings = settings
@@ -54,12 +56,14 @@ class DailyJob:
         self._maps = maps
         self._site_url = site_url
         self._marine = marine
+        self._tides = tides
 
     def run(self, now: datetime) -> str | None:
         """Archive the forecast, then alert on new or changed windows.
         Returns the message, or None if there was nothing to send."""
-        forecasts = [self._conditions(spot) for spot in self._spots]
-        self._keep_record(now, forecasts)
+        stations = self._station_tides(now)
+        forecasts = [self._conditions(spot, stations) for spot in self._spots]
+        self._keep_record(now, forecasts, stations)
         windows = [
             rate_window(window, forecast, self._settings)
             for forecast in forecasts
@@ -67,22 +71,37 @@ class DailyJob:
         ]
         return self._alert(windows, now)
 
-    def _conditions(self, spot: Spot) -> SpotForecast:
-        """Wind is required; sea data only adds warnings, so it may be missing (FR-4.4)."""
+    def _station_tides(self, now: datetime) -> dict[str, StationTides]:
+        """Each station once per run; a failing one is left out (FR-6.7)."""
+        wanted = sorted({spot.tide_station for spot in self._spots if spot.tide_station})
+        stations = {}
+        for station in wanted if self._tides else []:
+            try:
+                stations[station] = self._tides.fetch(station, now.date())
+            except TideError as error:
+                print(f"No tides for {station}: {error}", file=sys.stderr)
+        return stations
+
+    def _conditions(self, spot: Spot, stations: dict[str, StationTides]) -> SpotForecast:
+        """Wind is required; sea data and tides only add warnings, so they may be missing."""
         forecast = self._forecasts.fetch(spot)
+        station = stations.get(spot.tide_station or "")
+        if station:
+            forecast = replace(forecast, tides=station.tides)
         if not self._marine:
             return forecast
         try:
-            sea = self._marine.fetch(spot)
+            return replace(forecast, sea=self._marine.fetch(spot))
         except MarineError as error:
             print(f"No shore break warning for {spot.id}: {error}", file=sys.stderr)
             return forecast
-        return replace(forecast, sea=sea, tides=find_tides(sea))
 
-    def _keep_record(self, now: datetime, forecasts: list[SpotForecast]) -> None:
+    def _keep_record(
+        self, now: datetime, forecasts: list[SpotForecast], stations: dict[str, StationTides]
+    ) -> None:
         if not self._archive:
             return
-        snapshot = build_snapshot(now, forecasts, self._settings)
+        snapshot = build_snapshot(now, forecasts, self._settings, stations)
         self._archive.save(snapshot)
         if self._maps:
             self._maps.write(snapshot)
@@ -133,6 +152,7 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
         maps=None if args.dry_run else MapWriter(args.data),
         site_url=args.site_url,
         marine=MarineClient(http),
+        tides=TideClient(http),
     )
 
 
