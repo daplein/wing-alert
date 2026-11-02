@@ -4,7 +4,7 @@ from tests.helpers import ARKLOW, MORNING, SEAPOINT, SETTINGS, forecast, hours
 from wing_alert.archive import build_snapshot
 from wing_alert.config import load_spots
 from wing_alert.site import SiteBuilder, make_env
-from wing_alert.windmap import DUBLIN_BAY, WICKLOW, MapWriter
+from wing_alert.windmap import DUBLIN_BAY, WICKLOW, MapWriter, spread
 
 PNG = b"\x89PNG"
 REPO_SPOTS = Path(__file__).parents[1] / "config" / "spots.yaml"
@@ -49,3 +49,12 @@ def test_fr_3_1_seapoint_gets_the_inset_and_every_spot_is_on_one_map():
     for spot in spots:
         assert WICKLOW.contains(spot) != DUBLIN_BAY.contains(spot)
     assert [s["id"] for s in spots if DUBLIN_BAY.contains(s)] == ["seapoint"]
+
+
+def test_fr_3_2_close_arrows_are_spread_apart_around_their_middle():
+    shifts = spread([100.0, 114.0, 300.0], spacing=30)
+    assert shifts == [-8.0, 8.0, 0.0]
+
+
+def test_fr_3_2_arrows_far_enough_apart_stay_put():
+    assert spread([300.0, 100.0, 200.0], spacing=30) == [0.0, 0.0, 0.0]

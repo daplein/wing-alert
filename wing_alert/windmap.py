@@ -20,6 +20,7 @@ COLOURS = {"light": "#9aa0a6", "good": "#2e9e4f", "strong": "#f08c00", "wild": "
 # In points, so every map draws the same size. The arrow sits out at sea, clear of
 # the dot and the label, whichever way the wind blows (FR-3.2).
 ARROW_OFFSET, ARROW_HALF, LABEL_GAP = 22, 14, 7
+ARROW_SPACING = 30  # closer spots (Buckroney, Ennereilly) get their arrows spread apart
 SEA, LAND, SHORE = "#a9cfe8", "#efe6cf", "#3b4650"
 BOX = {"facecolor": "white", "alpha": 0.75, "edgecolor": "none", "pad": 1}
 
@@ -83,10 +84,46 @@ def _draw_map(
     ax: Axes, extent: Extent, spots: list[dict], day: str, hour: int, coast: Coast
 ) -> None:
     _draw_base(ax, extent, coast)
-    for spot in filter(extent.contains, spots):
-        reading = _reading(spot, day, hour)
-        if reading:
-            _draw_spot(ax, extent, spot, reading)
+    shown = [
+        (spot, reading)
+        for spot in spots
+        if extent.contains(spot)
+        if (reading := _reading(spot, day, hour))
+    ]
+    nudges = spread(_along_coast(ax, extent, [spot for spot, _ in shown]), ARROW_SPACING)
+    for (spot, reading), nudge in zip(shown, nudges, strict=True):
+        _draw_spot(ax, extent, spot, reading, nudge)
+
+
+def spread(positions: list[float], spacing: float) -> list[float]:
+    """Shifts that keep neighbours at least `spacing` apart, each group centred where it was."""
+    order = sorted(range(len(positions)), key=positions.__getitem__)
+    shifts = [0.0] * len(positions)
+    for group in _close_groups(order, positions, spacing):
+        middle = sum(positions[i] for i in group) / len(group)
+        for rank, index in enumerate(group):
+            target = middle + (rank - (len(group) - 1) / 2) * spacing
+            shifts[index] = target - positions[index]
+    return shifts
+
+
+def _close_groups(order: list[int], positions: list[float], spacing: float) -> list[list[int]]:
+    groups: list[list[int]] = []
+    for index in order:
+        if groups and positions[index] - positions[groups[-1][-1]] < spacing:
+            groups[-1].append(index)
+        else:
+            groups.append([index])
+    return groups
+
+
+def _along_coast(ax: Axes, extent: Extent, spots: list[dict]) -> list[float]:
+    """Each spot's position in points along the coast (across the sea direction)."""
+    ax.apply_aspect()
+    points = ax.transData.transform([(spot["lon"], spot["lat"]) for spot in spots])
+    across = 1 if extent.sea[0] else 0  # an east-facing coast runs north-south
+    scale = 72 / ax.figure.dpi
+    return [float(point[across]) * scale for point in points]
 
 
 def _draw_base(ax: Axes, extent: Extent, coast: Coast) -> None:
@@ -102,19 +139,22 @@ def _draw_base(ax: Axes, extent: Extent, coast: Coast) -> None:
     ax.set_yticks([])
 
 
-def _draw_spot(ax: Axes, extent: Extent, spot: dict, reading: dict) -> None:
+def _draw_spot(ax: Axes, extent: Extent, spot: dict, reading: dict, nudge: float) -> None:
     dot = (spot["lon"], spot["lat"])
-    _draw_arrow(ax, extent, dot, reading)
+    _draw_arrow(ax, extent, dot, reading, nudge)
     ax.plot(*dot, "o", color="black", markersize=4)
     _draw_label(
         ax, extent, dot, f"{spot['name']} {round(reading['wind'])}/{round(reading['gust'])}"
     )
 
 
-def _draw_arrow(ax: Axes, extent: Extent, dot: tuple[float, float], reading: dict) -> None:
+def _draw_arrow(
+    ax: Axes, extent: Extent, dot: tuple[float, float], reading: dict, nudge: float
+) -> None:
     blows_to = math.radians((reading["direction"] + 180) % 360)
     along = (math.sin(blows_to) * ARROW_HALF, math.cos(blows_to) * ARROW_HALF)
-    centre = (extent.sea[0] * ARROW_OFFSET, extent.sea[1] * ARROW_OFFSET)
+    east, north = extent.sea
+    centre = (east * ARROW_OFFSET + north * nudge, north * ARROW_OFFSET + east * nudge)
     tail = _shifted(ax, centre[0] - along[0], centre[1] - along[1])
     head = _shifted(ax, centre[0] + along[0], centre[1] + along[1])
     colour = COLOURS[wind_band(reading["wind"])]
