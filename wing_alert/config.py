@@ -24,6 +24,7 @@ class Spot:
     watch_wave_m: float | None = None
     danger_wave_m: float | None = None
     wind_at: tuple[float, float] | None = None  # a sea point off the beach (FR-1.11)
+    tide_station: str | None = None  # Marine Institute station ID (FR-6.1)
 
     @property
     def wind_point(self) -> tuple[float, float]:
@@ -89,6 +90,7 @@ def _parse_spot(item: Any, path: Path) -> Spot:
             watch_wave_m=_optional_number(item.get("watch_wave_m"), "watch_wave_m", path),
             danger_wave_m=_optional_number(item.get("danger_wave_m"), "danger_wave_m", path),
             wind_at=_optional_point(item.get("wind_at"), path),
+            tide_station=item.get("tide_station"),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ConfigError(f"{path}: spot {spot_id!r} is invalid ({error})") from error

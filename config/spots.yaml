@@ -4,12 +4,14 @@
 # watch_wave_m / danger_wave_m override the shore break wave heights for a spot.
 # wind_at: where the wind is read, a sea point 3–5 km out. The model's beach cell
 # counts as land and reads far too light (FR-1.11).
+# tide_station: the nearest Marine Institute tide station (FR-6.1).
 - id: arklow
   name: Arklow South Beach
   lat: 52.7878
   lon: -6.1434
   directions: [337, 202] # NNW → E → SSW
   wind_at: [52.7878, -6.07]
+  tide_station: Arklow
 
 - id: ennereilly
   name: Ennereilly
@@ -17,6 +19,7 @@
   lon: -6.105
   directions: [45, 225] # NE → E → SW
   wind_at: [52.837, -6.05]
+  tide_station: Arklow
 
 - id: buckroney
   name: Buckroney
@@ -24,6 +27,7 @@
   lon: -6.0931
   directions: [90, 248] # E → S → WSW
   wind_at: [52.8462, -6.04]
+  tide_station: Arklow
 
 - id: brittas
   name: Brittas Bay
@@ -31,6 +35,7 @@
   lon: -6.0575
   directions: [20, 200] # NNE → E → SSW
   wind_at: [52.8831, -5.98]
+  tide_station: Arklow  # approx.: halfway to Wicklow
 
 - id: magheramore
   name: Magheramore
@@ -38,6 +43,7 @@
   lon: -6.0225
   directions: [20, 200] # NNE → E → SSW
   wind_at: [52.931, -5.97]
+  tide_station: Wicklow_MODELLED
 
 - id: wicklow_harbour
   name: Wicklow Harbour
@@ -45,6 +51,7 @@
   lon: -6.035
   directions: [280, 20] # NW → N
   wind_at: [52.982, -6.00]
+  tide_station: Wicklow_MODELLED
 
 - id: seapoint
   name: Seapoint
@@ -52,4 +59,5 @@
   lon: -6.1589
   directions: [260, 90] # W → N → E
   wind_at: [53.31, -6.12]
+  tide_station: Dublin_Port
   sheltered: true

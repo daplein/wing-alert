@@ -90,15 +90,15 @@ Coordinates come from David's spot guide where it has them, otherwise from OpenS
 
 > **To confirm.** Arklow, Buckroney and Seapoint come from David. Ennereilly, Brittas and Magheramore are proposed from the OpenStreetMap coastline: the range runs from cross-shore on one side, through onshore, to cross-shore on the other. Ennereilly faces SE (no northerly, per David); Brittas and Magheramore face ESE.
 
-| ID | Spot | Lat, Lon | Wind read at (FR-1.11) | Good directions (wind from) | Notes |
-|---|---|---|---|---|---|
-| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | 52.7878, -6.07 | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
-| `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | 52.837, -6.05 | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
-| `buckroney` | Buckroney | 52.8462, -6.0931 | 52.8462, -6.04 | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
-| `brittas` | Brittas Bay | 52.8831, -6.0575 | 52.8831, -5.98 | NNE → E → SSW (20–200°) | |
-| `magheramore` | Magheramore | 52.9310, -6.0225 | 52.931, -5.97 | NNE → E → SSW (20–200°) | Tricky, on the wish list |
-| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 52.982, -6.00 | NW → N (280–20°) | Launch from the harbour |
-| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 53.31, -6.12 | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
+| ID | Spot | Lat, Lon | Wind read at (FR-1.11) | Tide station | Good directions (wind from) | Notes |
+|---|---|---|---|---|---|---|
+| `arklow` | Arklow South Beach / The Cove | 52.7878, -6.1434 | 52.7878, -6.07 | Arklow | NNW → E → SSW (337–202°) | The main spot. Sheltered corner by Arklow Rock |
+| `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | 52.837, -6.05 | Arklow | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
+| `buckroney` | Buckroney | 52.8462, -6.0931 | 52.8462, -6.04 | Arklow | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
+| `brittas` | Brittas Bay | 52.8831, -6.0575 | 52.8831, -5.98 | Arklow (approx., halfway to Wicklow) | NNE → E → SSW (20–200°) | |
+| `magheramore` | Magheramore | 52.9310, -6.0225 | 52.931, -5.97 | Wicklow | NNE → E → SSW (20–200°) | Tricky, on the wish list |
+| `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 52.982, -6.00 | Wicklow | NW → N (280–20°) | Launch from the harbour |
+| `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 53.31, -6.12 | Dublin Port | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
 
 A spot can be marked `sheltered: true` (Seapoint). See FR-4.5.
 
@@ -112,10 +112,11 @@ All spots, thresholds and directions live in `config/spots.yaml` and `config/set
 |---|---|---|---|
 | Hourly wind speed, gusts, direction (kn) | [Open-Meteo forecast API](https://open-meteo.com/en/docs), `best_match` model, `timezone=Europe/Dublin` | No | Slice 1 |
 | Sunrise, sunset | Open-Meteo forecast API (`daily`) | No | Slice 1 |
-| Wave height and period, swell height and period, sea level (tide) | [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) | No | Slice 4 |
+| Wave height and period, swell height and period | [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) | No | Slice 4 |
+| Tide predictions (Arklow, Wicklow, Dublin Port) | [Marine Institute ERDDAP](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html), `IMI-TidePrediction` | No | Slice 6 |
 | WhatsApp delivery | [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/): free, unofficial, text only, personal use | API key (secret) | Slice 1 |
 
-Checked on 2026-11-01: both Open-Meteo APIs answer for every spot with no key. The marine grid is coarse: Arklow to Magheramore share one point about 7 km offshore, and Seapoint uses one out in Dublin Bay. That's fine for swell. Sea level there is a model value and not for navigation.
+Checked on 2026-11-01: both Open-Meteo APIs answer for every spot with no key. The marine grid is coarse: Arklow to Magheramore share one point about 7 km offshore, and Seapoint uses one out in Dublin Bay. That's fine for swell, but too coarse for tides, hence slice 6. Tide predictions are for planning, not navigation.
 
 ---
 
@@ -192,8 +193,8 @@ Branch `feat/wind-map`.
 
 Branch `feat/shore-break`.
 
-- **FR-4.1** For each spot, fetch hourly wave height and period, swell height and period, and sea level from the Marine API.
-- **FR-4.2** Find high and low tide times from the sea level curve (local peaks and troughs of the hourly values) and show them on the day page. They stay out of the alert to keep it short. Tide times barely differ along this coast, so the page shows the first spot's.
+- **FR-4.1** For each spot, fetch hourly wave height and period, and swell height and period, from the Marine API. (Tides come from slice 6.)
+- **FR-4.2** Find high and low tide times from a sea level curve (peaks and troughs; a flat stretch counts once; swings under 0.2 m are dropped). They stay out of the alert to keep it short. *Replaced by slice 6: the curve now comes from each spot's tide station, not the Marine API's coarse model.*
 - **FR-4.3** Give each window a **shore break level**: none, ⚠️ watch out, or 🚨 dangerous. It's based on the worst hour in the window:
   - wave height above the spot's `watch_wave_m` / `danger_wave_m` (defaults 0.8 m / 1.5 m)
   - one level up if the swell period is 10 s or longer (long swell dumps harder)
@@ -213,6 +214,28 @@ Branch `feat/weekly`.
 - **FR-5.4** Save the summary as `data/weeks/<monday>.json` (state.json forgets after 14 days, so the week is computed once and kept). Publish a week page on the site, linked from the front page, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
 
 ---
+
+## Slice 6: Tides per spot
+
+Branch `feat/station-tides`.
+
+Tides along this coast are odd. Near Arklow the main twice-a-day tide almost cancels out (the Irish Sea's tide pivots around a point close to Courtown), so Arklow has a small, lopsided tide with long stands and sometimes a double high water, while Wicklow, Bray and Dublin have a normal one about 2–3 times bigger. On 2 Nov 2026:
+
+| Station | High water | Low water | Range |
+|---|---|---|---|
+| Arklow | ~05:50, ~17:45 (long stand 10:00–15:00) | ~09:15, ~23:00 | 0.8 m |
+| Wicklow | ~04:50, ~17:00 | ~10:15, ~23:25 | 1.9 m |
+| Dublin Port | ~05:00, ~17:25 | ~10:25, ~23:30 | 2.7 m |
+
+So one tide line for the whole coast is wrong, and the Marine API's modelled sea level is too coarse to show this.
+
+- **FR-6.1** Tide predictions come from the [Marine Institute](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html) (ERDDAP dataset `IMI-TidePrediction`, free, no key, 5-minute steps, height above chart datum). Each spot names its station in `config/spots.yaml` (`tide_station`). Each station is fetched once per run, for today and tomorrow plus 3 h either side so tides at midnight are found.
+- **FR-6.2** High and low waters are found as in FR-4.2. They feed the shore break rule (FR-4.3), so "worse at high tide" uses the spot's own high water.
+- **FR-6.3** The snapshot keeps, per station, its name, the levels every 30 minutes and the high/low waters; each spot records its station.
+- **FR-6.4** **Tide chart** on the day page, in place of the single "Tides:" line: one line per station over the day (00:00–24:00, height in m), with the hours where any spot is rideable shaded. A small inline SVG, so it scales on a phone and follows dark mode.
+- **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`.
+- **FR-6.6** **Map:** each spot's label adds the tide at that hour: `HW` or `LW` within 1 h of it, otherwise `↑` (rising) or `↓` (falling).
+- **FR-6.7** If the tide service fails, the run carries on without tides (no chart, no tide lines, no tide step-up in the shore break), like FR-4.4.
 
 ## Project layout (planned)
 
@@ -251,7 +274,6 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 - Model agreement: compare several models (ICON, UKMO, HARMONIE) and show "3/3 agree".
 - Met Éireann HARMONIE point forecast as an extra source.
 - Live observations: Marine Institute buoys (M2, M5), the Dublin Bay / Dún Laoghaire buoy near Seapoint. Use them in the weekly "forecast vs what happened".
-- Marine Institute tide predictions for Arklow and Wicklow, replacing the modelled sea level.
 - **Patterns:** explore the archive and years of Open-Meteo historical data, e.g. "the wind backs northerly in spring afternoons" (likely sea breeze).
 - Crew session log (where, when, how it was) to tune thresholds per spot.
 - Suggest where to park and launch by wind direction (e.g. Arklow: P1 in north-easterly, P2 in southerly, P3 when it's 20 kn+ or the shore break is big).

@@ -10,6 +10,7 @@ from wing_alert.forecast import SpotForecast
 from wing_alert.marine import SeaHour
 from wing_alert.scoring import Window, find_windows, is_good_hour, rank
 from wing_alert.shorebreak import rate_window
+from wing_alert.tides import StationTides
 
 
 class Archive:
@@ -25,7 +26,10 @@ class Archive:
 
 
 def build_snapshot(
-    issued: datetime, forecasts: list[SpotForecast], settings: Settings
+    issued: datetime,
+    forecasts: list[SpotForecast],
+    settings: Settings,
+    stations: dict[str, StationTides] | None = None,
 ) -> dict[str, Any]:
     """Windows here cover whole days (past hours included), unlike the alert."""
     start_of_day = issued.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -40,6 +44,7 @@ def build_snapshot(
         "daylight": _daylight(forecasts),
         "windows": [_window(window) for window in rank(windows, settings)],
         "spots": [_spot(forecast, settings) for forecast in forecasts],
+        "tide_stations": {key: _station(value) for key, value in (stations or {}).items()},
     }
 
 
@@ -68,6 +73,7 @@ def _spot(forecast: SpotForecast, settings: Settings) -> dict[str, Any]:
         "lon": spot.lon,
         "directions": [spot.direction_from, spot.direction_to],
         "sheltered": spot.sheltered,
+        "tide_station": spot.tide_station,
         "hours": [
             {
                 "time": hour.time.isoformat(timespec="minutes"),
@@ -82,6 +88,22 @@ def _spot(forecast: SpotForecast, settings: Settings) -> dict[str, Any]:
         "tides": [
             {"time": tide.time.isoformat(timespec="minutes"), "kind": tide.kind}
             for tide in forecast.tides
+        ],
+    }
+
+
+def _station(station: StationTides) -> dict[str, Any]:
+    """Levels every 30 minutes are plenty for the chart (FR-6.3)."""
+    return {
+        "name": station.name,
+        "levels": [
+            [when.isoformat(timespec="minutes"), level]
+            for when, level in station.levels
+            if when.minute % 30 == 0
+        ],
+        "tides": [
+            {"time": tide.time.isoformat(timespec="minutes"), "kind": tide.kind}
+            for tide in station.tides
         ],
     }
 

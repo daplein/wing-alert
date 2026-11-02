@@ -8,8 +8,9 @@ from dataclasses import dataclass, replace
 
 from wing_alert.config import Settings, Spot
 from wing_alert.forecast import SpotForecast
-from wing_alert.marine import SeaHour, tide_state
+from wing_alert.marine import SeaHour
 from wing_alert.scoring import Window
+from wing_alert.tides import tide_state
 
 NONE, WATCH, DANGER = 0, 1, 2
 EMOJI = {NONE: "", WATCH: "⚠️", DANGER: "🚨"}

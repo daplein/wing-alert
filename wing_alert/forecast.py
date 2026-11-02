@@ -9,7 +9,8 @@ import httpx
 from wing_alert.config import Spot
 
 if TYPE_CHECKING:
-    from wing_alert.marine import SeaHour, Tide
+    from wing_alert.marine import SeaHour
+    from wing_alert.tides import Tide
 
 
 class ForecastError(Exception):
