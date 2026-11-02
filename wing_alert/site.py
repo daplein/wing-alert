@@ -68,11 +68,14 @@ class SiteBuilder:
             self._write(out / "weeks" / f"{week['start']}.html", html)
 
     @staticmethod
-    def _copy_maps(maps: dict[str, Path], out: Path) -> set[str]:
+    def _copy_maps(maps: dict[str, Path], out: Path) -> dict[str, list[str]]:
+        """Copies the maps; returns each date's map names (`YYYY-MM-DD-HH`), in hour order."""
         (out / "maps").mkdir(parents=True, exist_ok=True)
-        for day, path in maps.items():
-            shutil.copy(path, out / "maps" / f"{day}.png")
-        return set(maps)
+        by_day: dict[str, list[str]] = {}
+        for name, path in sorted(maps.items()):
+            shutil.copy(path, out / "maps" / f"{name}.png")
+            by_day.setdefault(name[:10], []).append(name)
+        return by_day
 
     def _spots_page(self) -> str:
         guides = [(spot, self._guide_html(spot)) for spot in self._spots]

@@ -35,7 +35,22 @@ td.ok { border-color: var(--fg); font-weight: 700; }
 .spot { border-top: 1px solid var(--line); margin-top: 24px; }
 .spot table { border-collapse: collapse; } .spot td, .spot th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; min-width: 0; border-radius: 0; }
 footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px; padding-bottom: 24px; }
-.map { width: 100%; max-width: 900px; height: auto; border-radius: 10px; margin: 0 0 14px; display: block; }
+/* Maps: a swipe strip on a phone, a 2x2 grid on a wider screen (FR-2.8). */
+.maps { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px 14px; padding: 0 16px; }
+.maps img { flex: 0 0 88%; width: 88%; height: auto; border-radius: 10px; scroll-snap-align: center; }
+@media (min-width: 700px) {
+  .maps { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; margin: 0 0 14px; padding: 0; max-width: 900px; }
+  .maps img { width: 100%; }
+}
+/* Table: spot names stay pinned while the hours scroll sideways. */
+tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg); z-index: 1; }
+@media (max-width: 600px) {
+  header, main, footer { padding-left: 10px; padding-right: 10px; }
+  .maps { margin: 0 -10px 14px; padding: 0 10px; }
+  tbody th { white-space: normal; min-width: 96px; max-width: 120px; font-size: 0.8rem; }
+  td { min-width: 34px; font-size: 0.8rem; }
+  .best { font-size: 1rem; }
+}
 .tides { margin: 0 0 12px; }
 .warn { margin-top: 6px; font-size: 0.95rem; font-weight: 600; }
 .warn.level2 { color: #d62828; }
