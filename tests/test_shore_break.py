@@ -207,3 +207,69 @@ def test_fr_4_2_double_high_water_keeps_the_main_high():
     start = MORNING.replace(hour=8)
     series = {start + timedelta(hours=i): sea(0.5, level=lv) for i, lv in enumerate(levels)}
     assert [(t.time.hour, t.kind) for t in find_tides(series)] == [(16, "high"), (21, "low")]
+
+
+def test_fr_4_2_a_flat_stretch_is_not_a_tide():
+    # Real Arklow levels, 2 Nov 2026 22:00 to 3 Nov 07:00: a low, a flat hour, then the rise.
+    levels = [-0.91, -0.88, -0.81, -0.78, -0.78, -0.71, -0.55, -0.36, -0.26, -0.28]
+    start = MORNING.replace(hour=22)
+    series = {start + timedelta(hours=i): sea(0.5, level=lv) for i, lv in enumerate(levels)}
+    assert [(t.time.hour, t.kind) for t in find_tides(series)] == [(6, "high")]
+
+
+def test_fr_4_2_both_days_keep_their_tides():
+    levels = [
+        -0.68,
+        -0.73,
+        -0.73,
+        -0.59,
+        -0.38,
+        -0.26,
+        -0.29,
+        -0.44,
+        -0.59,
+        -0.64,
+        -0.56,
+        -0.42,
+        -0.34,
+        -0.34,
+        -0.37,
+        -0.33,
+        -0.2,
+        -0.12,
+        -0.18,
+        -0.37,
+        -0.62,
+        -0.82,
+        -0.91,
+        -0.88,
+        -0.81,
+        -0.78,
+        -0.78,
+        -0.71,
+        -0.55,
+        -0.36,
+        -0.26,
+        -0.28,
+        -0.4,
+        -0.54,
+        -0.62,
+        -0.59,
+        -0.49,
+        -0.4,
+        -0.37,
+        -0.34,
+        -0.26,
+        -0.14,
+        -0.07,
+        -0.1,
+        -0.24,
+        -0.46,
+        -0.68,
+        -0.82,
+    ]
+    start = MORNING.replace(hour=0)
+    series = {start + timedelta(hours=i): sea(0.5, level=lv) for i, lv in enumerate(levels)}
+    kinds = [tide.kind for tide in find_tides(series)]
+    assert len(kinds) >= 6
+    assert all(a != b for a, b in zip(kinds, kinds[1:], strict=False))

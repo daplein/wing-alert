@@ -93,12 +93,25 @@ def find_tides(sea: dict[datetime, SeaHour]) -> list[Tide]:
 
 def _turning_points(levels: list[tuple[datetime, float]]) -> list[tuple[datetime, float, str]]:
     turns = []
+    levels = _flatten_plateaus(levels)
     for (_, before), (time, level), (_, after) in zip(levels, levels[1:], levels[2:], strict=False):
-        if level > before and level >= after:
+        if before < level > after:
             turns.append((time, level, "high"))
-        elif level < before and level <= after:
+        elif before > level < after:
             turns.append((time, level, "low"))
     return turns
+
+
+def _flatten_plateaus(levels: list[tuple[datetime, float]]) -> list[tuple[datetime, float]]:
+    """A run of equal hourly levels counts once, at its middle hour. Otherwise a flat
+    stretch before a rise looks like a high (and before a fall, like a low)."""
+    runs: list[list[tuple[datetime, float]]] = []
+    for point in levels:
+        if runs and runs[-1][-1][1] == point[1]:
+            runs[-1].append(point)
+        else:
+            runs.append([point])
+    return [run[(len(run) - 1) // 2] for run in runs]
 
 
 def tide_state(time: datetime, tides: list[Tide]) -> str | None:
