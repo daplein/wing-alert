@@ -22,26 +22,37 @@ def snapshot():
     )
 
 
-def test_fr_3_1_writes_one_png_per_forecast_date(tmp_path):
-    (path,) = MapWriter(tmp_path).write(snapshot())
-    assert path == tmp_path / "2026/11/2026-11-06.png"
-    assert path.read_bytes().startswith(PNG)
-    assert 20_000 < path.stat().st_size < 400_000
+def test_fr_3_1_writes_one_png_per_hour(tmp_path):
+    paths = MapWriter(tmp_path).write(snapshot())
+    assert [path.name for path in paths] == [
+        "2026-11-06-09.png",
+        "2026-11-06-12.png",
+        "2026-11-06-15.png",
+        "2026-11-06-18.png",
+    ]
+    assert paths[0].parent == tmp_path / "2026/11"
+    assert paths[0].read_bytes().startswith(PNG)
+    assert 15_000 < paths[0].stat().st_size < 150_000
 
 
-def test_fr_3_4_a_later_run_overwrites_the_days_map(tmp_path):
+def test_fr_3_4_a_later_run_overwrites_the_days_maps(tmp_path):
     first = MapWriter(tmp_path).write(snapshot())
     second = MapWriter(tmp_path).write(snapshot())
     assert first == second
-    assert len(list(tmp_path.glob("*/*/*.png"))) == 1
+    assert len(list(tmp_path.glob("*/*/*.png"))) == 4
 
 
-def test_fr_3_1_day_page_shows_the_map(tmp_path):
-    (path,) = MapWriter(tmp_path / "data").write(snapshot())
+def test_fr_2_8_day_page_shows_the_hourly_maps_in_order(tmp_path):
+    paths = MapWriter(tmp_path / "data").write(snapshot())
     out = tmp_path / "site"
-    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([snapshot()], out, {"2026-11-06": path})
-    assert (out / "maps/2026-11-06.png").exists()
-    assert 'src="maps/2026-11-06.png"' in (out / "index.html").read_text()
+    maps = {path.stem: path for path in reversed(paths)}
+    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([snapshot()], out, maps)
+    page = (out / "index.html").read_text()
+    assert (out / "maps/2026-11-06-09.png").exists()
+    sources = [f'src="maps/2026-11-06-{hour}.png"' for hour in ("09", "12", "15", "18")]
+    assert all(source in page for source in sources)
+    assert [page.index(source) for source in sources] == sorted(page.index(s) for s in sources)
+    assert 'class="maps"' in page
 
 
 def test_fr_3_1_seapoint_gets_the_inset_and_every_spot_is_on_one_map():

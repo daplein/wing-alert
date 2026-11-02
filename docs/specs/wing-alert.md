@@ -169,6 +169,7 @@ Branch `feat/site`.
   - the wind map (from slice 3)
   - a table of all spots ranked, with hourly wind and good hours highlighted
   - links to the previous and next day
+- **FR-2.8** The site works on a phone first. The hourly maps are a horizontal swipe strip on a phone (one map per screen, the next one peeking in) and a 2×2 grid on a wider screen. The hourly table scrolls sideways with the spot names pinned on the left.
 - **FR-2.4** **Front page** is today's day page, plus a list of past days. A day page is built from the last run issued that day, and shows every date that run covers (today and tomorrow).
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
 - **FR-2.6** The site shows "Forecast from Open-Meteo" with a link (required by their terms).
@@ -180,10 +181,10 @@ Branch `feat/site`.
 
 Branch `feat/wind-map`.
 
-- **FR-3.1** One PNG per day: a 2×2 grid of maps (09:00, 12:00, 15:00, 18:00) of the coast from Wicklow Harbour to Arklow, big enough to read on a phone. Seapoint is 40 km further north, so it gets its own small inset map in the corner of each panel; otherwise the Wicklow spots end up squashed together.
+- **FR-3.1** One PNG per hour shown (09:00, 12:00, 15:00, 18:00), each a full map of the coast from Wicklow Harbour to Arklow, sized for a phone screen. The page lays them out (FR-2.8). Seapoint is 40 km further north, so it gets its own small inset map in the corner of each panel; otherwise the Wicklow spots end up squashed together.
 - **FR-3.2** Each spot has a dot and an arrow pointing where the wind blows **to**, coloured by strength: grey < 10 kn, green 10–20, orange 20–30, red > 30. The label (name, mean/gust in knots) sits on the land side of the dot and the arrow just out at sea, so they never overlap whichever way the wind blows. Arrows of spots close together (Buckroney and Ennereilly are 1 km apart) are spread along the coast so they don't touch.
 - **FR-3.3** The base map comes from OpenStreetMap coastline data, with attribution on the image.
-- **FR-3.4** Each run writes one map per date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD.png`, overwriting the earlier one, and the workflow commits it. Past maps never need re-rendering. At about 115 KB per map and a few versions per date in git history, that's roughly 125 MB a year.
+- **FR-3.4** Each run writes the maps for every date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD-HH.png`, overwriting the earlier ones, and the workflow commits them. Past maps never need re-rendering. At about 4 × 45 KB per date and a few versions per date in git history, that's roughly 200 MB a year: fine for a few years, and old map versions can be squashed out of history if it ever matters.
 - **FR-3.5** The coastline is a simplified OpenStreetMap extract stored in the repo (`wing_alert/assets/coastline.json`), so no map tiles are fetched at run time.
 - **FR-3.6** Land and sea have different colours (sand and blue), so the coast is easy to read. Land shapes are built from the same coastline lines: OpenStreetMap keeps land on the left of each way, and this coast faces east, so each open stretch is closed off far inland to the west. Small closed rings are islands.
 

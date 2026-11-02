@@ -19,8 +19,11 @@
   {% if day.tides %}
   <p class="tides">Tides: {% for tide in day.tides %}{{ tide.kind | capitalize }} {{ tide.time[11:] }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
   {% endif %}
-  {% if day.date.isoformat() in maps %}
-  <img class="map" src="{{ root }}maps/{{ day.date.isoformat() }}.png" alt="Wind map for {{ day.date | day_label }}">
+  {% set hourly = maps.get(day.date.isoformat(), []) %}
+  {% if hourly %}
+  <div class="maps">
+    {% for name in hourly %}<img src="{{ root }}maps/{{ name }}.png" alt="Wind map for {{ day.date | day_label }} at {{ name[11:] }}:00" loading="lazy">{% endfor %}
+  </div>
   {% endif %}
   <div class="scroll">
   <table>
