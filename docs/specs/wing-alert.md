@@ -28,7 +28,7 @@ What we can do for free:
 
 ```mermaid
 flowchart LR
-    cron([GitHub Actions cron<br/>06:00 + 16:00 UTC]):::ext
+    cron([GitHub Actions cron<br/>~05:17 + ~15:17 UTC, each repeated]):::ext
     spots[(config/spots.yaml)]
     wind[(Open-Meteo<br/>wind forecast)]:::ext
     sea[(Open-Meteo Marine<br/>waves, swell, sea level)]:::ext
@@ -67,7 +67,7 @@ Wind decides **whether** to alert. Waves and tide decide **how loud the warning 
 
 ```mermaid
 flowchart LR
-    cron([GitHub Actions cron<br/>Sunday 18:00 UTC]):::ext
+    cron([GitHub Actions cron<br/>Sunday ~18:17 UTC]):::ext
     archive[(data/ archive<br/>last 7 days)]
     sent[(state.json<br/>what we alerted)]
     review[Weekly summary<br/>best days, missed windows]:::hot
@@ -141,6 +141,7 @@ Branch `feat/wind-alert`.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
 - **FR-1.10** With no recipients configured, the job prints the message instead of sending it and doesn't update `state.json`, so it can run safely before the secret exists. `--dry-run` also skips the archive (FR-2.1): nothing is written at all.
 - **FR-1.11** Wind is read at a **sea point** a few km off each beach (`wind_at` in `config/spots.yaml`), not at the beach itself. The forecast model's cell on the beach counts as land, which slows the wind: on 1 Nov 2026 it said 8–9 kn at Arklow while David rode 14–20 kn, and the first sea cell said 17 kn. The beach position is still used for the map and the marine data.
+- **FR-1.12** The daily job runs twice per slot (see Schedule), because GitHub sometimes drops scheduled runs. The repeat is harmless: FR-1.7 stops repeat alerts, and the site shows the latest run.
 
 **Example message**
 
@@ -155,7 +156,7 @@ Fri 7 Nov
 
 From slice 2 the message ends with the day page link, and from slice 4 risky windows get ⚠️ or 🚨.
 
-**Schedule:** GitHub cron runs in UTC, so 06:00 and 16:00 UTC is 06:00/16:00 in winter and 07:00/17:00 in summer. GitHub can start scheduled runs 10–30 minutes late; that's acceptable. A `workflow_dispatch` trigger allows manual runs.
+**Schedule:** GitHub cron runs in UTC (an hour later in Irish summer time). GitHub delays or drops scheduled runs when it's busy, worst on the hour: on 1–2 Nov 2026 the 16:00 run started 4 hours late and the 06:00 run never ran. So the daily job runs off the hour, twice per slot: 05:17 and 06:47 UTC for the morning, 15:17 and 16:47 for the afternoon (FR-1.12). The weekly runs once, Sunday 18:17 UTC. A `workflow_dispatch` trigger allows manual runs.
 
 ## Slice 2: Daily archive and GitHub Pages site
 

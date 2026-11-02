@@ -2,11 +2,15 @@ name: daily
 
 on:
   schedule:
-    # UTC: 06:00/16:00 in winter, 07:00/17:00 Irish summer time.
-    - cron: "0 6 * * *"
-    - cron: "0 16 * * *"
-    # Sunday 18:00 UTC: the weekly summary instead.
-    - cron: "0 18 * * 0"
+    # UTC, so an hour later in Irish summer time. GitHub delays or drops scheduled
+    # runs under load, worst at the top of the hour: run off the hour, and twice
+    # per slot. A repeat run is harmless: state.json stops repeat alerts (FR-1.12).
+    - cron: "17 5 * * *"
+    - cron: "47 6 * * *"
+    - cron: "17 15 * * *"
+    - cron: "47 16 * * *"
+    # Sunday evening: the weekly summary instead (once: it has no repeat guard).
+    - cron: "17 18 * * 0"
   workflow_dispatch:
     inputs:
       job:
@@ -34,12 +38,12 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked --no-dev
       - name: Check the wind, archive it, send alerts
-        if: github.event.schedule != '0 18 * * 0' && inputs.job != 'weekly'
+        if: github.event.schedule != '17 18 * * 0' && inputs.job != 'weekly'
         run: uv run python -m wing_alert
         env:
           WHATSAPP_RECIPIENTS: ${{ secrets.WHATSAPP_RECIPIENTS }}
       - name: Weekly summary
-        if: github.event.schedule == '0 18 * * 0' || inputs.job == 'weekly'
+        if: github.event.schedule == '17 18 * * 0' || inputs.job == 'weekly'
         run: uv run python -m wing_alert.weekly
         env:
           WHATSAPP_RECIPIENTS: ${{ secrets.WHATSAPP_RECIPIENTS }}
