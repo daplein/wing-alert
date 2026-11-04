@@ -62,3 +62,8 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
 table.week td { text-align: left; min-width: 0; padding: 6px 8px; }
 table.week th { padding: 6px 12px 6px 0; vertical-align: top; }
 .muted { color: var(--muted); }
+/* Video previews (FR-8.1, FR-8.2): thumbnails that open YouTube, two per row on a phone. */
+.videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 16px; max-width: 900px; }
+.video { display: block; color: var(--fg); font-size: 0.85rem; }
+.video img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: var(--light); }
+.video span { display: block; margin-top: 4px; }
