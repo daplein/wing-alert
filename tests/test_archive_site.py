@@ -119,6 +119,13 @@ def test_fr_2_7_spots_page_renders_guides_and_placeholders(tmp_path):
     assert 'href="spots.html#arklow"' in day
 
 
+def test_fr_8_3_spots_page_adds_guides_without_a_spot(tmp_path):
+    out = build(tmp_path, [MORNING], {"malahide": "# Malahide\n"})
+    page = (out / "spots.html").read_text()
+    assert 'href="#malahide">Malahide</a>' in page
+    assert 'id="malahide"' in page and "No forecast" in page
+
+
 def test_wind_bands():
     assert [wind_band(k) for k in (5, 10, 25, 35)] == ["light", "good", "strong", "wild"]
 

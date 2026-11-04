@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Any
 
 import jinja2
-import markdown
 
 from wing_alert.archive import load_snapshots
 from wing_alert.config import Spot, load_spots
+from wing_alert.guides import guide_html, unforecast_guides
 from wing_alert.tidechart import tide_chart
 
 SITE_URL = "https://daplein.github.io/wing-alert/"
@@ -79,14 +79,9 @@ class SiteBuilder:
         return by_day
 
     def _spots_page(self) -> str:
-        guides = [(spot, self._guide_html(spot)) for spot in self._spots]
-        return self._env.get_template("spots.html").render(root="", guides=guides)
-
-    def _guide_html(self, spot: Spot) -> str | None:
-        path = self._guides / f"{spot.id}.md"
-        if not path.exists():
-            return None
-        return markdown.markdown(path.read_text(), extensions=["tables"])
+        guides = [(spot, guide_html(self._guides / f"{spot.id}.md")) for spot in self._spots]
+        extras = unforecast_guides(self._guides, {spot.id for spot in self._spots})
+        return self._env.get_template("spots.html").render(root="", guides=guides, extras=extras)
 
     @staticmethod
     def _write(path: Path, html: str) -> None:

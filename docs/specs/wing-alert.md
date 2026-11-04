@@ -266,6 +266,16 @@ flowchart LR
 - **FR-7.4** GitHub's cron keeps the daily job at 06:47 and 16:47 as a backup, in case the Worker or its token fails. The weekly job has no GitHub backup: it has no repeat guard, so it must only run once.
 - **FR-7.5** The Worker's code stays tiny: a lookup from cron to job, and one API call. The lookup has a unit test (`node --test`) that runs in CI.
 
+## Slice 8: Spot videos
+
+Branch `feat/spot-videos`.
+
+The spot guides list session videos as bare YouTube links. A thumbnail shows what the spot looks like in those conditions at a glance.
+
+- **FR-8.1** In a spot guide, a list item that is only a YouTube link (`youtu.be/<id>`, `youtube.com/watch?v=<id>` or `youtube.com/shorts/<id>`) shows on the spots page as a preview card: the video's thumbnail (`https://i.ytimg.com/vi/<id>/hqdefault.jpg`, lazy-loaded) with the link text as its title, linking to the video on YouTube. No embedded player and no script, so the page stays light however many videos there are. Other links are left as they are.
+- **FR-8.2** The cards sit in a grid that wraps: two per row on a phone, more on a wider screen. Adding a video is one more line in the spot's Markdown file.
+- **FR-8.3** A guide in `docs/spots/` with no spot in `config/spots.yaml` (e.g. Malahide) is shown at the end of the spots page, marked "No forecast". It gets no forecast, alert or map label.
+
 ## Project layout (planned)
 
 ```
