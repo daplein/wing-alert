@@ -92,6 +92,14 @@ def test_fr_2_4_front_page_is_latest_day_with_past_days(tmp_path):
     assert (out / "style.css").exists()
 
 
+def test_fr_2_4_pages_carry_the_wing_logo(tmp_path):
+    out = build(tmp_path, [MORNING])
+    index = (out / "index.html").read_text()
+    assert 'src="logo.svg"' in index
+    assert 'rel="icon" href="logo.svg"' in index
+    assert (out / "logo.svg").exists()
+
+
 def test_fr_2_4_empty_archive_still_builds(tmp_path):
     out = tmp_path / "site"
     SiteBuilder(make_env(), [ARKLOW], tmp_path).build([], out)
