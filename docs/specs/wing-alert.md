@@ -127,7 +127,7 @@ Branch `feat/wind-alert`.
 **Requirements**
 
 - **FR-1.1** Load spots and thresholds from YAML. An invalid config fails the run with a clear message.
-- **FR-1.2** For each spot, fetch the hourly forecast for today and tomorrow (Europe/Dublin): wind speed, gusts, direction in knots, plus sunrise and sunset.
+- **FR-1.2** For each spot, fetch the hourly forecast for today and the days ahead (Europe/Dublin; `forecast_days`, see FR-9.1): wind speed, gusts, direction in knots, plus sunrise and sunset.
 - **FR-1.3** An hour is **good** when all of these hold:
   - mean wind between `min_wind` and `max_wind` (defaults 10 and 40 kn)
   - gusts at or below `max_gust` (default 45 kn)
@@ -136,7 +136,7 @@ Branch `feat/wind-alert`.
   - the hour hasn't already ended (the current hour still counts)
 - **FR-1.4** A **window** is at least `min_window_hours` (default 2) consecutive good hours at one spot. It reports the start (first good hour), end (last good hour + 1 h), wind range, max gust and main direction (the circular mean as a 16-point compass name, e.g. ENE).
 - **FR-1.5** Rank windows by length, then by mean wind closest to `ideal_wind` (default 20 kn). The best one goes first in the message.
-- **FR-1.6** Send one WhatsApp message per run, to each configured recipient, with one short line per window (spot, hours, wind range, direction), grouped by day, best first. No hourly detail: that's on the site. If there are no new windows, send nothing.
+- **FR-1.6** Send one WhatsApp message per run, covering today and tomorrow only (FR-9.2), to each configured recipient, with one short line per window (spot, hours, wind range, direction), grouped by day, best first. No hourly detail: that's on the site. If there are no new windows, send nothing.
 - **FR-1.7** Don't repeat yourself. `state.json` keeps, per date, a signature of the windows already sent. Send only when a day's windows are new or have changed, and list only those days. A window that changes by an hour at either end counts as changed. A day whose windows disappear is not reported. Entries older than 14 days are pruned. The workflow commits `state.json` back to the repo.
 - **FR-1.8** If a data source fails, retry once, then fail the run. GitHub emails David about failed workflows, so no extra error alert is needed.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
@@ -165,14 +165,14 @@ Branch `feat/site`.
 
 - **FR-2.1** Every daily run writes `data/YYYY/MM/YYYY-MM-DDTHH.json`: the forecast as issued, every hour's scores, and the windows (whole days, including hours already past, ranked as in FR-1.5). Plain JSON, easy to scrape. The workflow commits it.
 - **FR-2.2** Every run builds a static site from `data/` (Python + Jinja templates, no framework) and deploys it with GitHub's official Pages actions. The built site is not committed.
-- **FR-2.3** **Day page:**
+- **FR-2.3** **Day page** (one date per page, laid out as in slice 9):
   - top: "Best spot" with its window, or "Nothing rideable"
   - the wind map (from slice 3)
   - a table of all spots ranked, with hourly wind and good hours highlighted
-  - links to the previous and next day
+  - a day strip to the days around it (FR-9.4)
 - **FR-2.9** If the Pages deploy fails, try once more. The data is already committed by then, so a failed deploy only leaves the site one run behind.
-- **FR-2.8** The site works on a phone first. The hourly maps are a horizontal swipe strip on a phone (one map per screen, the next one peeking in) and a 2×2 grid on a wider screen. The hourly table scrolls sideways with the spot names pinned on the left.
-- **FR-2.4** **Front page** is today's day page, plus a list of past days. A day page is built from the last run issued that day, and shows every date that run covers (today and tomorrow).
+- **FR-2.8** The site works on a phone first. Maps and table: see FR-9.6 and FR-9.7. If the hours don't fit (long summer days), the table scrolls sideways with the spot names pinned on the left.
+- **FR-2.4** **Front page** is today's day page. Each date has its own page (FR-9.3); the list of past days is on the All days page (FR-9.8).
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
 - **FR-2.6** The site shows "Forecast from Open-Meteo" with a link (required by their terms).
 - **FR-2.7** **Spots page:** one section per spot, rendered from `docs/spots/<id>.md` (launch points, parking by wind direction, hazards, seasonal notes, map link). The day page links each spot name to its section. Editing a spot's Markdown file is all it takes to update the page.
@@ -186,7 +186,7 @@ Branch `feat/wind-map`.
 - **FR-3.1** One PNG per hour shown (09:00, 12:00, 15:00, 18:00), each a full map of the coast from Wicklow Harbour to Arklow, sized for a phone screen. The page lays them out (FR-2.8). Seapoint is 40 km further north, so it gets its own small inset map; otherwise the Wicklow spots end up squashed together. The inset sits in the top-left corner, over empty land (Dublin Bay is north and a little west of Wicklow), with a light grey frame, a matching "Dublin Bay" tab in its top-left corner and a small "↑ 40 km north" note under it. The image is cropped to its content, so there is no empty band between the title, the map and the legend.
 - **FR-3.2** Each spot has a dot and an arrow pointing where the wind blows **to**, coloured by strength: grey < 10 kn, green 10–20, orange 20–30, red > 30. The label (name, mean/gust in knots) sits on the land side of the dot and the arrow just out at sea, so they never overlap whichever way the wind blows. Labels have no box: the name is dark slate, the numbers bold in the arrow's colour (a shade darker for grey and orange so they stay readable), both with a thin white outline so they read on land and sea. The dot is white with a dark ring. Arrows of spots close together (Buckroney and Ennereilly are 1 km apart) are spread along the coast so they don't touch.
 - **FR-3.3** The base map comes from OpenStreetMap coastline data, with attribution on the image.
-- **FR-3.4** Each run writes the maps for every date it covers (today and tomorrow) as `data/YYYY/MM/YYYY-MM-DD-HH.png`, overwriting the earlier ones, and the workflow commits them. Past maps never need re-rendering. At about 4 × 45 KB per date and a few versions per date in git history, that's roughly 200 MB a year: fine for a few years, and old map versions can be squashed out of history if it ever matters.
+- **FR-3.4** Each run writes the maps for every date it covers (today and 3 days ahead, FR-9.1) as `data/YYYY/MM/YYYY-MM-DD-HH.png`, overwriting the earlier ones, and the workflow commits them. Past maps never need re-rendering. At about 4 × 45 KB per date, rewritten by every run that covers the date (about 8 runs over 4 days), that's roughly 400 MB a year in git history: fine for a couple of years, and old map versions can be squashed out of history if it ever matters.
 - **FR-3.5** The coastline is a simplified OpenStreetMap extract stored in the repo (`wing_alert/assets/coastline.json`), so no map tiles are fetched at run time.
 - **FR-3.6** Land and sea have different colours (pale green-sand and blue), so the coast is easy to read. A pale blue band of shallows runs along the sea side of the shore, the way nautical charts show it. Land shapes are built from the same coastline lines: OpenStreetMap keeps land on the left of each way, and this coast faces east, so each open stretch is closed off far inland to the west. Small closed rings are islands.
 
@@ -212,7 +212,7 @@ Branch `feat/weekly`.
 - **FR-5.1** On Sundays at 18:17 UTC (same workflow, started by the Worker as `job: weekly`; also runnable by hand), read the last 7 days of `data/` (Monday to the run day) and `state.json`.
 - **FR-5.2** For each day, take the windows from that day's **morning run** (the shortest-range, most accurate forecast). List the best days and spots of the week.
 - **FR-5.3** Mark each window as **alerted** if a sent alert listed an overlapping window at that spot, otherwise **missed** (the forecast didn't see it coming). Alerts are only recorded once `WHATSAPP_RECIPIENTS` is set, so until then every window shows as missed.
-- **FR-5.4** Save the summary as `data/weeks/<monday>.json` (state.json forgets after 14 days, so the week is computed once and kept). Publish a week page on the site, linked from the front page, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
+- **FR-5.4** Save the summary as `data/weeks/<monday>.json` (state.json forgets after 14 days, so the week is computed once and kept). Publish a week page on the site, linked from the All days page (FR-9.8), and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
 
 ---
 
@@ -230,10 +230,10 @@ Tides along this coast are odd. Near Arklow the main twice-a-day tide almost can
 
 So one tide line for the whole coast is wrong, and the Marine API's modelled sea level is too coarse to show this.
 
-- **FR-6.1** Tide predictions come from the [Marine Institute](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html) (ERDDAP dataset `IMI-TidePrediction`, free, no key, 5-minute steps, height above chart datum). Each spot names its station in `config/spots.yaml` (`tide_station`). Each station is fetched once per run, for today and tomorrow plus 3 h either side so tides at midnight are found.
+- **FR-6.1** Tide predictions come from the [Marine Institute](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html) (ERDDAP dataset `IMI-TidePrediction`, free, no key, 5-minute steps, height above chart datum). Each spot names its station in `config/spots.yaml` (`tide_station`). Each station is fetched once per run, for the forecast days (FR-9.1) plus 3 h either side so tides at midnight are found.
 - **FR-6.2** High and low waters are found as in FR-4.2. They feed the shore break rule (FR-4.3), so "worse at high tide" uses the spot's own high water.
 - **FR-6.3** The snapshot keeps, per station, its name, the levels every 30 minutes and the high/low waters; each spot records its station.
-- **FR-6.4** **Tide chart** on the day page, in place of the single "Tides:" line: one line per station over the day (00:00–24:00, height in m), with the hours where any spot is rideable shaded. A small inline SVG, so it scales on a phone and follows dark mode.
+- **FR-6.4** **Tide chart** on the day page (drawn inside the table since slice 9, FR-9.6), in place of the single "Tides:" line: one line per station over the day (00:00–24:00, height in m), with the hours where any spot is rideable shaded. A small inline SVG, so it scales on a phone and follows dark mode.
 - **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`.
 - **FR-6.6** **Map:** each spot's label adds the tide at that hour: `HW` or `LW` within 1 h of it, otherwise `↑` (rising) or `↓` (falling).
 - **FR-6.7** If the tide service fails, the run carries on without tides (no chart, no tide lines, no tide step-up in the shore break), like FR-4.4.
@@ -275,6 +275,21 @@ The spot guides list session videos as bare YouTube links. A thumbnail shows wha
 - **FR-8.1** In a spot guide, a list item that is only a YouTube link (`youtu.be/<id>`, `youtube.com/watch?v=<id>` or `youtube.com/shorts/<id>`) shows on the spots page as a preview card: the video's thumbnail (`https://i.ytimg.com/vi/<id>/hqdefault.jpg`, lazy-loaded) with the link text as its title, linking to the video on YouTube. No embedded player and no script, so the page stays light however many videos there are. Other links are left as they are.
 - **FR-8.2** The cards sit in a grid that wraps: two per row on a phone, more on a wider screen. Adding a video is one more line in the spot's Markdown file.
 - **FR-8.3** A guide in `docs/spots/` with no spot in `config/spots.yaml` (e.g. Malahide) is shown at the end of the spots page, marked "No forecast". It gets no forecast, alert or map label.
+
+## Slice 9: Day pages, 3 days ahead, cleaner layout
+
+Branch `feat/day-pages`.
+
+The old day page stacked today and tomorrow, and each block had its own width (best box 1100 px, maps 900, tide chart 640, table as wide as its numbers), so nothing lined up. On a phone the maps and the table both scrolled sideways. Now each date gets one page, the site looks 3 days ahead, and everything sits in one column.
+
+- **FR-9.1** The daily run fetches wind, sea and tides for `forecast_days` (default 4: today + 3) from `config/settings.yaml`. The archive, the maps and the site cover all of them.
+- **FR-9.2** Alerts only cover `alert_days` (default 2: today and tomorrow). Forecasts further out move too much: FR-1.7 would re-alert on every shift.
+- **FR-9.3** **One page per date.** A date's page comes from the latest run that covers it: the newest run for today and the days ahead, the last run issued that day once it has passed. So the same link starts as an outlook and ends as the record. Days after tomorrow say "Outlook: may still change".
+- **FR-9.4** **Day strip** at the top of every day page: 2 days back and 3 ahead, with ‹ › to the next ones. Each day shows the peak wind of its windows (a number in the table's wind colours, or "–" with no window), not a go/no-go light: a marginal 11 kn day must not look like "go". A shore break warning is said in words under it, "⚠️ shore break", orange for watch out and red for dangerous, with the reason on mouseover. The day page itself gives the reason on a phone.
+- **FR-9.5** **Order:** day strip, date, best spot, maps, then the table.
+- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row.
+- **FR-9.7** **Maps:** the four hours side by side on a wide screen; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript they show as a grid.
+- **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports.
 
 ## Project layout (planned)
 

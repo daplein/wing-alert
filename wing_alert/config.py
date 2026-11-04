@@ -42,6 +42,8 @@ class Settings:
     watch_wave_m: float = 0.8
     danger_wave_m: float = 1.5
     long_period_s: float = 10
+    forecast_days: int = 4
+    alert_days: int = 2
 
 
 def load_spots(path: Path) -> list[Spot]:

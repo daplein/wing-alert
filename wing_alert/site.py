@@ -3,7 +3,7 @@
 import argparse
 import json
 import shutil
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +17,7 @@ from wing_alert.tidechart import tide_chart
 SITE_URL = "https://daplein.github.io/wing-alert/"
 TEMPLATES = Path(__file__).parent / "templates"
 ASSETS = ("style.css", "logo.svg")
+STRIP_BEFORE, STRIP_AFTER = 2, 3  # days either side of the current page in the day strip
 
 
 def day_url(site_url: str, day: date) -> str:
@@ -36,32 +37,40 @@ class SiteBuilder:
         maps: dict[str, Path] | None = None,
         weeks: list[dict[str, Any]] | None = None,
     ) -> None:
-        latest = latest_per_day(snapshots)
-        days = sorted(latest)
+        pages = pages_by_date(snapshots)
+        days = sorted(pages)
         (out / "days").mkdir(parents=True, exist_ok=True)
         self._maps = self._copy_maps(maps or {}, out)
-        for index, day in enumerate(days):
-            links = _neighbours(days, index)
-            self._render("day.html", out / "days" / f"{day}.html", "../", latest[day], links)
+        self._summaries = {day: _summary(pages[day], day) for day in days}
+        for day in days:
+            self._render_day(out / "days" / f"{day}.html", "../", pages[day], day, days)
         if days:
-            front = {"past": days, "weeks": [week["start"] for week in weeks or []]}
-            self._render("day.html", out / "index.html", "", latest[days[-1]], front)
+            today = max(snapshot["issued"][:10] for snapshot in snapshots)
+            self._render_day(out / "index.html", "", pages[today], today, days)
         else:
             self._write(out / "index.html", self._env.get_template("empty.html").render(root=""))
+        self._write(out / "days.html", self._archive_page(days, weeks or []))
         self._write(out / "spots.html", self._spots_page())
         self._week_pages(weeks or [], out)
         for asset in ASSETS:
             shutil.copy(TEMPLATES / asset, out / asset)
 
-    def _render(self, template: str, path: Path, root: str, snapshot: dict, links: dict) -> None:
-        html = self._env.get_template(template).render(
+    def _render_day(self, path: Path, root: str, snapshot: dict, day: str, days: list) -> None:
+        html = self._env.get_template("day.html").render(
             root=root,
             issued=snapshot["issued"],
-            days=forecast_days(snapshot),
-            maps=self._maps,
-            **links,
+            day=_forecast_day(snapshot, day),
+            outlook=day > _next_day(snapshot["issued"][:10]),
+            maps=self._maps.get(day, []),
+            strip=_strip(days, day, self._summaries),
+            **_neighbours(days, days.index(day)),
         )
         self._write(path, html)
+
+    def _archive_page(self, days: list[str], weeks: list[dict[str, Any]]) -> str:
+        return self._env.get_template("days.html").render(
+            root="", days=days, summaries=self._summaries, weeks=[w["start"] for w in weeks]
+        )
 
     def _week_pages(self, weeks: list[dict[str, Any]], out: Path) -> None:
         (out / "weeks").mkdir(parents=True, exist_ok=True)
@@ -90,18 +99,49 @@ class SiteBuilder:
         path.write_text(html)
 
 
-def latest_per_day(snapshots: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """The last run issued on each date stands for that date."""
-    latest: dict[str, dict[str, Any]] = {}
+def pages_by_date(snapshots: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Each date's page comes from the latest run that covers it: the last run issued
+    that day once it has passed, the newest run for today and the days ahead."""
+    pages: dict[str, dict[str, Any]] = {}
     for snapshot in sorted(snapshots, key=lambda s: s["issued"]):
-        latest[snapshot["issued"][:10]] = snapshot
-    return latest
+        for day in _covered_dates(snapshot):
+            pages[day] = snapshot
+    return pages
+
+
+def _covered_dates(snapshot: dict[str, Any]) -> list[str]:
+    dates = {hour["time"][:10] for spot in snapshot["spots"] for hour in spot["hours"]}
+    return sorted(day for day in dates if day >= snapshot["issued"][:10])
+
+
+def _next_day(day: str) -> str:
+    return (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+
+
+def _summary(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
+    """What the day strip shows for a date: the peak wind of its windows (a number, not
+    a go/no-go light) and, apart from it, the worst shore break and why."""
+    windows = [window for window in snapshot["windows"] if window["date"] == day]
+    peak = max((window["wind_max"] for window in windows), default=None)
+    worst = max(windows, key=lambda window: window.get("shore_break") or 0, default=None)
+    return {
+        "peak": peak,
+        "band": wind_band(peak) if peak is not None else None,
+        "warning": (worst or {}).get("shore_break") or 0,
+        "reason": (worst or {}).get("shore_break_reason") or "",
+    }
+
+
+def _strip(days: list[str], current: str, summaries: dict[str, dict]) -> list[dict[str, Any]]:
+    """A few days either side of the current page."""
+    index = days.index(current)
+    shown = days[max(0, index - STRIP_BEFORE) : index + STRIP_AFTER + 1]
+    return [{"date": day, "current": day == current, **summaries[day]} for day in shown]
 
 
 def forecast_days(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
-    """One section per date the run covers: today, then tomorrow."""
-    dates = sorted({hour["time"][:10] for spot in snapshot["spots"] for hour in spot["hours"]})
-    return [_forecast_day(snapshot, day) for day in dates if day >= snapshot["issued"][:10]]
+    """One entry per date the run covers, from the day it was issued."""
+    return [_forecast_day(snapshot, day) for day in _covered_dates(snapshot)]
 
 
 def _forecast_day(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
@@ -110,7 +150,7 @@ def _forecast_day(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
     return {
         "date": date.fromisoformat(day),
         "best": windows[0] if windows else None,
-        "tide_chart": tide_chart(_stations_in_spot_order(snapshot), day, _rideable(windows)),
+        "tide": tide_chart(_stations_in_spot_order(snapshot), day, _rideable(windows), hours),
         "hours": hours,
         "rows": [_row(spot, day, hours, windows) for spot in _ranked_spots(snapshot, windows)],
     }
@@ -194,6 +234,7 @@ def make_env() -> jinja2.Environment:
     )
     env.filters["day_label"] = lambda d: f"{d:%A} {d.day} {d:%B}"
     env.filters["iso_label"] = lambda text: env.filters["day_label"](date.fromisoformat(text))
+    env.filters["short_label"] = lambda text: f"{date.fromisoformat(text):%a %-d}"
     env.filters["warning"] = lambda level: {1: "⚠️", 2: "🚨"}.get(level, "")
     return env
 

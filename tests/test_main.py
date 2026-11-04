@@ -13,6 +13,7 @@ from tests.helpers import (
     sea_payload,
     tide_csv,
 )
+from wing_alert.config import load_settings
 from wing_alert.forecast import OpenMeteoClient
 from wing_alert.main import DailyJob, main
 from wing_alert.marine import MarineClient
@@ -25,11 +26,12 @@ NOON = MORNING.replace(hour=12)
 
 
 class FakeForecasts:
-    def __init__(self, winds: list[float]) -> None:
+    def __init__(self, winds: list[float], start=NOON) -> None:
         self.winds = winds
+        self.start = start
 
     def fetch(self, spot):
-        return forecast(spot, hours(NOON, self.winds))
+        return forecast(spot, hours(self.start, self.winds))
 
 
 class FakeSender:
@@ -50,6 +52,18 @@ def test_fr_1_6_sends_one_message_when_there_is_a_window(tmp_path):
     daily, sender = job(tmp_path, [18, 20])
     assert daily.run(MORNING) == sender.sent[0]
     assert "Arklow South Beach 12:00–14:00" in sender.sent[0]
+
+
+def test_fr_9_2_alerts_only_cover_today_and_tomorrow(tmp_path):
+    daily, sender = job(tmp_path, [18, 20])
+    daily._forecasts = FakeForecasts([18, 20], start=NOON.replace(day=8))  # two days ahead
+    assert daily.run(MORNING) is None
+    assert sender.sent == []
+
+
+def test_fr_9_1_site_looks_four_days_ahead():
+    settings = load_settings(REPO_CONFIG / "settings.yaml")
+    assert (settings.forecast_days, settings.alert_days) == (4, 2)
 
 
 def test_fr_1_6_sends_nothing_without_windows(tmp_path):

@@ -111,4 +111,5 @@ def test_fr_5_4_week_page_lists_alerted_and_missed(tmp_path):
     assert "✅ Arklow South Beach 12:00–15:00" in page
     assert "❌ missed Seapoint 10:00–12:00" in page
     assert "No forecast" in page and "Nothing rideable" in page
-    assert 'href="weeks/2026-11-02.html"' in (out / "index.html").read_text()
+    assert 'href="days.html"' in (out / "index.html").read_text()
+    assert 'href="weeks/2026-11-02.html"' in (out / "days.html").read_text()

@@ -4,7 +4,7 @@ from datetime import date, datetime
 from tests.helpers import ARKLOW, MORNING, SEAPOINT, SETTINGS, forecast, hours, window
 from wing_alert.archive import Archive, build_snapshot, load_snapshots
 from wing_alert.message import format_alert
-from wing_alert.site import SiteBuilder, day_url, latest_per_day, make_env, wind_band
+from wing_alert.site import SiteBuilder, day_url, make_env, pages_by_date, wind_band
 
 NOON = MORNING.replace(hour=12)
 
@@ -41,15 +41,83 @@ def test_fr_2_1_archive_keeps_hours_already_past():
     assert snapshot["windows"][0]["start"] == "2026-11-06T12:00"
 
 
-def test_fr_2_3_latest_run_of_each_day_wins():
-    runs = [
-        {"issued": "2026-11-06T16:00"},
-        {"issued": "2026-11-06T07:00"},
-        {"issued": "2026-11-05T16:00"},
-    ]
-    latest = latest_per_day(runs)
-    assert latest["2026-11-06"]["issued"] == "2026-11-06T16:00"
-    assert sorted(latest) == ["2026-11-05", "2026-11-06"]
+def run_covering(issued: datetime, *days: int) -> dict:
+    """A run issued at `issued` with a good Arklow window at noon on each given day."""
+    readings = [h for day in days for h in hours(NOON.replace(day=day), [18, 20, 18])]
+    return build_snapshot(issued, [forecast(ARKLOW, readings)], SETTINGS)
+
+
+def test_fr_9_3_each_date_comes_from_the_latest_run_covering_it():
+    first, second = run_covering(MORNING, 6, 8), run_covering(MORNING.replace(day=7), 7, 8)
+    pages = pages_by_date([second, first])
+    assert pages["2026-11-06"] is first  # past: the last run issued that day
+    assert pages["2026-11-07"] is second and pages["2026-11-08"] is second
+
+
+def site_from(tmp_path, runs):
+    out = tmp_path / "site"
+    SiteBuilder(make_env(), [ARKLOW], tmp_path).build(runs, out)
+    return out
+
+
+def test_fr_9_3_one_day_per_page_and_later_days_are_an_outlook(tmp_path):
+    out = site_from(tmp_path, [run_covering(MORNING, 6, 7, 8)])
+    ahead = (out / "days/2026-11-08.html").read_text()
+    assert "<h1>Sunday 8 November</h1>" in ahead and "Outlook" in ahead
+    assert "<h1>Friday 6 November</h1>" not in ahead
+    tomorrow = (out / "days/2026-11-07.html").read_text()
+    assert "Outlook" not in tomorrow
+    assert "<h1>Friday 6 November</h1>" in (out / "index.html").read_text()
+
+
+def test_fr_9_4_day_strip_shows_peak_wind_and_links_neighbours(tmp_path):
+    calm = build_snapshot(
+        MORNING.replace(day=9), [forecast(ARKLOW, hours(NOON.replace(day=9), [5]))], SETTINGS
+    )
+    out = site_from(tmp_path, [run_covering(MORNING, 6, 7, 8), calm])
+    page = (out / "days/2026-11-08.html").read_text()
+    assert 'aria-current="page"' in page and "Sun 8" in page
+    assert 'aria-label="Previous day"' in page and 'href="../days/2026-11-07.html"' in page
+    assert page.count('<span class="peak strong">20 kn</span>') == 3  # 6, 7 and 8
+    assert '<span class="peak none">–</span>' in page  # the 9th is calm
+    assert 'href="../days/2026-11-09.html" aria-label="Next day"' in page
+
+
+def test_fr_9_6_table_knows_its_first_hour_for_the_hover_link(tmp_path):
+    out = site_from(tmp_path, [run_covering(MORNING, 6)])
+    page = (out / "index.html").read_text()
+    assert 'class="hours"' in page and 'data-first="7"' in page
+    assert '<tr class="spot-row">' in page
+
+
+def test_fr_9_4_day_strip_names_the_shore_break_and_why():
+    from wing_alert.site import _summary
+
+    run = run_covering(MORNING, 6)
+    run["windows"][0].update(shore_break=2, shore_break_reason="1.6 m waves at 6 s")
+    assert _summary(run, "2026-11-06") == {
+        "peak": 20,
+        "band": "strong",
+        "warning": 2,
+        "reason": "1.6 m waves at 6 s",
+    }
+
+
+def test_fr_9_8_all_days_page_lists_every_date(tmp_path):
+    out = site_from(tmp_path, [run_covering(MORNING, 6, 7)])
+    archive = (out / "days.html").read_text()
+    assert "Friday 6 November" in archive and "Saturday 7 November" in archive
+
+
+def test_fr_9_7_maps_switch_by_hour(tmp_path):
+    out = tmp_path / "site"
+    png = tmp_path / "map.png"
+    png.write_bytes(b"png")
+    maps = {f"2026-11-06-{h:02d}": png for h in (9, 12, 15, 18)}
+    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run_covering(MORNING, 6)], out, maps)
+    page = (out / "index.html").read_text()
+    assert page.count('<button type="button" data-hour=') == 4
+    assert 'src="maps/2026-11-06-15.png" data-hour="15"' in page
 
 
 def build(tmp_path, issued_list, guides=None):

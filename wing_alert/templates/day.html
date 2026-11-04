@@ -1,73 +1,170 @@
 {% extends "base.html" %}
-{% block title %}Wing alert · {{ days[0].date | day_label if days else "" }}{% endblock %}
+{% block title %}Wing alert · {{ day.date | day_label }}{% endblock %}
 {% block content %}
-<p class="issued">Forecast issued {{ issued | replace("T", " ") }}</p>
-{% for day in days %}
-<section class="day">
-  <h1>{{ day.date | day_label }}</h1>
-  {% if day.best %}
-  <div class="best">
-    <span class="label">Best spot</span>
-    <a href="{{ root }}spots.html#{{ day.best.spot }}">{{ day.best.spot_name }}</a>
-    {{ day.best.start[11:] }}–{{ day.best.end[11:] }} ·
-    {{ day.best.wind_min }}{% if day.best.wind_max != day.best.wind_min %}–{{ day.best.wind_max }}{% endif %} kn {{ day.best.direction }}, gusts {{ day.best.gust_max }}
-    {% if day.best.shore_break %}<div class="warn level{{ day.best.shore_break }}">{{ day.best.shore_break | warning }} Shore break{% if day.best.shore_break == 2 %}: dangerous{% else %}: watch out{% endif %} · {{ day.best.shore_break_reason }}</div>{% endif %}
-  </div>
-  {% else %}
-  <div class="best none">Nothing rideable</div>
-  {% endif %}
-  {% set hourly = maps.get(day.date.isoformat(), []) %}
-  {% if hourly %}
-  <div class="maps">
-    {% for name in hourly %}<img src="{{ root }}maps/{{ name }}.png" alt="Wind map for {{ day.date | day_label }} at {{ name[11:] }}:00" loading="lazy">{% endfor %}
-  </div>
-  {% endif %}
-  {% if day.tide_chart %}
-  <figure class="tides">
-    {{ day.tide_chart | safe }}
-    <figcaption>Tide height above chart datum · shaded = rideable hours · predictions from the Marine Institute</figcaption>
-  </figure>
-  {% endif %}
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Spot</th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
-    <tbody>
-    {% for row in day.rows %}
-      <tr>
-        <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>
-          {% for w in row.windows %}<small>{{ w.start[11:] }}–{{ w.end[11:] }} {{ w.shore_break | warning }}</small>{% endfor %}
-          {% if row.waves is not none %}<small>Waves up to {{ "%.1f" | format(row.waves) }} m</small>{% endif %}
-          {% if row.tides.high %}<small>HW {{ row.tides.high | join(" ") }}</small>{% endif %}
-          {% if row.tides.low %}<small>LW {{ row.tides.low | join(" ") }}</small>{% endif %}</th>
-        {% for cell in row.cells %}
-          {% if cell %}
-          <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
-            <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
-          </td>
-          {% else %}<td></td>{% endif %}
-        {% endfor %}
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-</section>
-{% endfor %}
-<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · arrow = where the wind blows to · small number = gusts</p>
-<nav class="pager">
-  {% if previous %}<a href="{{ root }}days/{{ previous }}.html">← {{ previous }}</a>{% endif %}
-  {% if next %}<a href="{{ root }}days/{{ next }}.html">{{ next }} →</a>{% endif %}
+<nav class="strip" aria-label="Days">
+  {% if previous %}<a class="step" href="{{ root }}days/{{ previous }}.html" aria-label="Previous day">‹</a>{% else %}<span class="step"></span>{% endif %}
+  {% for item in strip %}
+  <a href="{{ root }}days/{{ item.date }}.html"{% if item.current %} class="current" aria-current="page"{% endif %}{% if item.warning %} title="Shore break: {{ 'dangerous' if item.warning == 2 else 'watch out' }} · {{ item.reason }}"{% endif %}>
+    <span class="day">{{ item.date | short_label }}</span>
+    <span class="peak {{ item.band or 'none' }}">{% if item.peak is not none %}{{ item.peak }} kn{% else %}–{% endif %}</span>
+    {% if item.warning %}<span class="break level{{ item.warning }}">⚠️ shore break</span>{% endif %}
+  </a>
+  {% endfor %}
+  {% if next %}<a class="step" href="{{ root }}days/{{ next }}.html" aria-label="Next day">›</a>{% else %}<span class="step"></span>{% endif %}
 </nav>
-{% if weeks %}
-<section class="past">
-  <h2>Weekly reports</h2>
-  <ul>{% for w in weeks | reverse %}<li><a href="{{ root }}weeks/{{ w }}.html">Week of {{ w }}</a></li>{% endfor %}</ul>
+
+<h1>{{ day.date | day_label }}</h1>
+<p class="issued">Forecast issued {{ issued | replace("T", " ") }}{% if outlook %} · <strong>Outlook: may still change</strong>{% endif %}</p>
+
+{% if day.best %}
+<div class="best">
+  <span class="label">Best spot</span>
+  <a href="{{ root }}spots.html#{{ day.best.spot }}">{{ day.best.spot_name }}</a>
+  {{ day.best.start[11:] }}–{{ day.best.end[11:] }} ·
+  {{ day.best.wind_min }}{% if day.best.wind_max != day.best.wind_min %}–{{ day.best.wind_max }}{% endif %} kn {{ day.best.direction }}, gusts {{ day.best.gust_max }}
+  {% if day.best.shore_break %}<div class="warn level{{ day.best.shore_break }}">{{ day.best.shore_break | warning }} Shore break{% if day.best.shore_break == 2 %}: dangerous{% else %}: watch out{% endif %} · {{ day.best.shore_break_reason }}</div>{% endif %}
+</div>
+{% else %}
+<div class="best none">Nothing rideable</div>
+{% endif %}
+
+{% if maps %}
+<section class="maps">
+  <div class="times" role="group" aria-label="Map hour">
+    {% for name in maps %}<button type="button" data-hour="{{ name[11:] }}">{{ name[11:] }}:00</button>{% endfor %}
+  </div>
+  <div class="images">
+    {% for name in maps %}<img src="{{ root }}maps/{{ name }}.png" data-hour="{{ name[11:] }}" alt="Wind map for {{ day.date | day_label }} at {{ name[11:] }}:00" loading="lazy">{% endfor %}
+  </div>
 </section>
 {% endif %}
-{% if past %}
-<section class="past">
-  <h2>Past days</h2>
-  <ul>{% for d in past | reverse %}<li><a href="{{ root }}days/{{ d }}.html">{{ d }}</a></li>{% endfor %}</ul>
-</section>
-{% endif %}
+
+<div class="scroll">
+<table class="hours" style="--hours: {{ day.hours | length }}" data-first="{{ day.hours[0] }}">
+  <colgroup><col class="names">{% for hour in day.hours %}<col>{% endfor %}</colgroup>
+  <thead><tr><th></th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% if day.tide %}
+    <tr class="tide">
+      <th>Tide<small class="tide-readout" aria-live="polite">{{ "%.1f" | format(day.tide.low) }}–{{ "%.1f" | format(day.tide.high) }} m</small></th>
+      <td colspan="{{ day.hours | length }}">{{ day.tide.svg | safe }}</td>
+    </tr>
+    <tr class="tide-legend">
+      <td colspan="{{ day.hours | length + 1 }}">
+        {% for name, colour in day.tide.legend %}<span class="key" style="--key: {{ colour }}">{{ name }}</span> {% endfor %}
+        · <span class="good">shaded</span> = rideable · Marine Institute predictions
+      </td>
+    </tr>
+  {% endif %}
+  {% for row in day.rows %}
+    <tr class="spot-row">
+      <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>{% for w in row.windows if w.shore_break %} {{ w.shore_break | warning }}{% endfor %}</th>
+      {% for cell in row.cells %}
+        {% if cell %}
+        <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
+          <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
+        </td>
+        {% else %}<td></td>{% endif %}
+      {% endfor %}
+    </tr>
+    <tr class="details">
+      <td colspan="{{ day.hours | length + 1 }}">
+        {% for w in row.windows %}<strong>{{ w.start[11:] }}–{{ w.end[11:] }}</strong> {{ w.shore_break | warning }} · {% else %}No window · {% endfor %}
+        {% if row.waves is not none %}waves {{ "%.1f" | format(row.waves) }} m · {% endif %}
+        {% if row.tides.high %}HW {{ row.tides.high | join(" ") }} {% endif %}
+        {% if row.tides.low %}LW {{ row.tides.low | join(" ") }}{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts</p>
+
+<script>
+/* One map at a time on a phone, picked with the hour buttons; all four side by side
+   on a wider screen (CSS). Opens on the next hour still to come today. */
+(function () {
+  var maps = document.querySelector(".maps");
+  if (!maps) return;
+  document.documentElement.classList.add("js");
+  var buttons = maps.querySelectorAll("button"), images = maps.querySelectorAll("img");
+  function show(hour) {
+    buttons.forEach(function (b) { b.classList.toggle("on", b.dataset.hour === hour); });
+    images.forEach(function (i) { i.classList.toggle("on", i.dataset.hour === hour); });
+  }
+  buttons.forEach(function (b) { b.onclick = function () { show(b.dataset.hour); }; });
+  var hours = Array.prototype.map.call(buttons, function (b) { return b.dataset.hour; });
+  var now = new Date(), today = now.toLocaleDateString("en-CA", { timeZone: "Europe/Dublin" });
+  var pick = hours[Math.min(1, hours.length - 1)];
+  if (today === "{{ day.date }}") {
+    var hour = Number(now.toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Dublin" }));
+    pick = hours.filter(function (h) { return Number(h) >= hour; })[0] || hours[hours.length - 1];
+  }
+  show(pick);
+})();
+
+/* One moment across the page: hovering or tapping an hour cell, or moving along the
+   tide chart, marks that hour in the table header and shows each station's tide height
+   then, in the Tide cell on the left (not under the finger). */
+(function () {
+  var table = document.querySelector("table.hours");
+  if (!table) return;
+  var heads = table.tHead.rows[0].cells, first = Number(table.dataset.first);
+  var count = heads.length - 1, svg = table.querySelector(".tidechart");
+  var readout = table.querySelector(".tide-readout"), resting = readout ? readout.innerHTML : "";
+  var series = svg ? JSON.parse(svg.dataset.series) : [], picked = null;
+  function level(points, hour) {
+    for (var i = 1; i < points.length; i++) {
+      var a = points[i - 1], b = points[i];
+      if (hour <= b[0]) return a[1] + (b[1] - a[1]) * (hour - a[0]) / (b[0] - a[0]);
+    }
+    return points[points.length - 1][1];
+  }
+  function clock(hour) {
+    var minutes = Math.round(hour * 12) * 5, h = Math.floor(minutes / 60), m = minutes % 60;
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  }
+  function markHour(column) {
+    for (var i = 1; i < heads.length; i++) heads[i].classList.toggle("now", i === column + 1);
+  }
+  function pick(cell) {
+    if (picked) picked.classList.remove("picked");
+    picked = cell;
+    if (cell) cell.classList.add("picked");
+  }
+  function showTide(hour) {
+    if (!svg) return;
+    var x = (hour - first) / count * svg.viewBox.baseVal.width, cursor = svg.querySelector(".cursor");
+    cursor.setAttribute("x1", x); cursor.setAttribute("x2", x);
+    svg.classList.add("reading");
+    readout.innerHTML = "<b>" + clock(hour) + "</b>" + series.map(function (s) {
+      return '<span style="color:' + s.colour + '">● ' + level(s.points, hour).toFixed(1) + " m</span>";
+    }).join("");
+  }
+  function onChart(event) {
+    var box = svg.getBoundingClientRect();
+    var share = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
+    pick(null);
+    markHour(Math.min(count - 1, Math.floor(share * count)));
+    showTide(first + share * count);
+  }
+  function onCell(event) {
+    var cell = event.target.closest("tr.spot-row td");
+    if (!cell) return;
+    pick(cell);
+    markHour(cell.cellIndex - 1);
+    showTide(first + cell.cellIndex - 0.5);  /* the middle of that hour */
+  }
+  function clear(event) {
+    if (event.pointerType !== "mouse") return;  /* a finger lifting leaves the reading up */
+    pick(null); markHour(-1);
+    if (svg) { svg.classList.remove("reading"); readout.innerHTML = resting; }
+  }
+  table.addEventListener("pointerover", onCell);
+  table.addEventListener("pointerdown", onCell);
+  table.addEventListener("pointerleave", clear);
+  if (svg) { svg.addEventListener("pointermove", onChart); svg.addEventListener("pointerdown", onChart); }
+})();
+</script>
 {% endblock %}

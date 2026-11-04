@@ -135,8 +135,8 @@ def test_fr_4_4_day_page_shows_waves_and_reason(tmp_path):
     SiteBuilder(make_env(), [ARKLOW], tmp_path).build([snapshot], out)
     page = (out / "index.html").read_text()
     assert "Shore break: dangerous · 1.6 m waves at 6 s" in page
-    assert "Waves up to 1.6 m" in page
-    assert "<small>HW 12:00</small>" in page and "<small>LW 18:00</small>" in page  # FR-6.5
+    assert "waves 1.6 m" in page
+    assert "HW 12:00" in page and "LW 18:00" in page  # FR-6.5
     assert 'class="tidechart"' in page  # FR-6.4
 
 
