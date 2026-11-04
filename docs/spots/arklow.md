@@ -32,7 +32,13 @@
 
 ## Videos
 
+- [Arklow to Buckroney - Epic Wing Foil Downwinder!](https://youtu.be/ey-8ESqBbR8)
+- [Arklow Wing Foiling May 2025](https://youtu.be/VOsmOpkhL9g)
+- [Arklow south beach wing foiling - 27 December 2025](https://youtu.be/ve76VmBjkWU)
+- [Arklow wing foiling - 25th June 2025](https://youtu.be/gA6IlNX38zI)
+- [Arklow Wing foiling 3 May 2025 (Short)](https://youtube.com/shorts/lnklyvQol4I)
 - [North-easterly, 3 May 2025](https://youtu.be/gHAu4Nts9q0)
+- [Raw footage Arklow Wing foiling down wind 03-05-2025](https://youtu.be/2sEuT0d0dBk)
 - [19 May 2024](https://youtu.be/sjC9kCzDR2U)
 
 _The map with the numbered landing spots and the rock lines is still to be added._
