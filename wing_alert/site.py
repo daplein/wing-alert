@@ -237,6 +237,7 @@ def _measured_row(
         "where": where(about, spots) if about else "",
         "cells": [_reading_cell(by_hour.get(hour)) for hour in hours],
         "waves": [_wave_cell(by_hour.get(hour)) for hour in hours],
+        "has_waves": (about or {}).get("waves", True),
     }
 
 

@@ -8,6 +8,7 @@ from wing_alert.measured import (
     eight_point,
     load_observations,
     readings_by_hour,
+    stations_about,
     where,
 )
 from wing_alert.site import SiteBuilder, make_env
@@ -58,6 +59,17 @@ def test_fr_11_2_distance_and_bearing():
     assert round(distance_km({"lat": 53.0, "lon": -6.0}, north)) == 111
     assert round(bearing({"lat": 53.0, "lon": -6.0}, north)) == 0
     assert [eight_point(d) for d in (0, 44, 100, 350)] == ["N", "NE", "E", "N"]
+
+
+def test_fr_11_1_stations_follow_the_newest_list():
+    pier = {"id": "east_pier", "name": "East Pier", "lat": 53.3, "lon": -6.12}
+    observations = {
+        **obs("2026-11-03", {}, (DUBLIN_BAY, M5)),
+        **obs("2026-11-04", {}, (pier, {**DUBLIN_BAY, "name": "Dublin Bay"})),
+    }
+    about = stations_about(observations)
+    assert list(about) == ["east_pier", "dublin_bay", "m5"]
+    assert about["dublin_bay"]["name"] == "Dublin Bay"
 
 
 def test_fr_10_6_loads_kept_readings_by_utc_day(tmp_path):
@@ -112,6 +124,14 @@ def test_fr_11_3_past_days_only_show_stations_with_readings(tmp_path):
     page = (out / "days/2026-11-06.html").read_text()
     assert 'data-station="m5"' in page and 'data-station="dublin_bay"' not in page
     assert '<tr class="measured-row" data-station="m5">' in page
+
+
+def test_fr_11_2_no_waves_line_for_a_station_without_a_wave_sensor(tmp_path):
+    pier = {"id": "east_pier", "name": "East Pier", "lat": 53.3, "lon": -6.12, "waves": False}
+    observations = obs("2026-11-06", {"east_pier": [reading("2026-11-06T12:00Z")]}, (pier,))
+    page = site(tmp_path, observations)
+    assert 'data-station="east_pier"' in page
+    assert '<tr class="measured-waves" data-station="east_pier">' not in page
 
 
 def test_fr_11_1_station_missing_from_about_uses_its_id(tmp_path):

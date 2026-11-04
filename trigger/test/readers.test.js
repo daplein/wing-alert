@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { erddapUrl, parseErddap, parseIrishLights, read } from "../src/readers.js";
+import { erddapUrl, parseEastPier, parseErddap, parseIrishLights, read } from "../src/readers.js";
 
 const FEED = {
   LatestAISDataFeed: [
@@ -69,4 +69,28 @@ test("fr_10_2 read fetches and parses the right source", async () => {
   const readings = await read({ kind: "erddap", station: "M2" }, new Date(), fetchFn);
   assert.equal(readings.length, 2);
   await assert.rejects(read({ kind: "carrier_pigeon" }, new Date()), /Unknown source/);
+});
+
+const EAST_PIER = {
+  reading: { received_utc: "2026-11-04T23:04:14.205Z", wind_kt: 25.46 },
+  window_10min: { samples: 10, mean_wind_kt: 22.82, max_gust_kt: 28.57, vector_mean_dir_deg: 98.8 },
+};
+
+test("fr_10_2 east pier reading is its 10-minute block in knots", () => {
+  assert.deepEqual(parseEastPier(EAST_PIER), [
+    { time: "2026-11-04T23:04Z", wind: 22.8, gust: 28.6, direction: 98.8, wave_height: null, wave_period: null },
+  ]);
+});
+
+test("fr_10_4 east pier without a full 10-minute block fails", () => {
+  const short = { ...EAST_PIER, window_10min: { ...EAST_PIER.window_10min, samples: 2 } };
+  assert.throws(() => parseEastPier(short), /no full 10-minute block/);
+});
+
+test("fr_10_2 read fetches the east pier station", async () => {
+  const fetchFn = async (url) => {
+    assert.match(url, /eastpier\.dublinbaybuoy\.com\/latest$/);
+    return new Response(JSON.stringify(EAST_PIER));
+  };
+  assert.equal((await read({ kind: "east_pier" }, new Date(), fetchFn))[0].wind, 22.8);
 });

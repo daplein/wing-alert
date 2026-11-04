@@ -114,6 +114,7 @@ All spots, thresholds and directions live in `config/spots.yaml` and `config/set
 | Sunrise, sunset | Open-Meteo forecast API (`daily`) | No | Slice 1 |
 | Wave height and period, swell height and period | [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) | No | Slice 4 |
 | Tide predictions (Arklow, Wicklow, Dublin Port) | [Marine Institute ERDDAP](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html), `IMI-TidePrediction` | No | Slice 6 |
+| Live wind: DLR East Pier station | [Cruising Association of Ireland](https://cruising.ie/dlr-east-pier-weather-station/) | No | Slice 10 |
 | Live wind and waves: Dublin Bay Buoy | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx) | No | Slice 10 |
 | Live wind and waves: M2, M5 buoys | [Marine Institute ERDDAP](https://erddap.marine.ie/erddap/tabledap/IWBNetwork.html), `IWBNetwork` | No | Slice 10 |
 | WhatsApp delivery | [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/): free, unofficial, text only, personal use | API key (secret) | Slice 1 |
@@ -325,11 +326,12 @@ flowchart LR
 
 | ID | Station | Lat, Lon | Near | Source | History at source? |
 |---|---|---|---|---|---|
+| `east_pier` | DLR East Pier station | 53.3002, -6.1242 | Seapoint, 2 km E | [Cruising Association of Ireland](https://cruising.ie/dlr-east-pier-weather-station/), `eastpier.dublinbaybuoy.com/latest`: the station's own 10-minute mean wind, max gust and direction, in kn. No waves | Only the last 3 hours: we must record it |
 | `dublin_bay` | Dublin Bay Buoy | 53.3319, -6.0774 | Seapoint, 7 km NE | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx): latest reading only, in a JSON field (`latestais`) of the page. Wind in kn, times in UTC | No: we must record it |
 | `m2` | M2 weather buoy | 53.4836, -5.4302 | Off north Dublin, 50 km out | [ERDDAP `IWBNetwork`](https://erddap.marine.ie/erddap/tabledap/IWBNetwork.html), hourly | Yes, years |
 | `m5` | M5 weather buoy | 51.6904, -6.7043 | Off Wexford, where southerly swell comes into the Irish Sea | ERDDAP `IWBNetwork`, hourly | Yes, years |
 
-No live station was found near the Wicklow spots: Greystones harbour has none that publishes data (only an amateur station inland). Irish Lights has no data buoy between Dublin Bay and Wexford.
+No live station was found near the Wicklow spots: Greystones harbour has none that publishes data (only an amateur station inland). Irish Lights has no data buoy between Dublin Bay and Wexford. Irish Lights also has North Kish, South Burford (both off Dublin Bay) and Splaugh (off Rosslare, 60 km south of Arklow, half as far as M5); each is one more entry if we want them.
 
 - **FR-10.1** The Worker from slice 7 gets a fourth cron, `7 * * * *`. On it, it reads every station and stores the readings; it starts no GitHub job.
 - **FR-10.2** A reading is: station, `time` (UTC, to the minute, as the source gives it), `wind` and `gust` (kn), `direction` (°, wind from), `wave_height` (m), `wave_period` (s). A value the source leaves out is `null`. The Dublin Bay Buoy gives its latest reading; ERDDAP gives the last 3 hours, so a late or missed run fills in.
@@ -357,7 +359,7 @@ M5          ...
 ```
 
 - **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
-- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Under the wind, a **waves line** over the same hours: wave height (m) with the period small (`1.2` `5s`), from the same reading. The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). The Measured heading names the sources, and the legend says the readings are not at the spot.
+- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Under the wind, a **waves line** over the same hours: wave height (m) with the period small (`1.2` `5s`), from the same reading. The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) gets no waves line. The Measured heading names the sources, and the legend says the readings are not at the spot.
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.

@@ -38,8 +38,14 @@ def local_time(utc: str) -> datetime:
 
 
 def stations_about(observations: dict[str, dict]) -> dict[str, dict[str, Any]]:
-    """Names and positions, newest description wins."""
-    return {about["id"]: about for record in observations.values() for about in record["about"]}
+    """Names and positions in the newest record's order; older records only add stations
+    that have since been dropped."""
+    newest_first = reversed(list(observations.values()))
+    about: dict[str, dict[str, Any]] = {}
+    for record in newest_first:
+        for station in record["about"]:
+            about.setdefault(station["id"], station)
+    return about
 
 
 def where(station: dict[str, Any], spots: list[dict[str, Any]]) -> str:

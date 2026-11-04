@@ -76,8 +76,8 @@ test("fr_10_5 obs answers a day's readings with station details and open cors", 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "*");
   assert.equal(body.stations.m2[0].wind, 10);
-  assert.deepEqual(body.about.map((s) => s.id), ["dublin_bay", "m2", "m5"]);
-  assert.equal(body.about[0].lat, 53.3319);
+  assert.deepEqual(body.about.map((s) => s.id), ["east_pier", "dublin_bay", "m2", "m5"]);
+  assert.equal(body.about[1].lat, 53.3319);
 });
 
 test("fr_10_5 obs answers an empty day and rejects bad requests", async () => {
