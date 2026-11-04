@@ -8,3 +8,5 @@ htmlcov/
 _site/
 .env
 .DS_Store
+.wrangler/
+node_modules/
