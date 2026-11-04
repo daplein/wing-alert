@@ -10,3 +10,8 @@ daylight_margin_minutes: 30
 watch_wave_m: 0.8
 danger_wave_m: 1.5
 long_period_s: 10
+
+# How far ahead: the site shows forecast_days (today + 3), alerts only cover
+# alert_days (today and tomorrow), since longer forecasts move too much.
+forecast_days: 4
+alert_days: 2

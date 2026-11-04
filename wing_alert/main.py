@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 from zoneinfo import ZoneInfo
@@ -107,6 +107,8 @@ class DailyJob:
             self._maps.write(snapshot)
 
     def _alert(self, windows: list[Window], now: datetime) -> str | None:
+        last = now.date() + timedelta(days=self._settings.alert_days)
+        windows = [window for window in windows if window.date < last]
         changed = self._state.changed_days(windows)
         fresh = [window for window in windows if window.date in changed]
         if not fresh:
@@ -144,15 +146,15 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
     return DailyJob(
         spots=load_spots(args.config / "spots.yaml"),
         settings=settings,
-        forecasts=OpenMeteoClient(http),
+        forecasts=OpenMeteoClient(http, settings.forecast_days),
         sender=CallMeBotSender(http, recipients) if live else DrySender(),
         state=AlertState(args.state),
         persist=live,
         archive=None if args.dry_run else Archive(args.data),
         maps=None if args.dry_run else MapWriter(args.data),
         site_url=args.site_url,
-        marine=MarineClient(http),
-        tides=TideClient(http),
+        marine=MarineClient(http, settings.forecast_days),
+        tides=TideClient(http, settings.forecast_days),
     )
 
 

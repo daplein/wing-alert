@@ -12,51 +12,94 @@ header .brand { font-weight: 700; font-size: 1.15rem; display: flex; align-items
 nav a { margin-left: 14px; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
-h1 { font-size: 1.35rem; margin: 28px 0 10px; }
+h1 { font-size: 1.35rem; margin: 18px 0 2px; }
 .issued, .legend, footer { color: var(--muted); font-size: 0.85rem; }
-.best { background: var(--good); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 1.05rem; }
+.best { background: var(--good); border-radius: 10px; padding: 12px 14px; margin: 10px 0 14px; font-size: 1.05rem; }
 .best .label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .best a { font-weight: 700; }
 .best.none { background: var(--light); color: var(--muted); }
 .scroll { overflow-x: auto; }
-table { border-collapse: separate; border-spacing: 2px; font-size: 0.85rem; }
-th { text-align: left; font-weight: 600; white-space: nowrap; padding: 4px 8px 4px 0; }
+/* Every block fills the same column, so their edges line up. */
+.best, .maps, .scroll, table.hours { width: 100%; }
+table.hours { table-layout: fixed; border-collapse: separate; border-spacing: 2px; font-size: 0.85rem;
+  min-width: calc(var(--name-col) + var(--hours) * 30px); --name-col: 170px; }
+table.hours col.names { width: var(--name-col); }
+th { text-align: left; font-weight: 600; padding: 4px 8px 4px 0; }
 th small { display: block; font-weight: 400; color: var(--muted); }
-thead th { color: var(--muted); font-weight: 500; text-align: center; }
-td { min-width: 42px; text-align: center; border-radius: 6px; padding: 4px 2px; border: 2px solid transparent; }
+thead th { color: var(--muted); font-weight: 500; text-align: center; padding: 0; }
+td { text-align: center; border-radius: 6px; padding: 4px 0; border: 2px solid transparent; }
 td small { display: block; color: var(--muted); font-size: 0.7rem; }
 td.ok { border-color: var(--fg); font-weight: 700; }
+tr.details td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 0 0 8px; border-radius: 0; }
+tr.tide td { padding: 0; }
+tr.tide-legend td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 2px 0 10px; }
+.key::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: var(--key); vertical-align: middle; margin-right: 4px; }
+tr.tide-legend .good { padding: 0 4px; border-radius: 3px; }
 .light { background: var(--light); } .good { background: var(--good); }
 .strong { background: var(--strong); } .wild { background: var(--wild); }
 .arrow { display: inline-block; margin-right: 2px; }
+/* The hour under the mouse or finger: its cell grows a little, its hour lights up. */
+tr.spot-row td { transition: transform .12s ease-out; }
+tr.spot-row td.picked { transform: scale(1.15); position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+thead th.now { background: var(--accent); color: var(--bg); font-weight: 700; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  tr.spot-row td { transition: none; }
+  tr.spot-row td.picked { transform: none; }
+}
 .legend span { padding: 1px 6px; border-radius: 4px; }
-.pager { display: flex; justify-content: space-between; margin: 20px 0; }
 .past ul, .toc { columns: 3 140px; padding-left: 18px; }
 .spot { border-top: 1px solid var(--line); margin-top: 24px; }
 .spot table { border-collapse: collapse; } .spot td, .spot th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; min-width: 0; border-radius: 0; }
 footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px; padding-bottom: 24px; }
-/* Maps: a swipe strip on a phone, a 2x2 grid on a wider screen (FR-2.8). */
-.maps { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px 14px; padding: 0 16px; }
-.maps img { flex: 0 0 88%; width: 88%; height: auto; border-radius: 10px; scroll-snap-align: center; }
-@media (min-width: 700px) {
-  .maps { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; margin: 0 0 14px; padding: 0; max-width: 900px; }
-  .maps img { width: 100%; }
+/* Day strip: a few days either side, today's page in the middle of the week. */
+.strip { display: flex; gap: 6px; margin: 14px 0 0; overflow-x: auto; }
+.strip a { margin: 0; flex: 1 1 0; min-width: 0; text-align: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; color: var(--fg); }
+.strip a:hover { text-decoration: none; border-color: var(--accent); }
+.strip a.current { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+.strip .peak, .strip .break { display: block; }
+/* Peak wind as a number in the table's colours; shore break said in words, apart from it. */
+.strip .day { display: block; white-space: nowrap; }
+.peak { white-space: nowrap; font-size: 0.8rem; font-weight: 700; padding: 0 5px; border-radius: 4px; margin-top: 2px; }
+.peak.none { color: var(--muted); font-weight: 400; }
+.break { font-size: 0.68rem; font-weight: 600; color: #d97700; line-height: 1.15; margin-top: 2px; }
+.break.level2 { color: #d62828; }
+.strip .step { flex: 0 0 auto; display: flex; align-items: center; font-size: 1.3rem; border: none; color: var(--accent); padding: 0 4px; }
+/* Maps: four side by side on a wide screen; one at a time with hour buttons on a phone. */
+.maps { margin: 0 0 14px; }
+.maps .times { display: none; gap: 6px; margin-bottom: 8px; }
+.maps button { flex: 1; font: inherit; font-size: 0.9rem; padding: 6px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.maps button.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+.maps .images { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.maps img { width: 100%; height: auto; border-radius: 10px; display: block; }
+@media (max-width: 899px) {
+  .maps .images { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .js .maps .times { display: flex; }
+  .js .maps .images { display: block; }
+  .js .maps img { display: none; max-width: 520px; margin: 0 auto; }
+  .js .maps img.on { display: block; }
 }
 /* Table: spot names stay pinned while the hours scroll sideways. */
 tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg); z-index: 1; }
 @media (max-width: 600px) {
   header, main, footer { padding-left: 10px; padding-right: 10px; }
-  .maps { margin: 0 -10px 14px; padding: 0 10px; }
-  tbody th { white-space: normal; min-width: 96px; max-width: 120px; font-size: 0.8rem; }
-  td { min-width: 34px; font-size: 0.8rem; }
+  table.hours { --name-col: 84px; font-size: 0.8rem; border-spacing: 1px; min-width: calc(var(--name-col) + var(--hours) * 26px); }
+  tbody th { font-size: 0.78rem; line-height: 1.2; padding-right: 4px; }
+  .arrow { display: none; }
+  td small { font-size: 0.65rem; }
+  .strip { gap: 4px; }
+  .strip a { padding: 5px 1px; font-size: 0.74rem; }
+  .strip .peak { font-size: 0.74rem; padding: 0 3px; }
+  .strip .step { padding: 0 1px; }
   .best { font-size: 1rem; }
 }
 /* Tide chart (FR-6.4): inline SVG, so it follows the page colours. */
-.tides { margin: 0 0 16px; max-width: 900px; }
-.tidechart { width: 100%; max-width: 640px; height: auto; display: block; font-size: 13px; fill: var(--fg); }
-.tidechart .grid { stroke: var(--line); stroke-width: 1; }
+.tidechart { width: 100%; height: 70px; display: block; touch-action: pan-y; cursor: crosshair; }
+.tidechart .cursor { stroke: var(--fg); stroke-width: 1.5; vector-effect: non-scaling-stroke; visibility: hidden; }
+.tidechart.reading .cursor { visibility: visible; }
+.tide-readout b, .tide-readout span { display: block; }
+.tide-readout b { color: var(--fg); }
+.tide-readout span { font-weight: 600; }
 .tidechart .ride { fill: var(--good); opacity: .7; }
-.tides figcaption { color: var(--muted); font-size: 0.8rem; }
 .warn { margin-top: 6px; font-size: 0.95rem; font-weight: 600; }
 .warn.level2 { color: #d62828; }
 table.week td { text-align: left; min-width: 0; padding: 6px 8px; }

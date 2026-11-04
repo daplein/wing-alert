@@ -200,15 +200,38 @@ STATIONS = {
 def test_fr_6_4_chart_draws_one_line_per_station_and_shades_rideable_hours():
     from wing_alert.tidechart import tide_chart
 
-    svg = tide_chart(STATIONS, "2026-11-06", {13, 14})
-    assert svg.startswith("<svg") and svg.count("<polyline") == 2
-    assert ">Arklow<" in svg and ">Dublin Port<" in svg
-    assert svg.count('class="ride"') == 2
-    assert "12:00</text>" in svg
+    chart = tide_chart(STATIONS, "2026-11-06", {6, 13, 14}, list(range(8, 17)))
+    assert chart.svg.startswith("<svg") and chart.svg.count("<polyline") == 2
+    assert [name for name, _ in chart.legend] == ["Arklow", "Dublin Port"]
+    assert chart.svg.count('class="ride"') == 2  # 06:00 is outside the table's hours
+
+
+def test_fr_6_4_chart_spans_the_table_hours():
+    from wing_alert.tidechart import HOUR_WIDTH, tide_chart
+
+    chart = tide_chart(STATIONS, "2026-11-06", {8}, list(range(8, 17)))
+    assert f'viewBox="0 0 {9 * HOUR_WIDTH} ' in chart.svg
+    assert '<rect class="ride" x="0.0"' in chart.svg  # 08:00 is the first column
+    assert "<text" not in chart.svg  # it stretches, so the page writes the labels
+
+
+def test_fr_9_6_chart_carries_levels_for_the_hover_readout():
+    import html
+    import json
+
+    from wing_alert.tidechart import tide_chart
+
+    chart = tide_chart(STATIONS, "2026-11-06", set(), list(range(8, 17)))
+    assert 'data-first="8" data-count="9"' in chart.svg and 'class="cursor"' in chart.svg
+    data = html.unescape(chart.svg.split('data-series="')[1].split('"')[0])
+    series = json.loads(data)
+    assert [s["name"] for s in series] == ["Arklow", "Dublin Port"]
+    assert series[1]["points"] == [[12.0, 1.2]]  # only levels near the table hours
 
 
 def test_fr_6_4_no_chart_without_levels_for_the_day():
     from wing_alert.tidechart import tide_chart
 
-    assert tide_chart(STATIONS, "2026-11-09", set()) == ""
-    assert tide_chart({}, "2026-11-06", set()) == ""
+    assert tide_chart(STATIONS, "2026-11-09", set(), [12]) is None
+    assert tide_chart({}, "2026-11-06", set(), [12]) is None
+    assert tide_chart(STATIONS, "2026-11-06", set(), []) is None
