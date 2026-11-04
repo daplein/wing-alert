@@ -1,0 +1,13 @@
+# Cloudflare Worker that starts the GitHub jobs on time (spec slice 7).
+# The GitHub token is a Worker secret: `npx wrangler secret put GITHUB_TOKEN`.
+name = "wing-alert-trigger"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+[triggers]
+# UTC. Keep in sync with src/jobs.js.
+crons = ["17 5 * * *", "17 15 * * *", "17 18 * * SUN"]
+
+[observability]
+enabled = true

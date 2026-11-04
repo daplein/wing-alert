@@ -10,7 +10,7 @@ Tell the Wicklow wingfoiling crew when the wind is good, where to go, and how da
 - **Pull:** a GitHub Pages site with today's report, a map, and every past day.
 - **Look back:** a weekly page on the site. WhatsApp gets a one-line link to it.
 
-It runs entirely on GitHub Actions and free data. There's no server and no app.
+It runs on GitHub Actions and free data, with a free Cloudflare Worker as its alarm clock (slice 7). There's no server and no app.
 
 ## For the crew: how you'll get the alerts
 
@@ -28,7 +28,7 @@ What we can do for free:
 
 ```mermaid
 flowchart LR
-    cron([GitHub Actions cron<br/>~05:17 + ~15:17 UTC, each repeated]):::ext
+    cron([Cloudflare Worker cron<br/>05:17 + 15:17 UTC]):::ext
     spots[(config/spots.yaml)]
     wind[(Open-Meteo<br/>wind forecast)]:::ext
     sea[(Open-Meteo Marine<br/>waves, swell, sea level)]:::ext
@@ -67,7 +67,7 @@ Wind decides **whether** to alert. Waves and tide decide **how loud the warning 
 
 ```mermaid
 flowchart LR
-    cron([GitHub Actions cron<br/>Sunday ~18:17 UTC]):::ext
+    cron([Cloudflare Worker cron<br/>Sunday 18:17 UTC]):::ext
     archive[(data/ archive<br/>last 7 days)]
     sent[(state.json<br/>what we alerted)]
     review[Weekly summary<br/>best days, missed windows]:::hot
@@ -142,7 +142,7 @@ Branch `feat/wind-alert`.
 - **FR-1.9** Recipients (phone number + CallMeBot key each) come from one secret, `WHATSAPP_RECIPIENTS`, and only ever from environment variables. They never appear in logs, files or the site; error messages name a recipient by position only.
 - **FR-1.10** With no recipients configured, the job prints the message instead of sending it and doesn't update `state.json`, so it can run safely before the secret exists. `--dry-run` also skips the archive (FR-2.1): nothing is written at all.
 - **FR-1.11** Wind is read at a **sea point** a few km off each beach (`wind_at` in `config/spots.yaml`), not at the beach itself. The forecast model's cell on the beach counts as land, which slows the wind: on 1 Nov 2026 it said 8–9 kn at Arklow while David rode 14–20 kn, and the first sea cell said 17 kn. The beach position is still used for the map and the marine data.
-- **FR-1.12** The daily job runs twice per slot (see Schedule), because GitHub sometimes drops scheduled runs. The repeat is harmless: FR-1.7 stops repeat alerts, and the site shows the latest run.
+- **FR-1.12** A Cloudflare Worker starts the daily job on time (slice 7). GitHub's own cron stays as a late backup, in case the Worker fails. A run that comes twice is harmless: FR-1.7 stops repeat alerts, and the site shows the latest run.
 
 **Example message**
 
@@ -157,7 +157,7 @@ Fri 7 Nov
 
 From slice 2 the message ends with the day page link, and from slice 4 risky windows get ⚠️ or 🚨.
 
-**Schedule:** GitHub cron runs in UTC (an hour later in Irish summer time). GitHub delays or drops scheduled runs when it's busy, worst on the hour: on 1–2 Nov 2026 the 16:00 run started 4 hours late and the 06:00 run never ran. So the daily job runs off the hour, twice per slot: 05:17 and 06:47 UTC for the morning, 15:17 and 16:47 for the afternoon (FR-1.12). The weekly runs once, Sunday 18:17 UTC. A `workflow_dispatch` trigger allows manual runs.
+**Schedule:** all times are UTC (an hour later in Irish summer time). The daily job runs at 05:17 and 15:17, the weekly on Sunday at 18:17, all started by the Cloudflare Worker (slice 7). GitHub's cron runs the daily job again at 06:47 and 16:47 as a backup (FR-1.12). A `workflow_dispatch` trigger allows manual runs.
 
 ## Slice 2: Daily archive and GitHub Pages site
 
@@ -170,6 +170,7 @@ Branch `feat/site`.
   - the wind map (from slice 3)
   - a table of all spots ranked, with hourly wind and good hours highlighted
   - links to the previous and next day
+- **FR-2.9** If the Pages deploy fails, try once more. The data is already committed by then, so a failed deploy only leaves the site one run behind.
 - **FR-2.8** The site works on a phone first. The hourly maps are a horizontal swipe strip on a phone (one map per screen, the next one peeking in) and a 2×2 grid on a wider screen. The hourly table scrolls sideways with the spot names pinned on the left.
 - **FR-2.4** **Front page** is today's day page, plus a list of past days. A day page is built from the last run issued that day, and shows every date that run covers (today and tomorrow).
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
@@ -208,7 +209,7 @@ Branch `feat/shore-break`.
 
 Branch `feat/weekly`.
 
-- **FR-5.1** On Sundays at 18:00 UTC (same workflow, its own cron; also runnable by hand), read the last 7 days of `data/` (Monday to the run day) and `state.json`.
+- **FR-5.1** On Sundays at 18:17 UTC (same workflow, started by the Worker as `job: weekly`; also runnable by hand), read the last 7 days of `data/` (Monday to the run day) and `state.json`.
 - **FR-5.2** For each day, take the windows from that day's **morning run** (the shortest-range, most accurate forecast). List the best days and spots of the week.
 - **FR-5.3** Mark each window as **alerted** if a sent alert listed an overlapping window at that spot, otherwise **missed** (the forecast didn't see it coming). Alerts are only recorded once `WHATSAPP_RECIPIENTS` is set, so until then every window shows as missed.
 - **FR-5.4** Save the summary as `data/weeks/<monday>.json` (state.json forgets after 14 days, so the week is computed once and kept). Publish a week page on the site, linked from the front page, and send one WhatsApp line with the link, e.g. `🪁 Week of 3 Nov: 3 good days, 1 missed → <link>`.
@@ -237,6 +238,34 @@ So one tide line for the whole coast is wrong, and the Marine API's modelled sea
 - **FR-6.6** **Map:** each spot's label adds the tide at that hour: `HW` or `LW` within 1 h of it, otherwise `↑` (rising) or `↓` (falling).
 - **FR-6.7** If the tide service fails, the run carries on without tides (no chart, no tide lines, no tide step-up in the shore break), like FR-4.4.
 
+## Slice 7: Reliable schedule
+
+Branch `feat/cloudflare-trigger`.
+
+GitHub's cron is too unreliable to time an alert. GitHub runs scheduled workflows "best effort" from one shared queue, and free public repos have no guarantee. From 2 to 4 Nov 2026, 4 of 12 scheduled runs never ran and the rest started 6 to 8 hours late: the morning alert arrived around 13:00. Runs started by hand or through the API (`workflow_dispatch`) don't wait in that queue: they start within seconds.
+
+So a free Cloudflare Worker is the alarm clock, and GitHub still does all the work.
+
+```mermaid
+flowchart LR
+    worker([Cloudflare Worker<br/>cron, on the minute]):::hot
+    api[GitHub API<br/>workflow_dispatch]:::hot
+    job[daily.yml<br/>same job as before]:::hot
+    backup([GitHub cron<br/>late backup]):::ext
+
+    worker -- token, Actions: write --> api --> job
+    backup -.-> job
+
+    classDef hot fill:#EB1F1F,stroke:#9E0F14,stroke-width:3px,color:#fff,font-weight:bold
+    classDef ext fill:#5B3FD9,stroke:#3A2899,stroke-width:3px,color:#fff,font-weight:bold
+```
+
+- **FR-7.1** A Cloudflare Worker (`trigger/`, free plan) has three cron triggers: `17 5 * * *` and `17 15 * * *` (daily) and `17 18 * * SUN` (weekly).
+- **FR-7.2** On each trigger it calls GitHub's API to run `daily.yml` on `main` with `job: daily` or `job: weekly`. If the call fails, it retries once, then fails, so the error shows in the Worker's logs.
+- **FR-7.3** It authenticates with a fine-grained GitHub token limited to this repo, with only the **Actions: read and write** permission. The token lives only in the Worker's secret `GITHUB_TOKEN`, never in a file, log or commit.
+- **FR-7.4** GitHub's cron keeps the daily job at 06:47 and 16:47 as a backup, in case the Worker or its token fails. The weekly job has no GitHub backup: it has no repeat guard, so it must only run once.
+- **FR-7.5** The Worker's code stays tiny: a lookup from cron to job, and one API call. The lookup has a unit test (`node --test`) that runs in CI.
+
 ## Project layout (planned)
 
 ```
@@ -252,6 +281,7 @@ wing_alert/
   main.py                  wiring: build parts, run the daily job
 tests/
 .github/workflows/daily.yml
+trigger/                   Cloudflare Worker that starts the jobs (slice 7)
 ```
 
 Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2` (slice 2), `matplotlib` (slice 3).
@@ -261,6 +291,8 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 1. Register with CallMeBot: add their number, send "I allow callmebot to send me messages", and receive the API key.
 2. Add the repo secret `WHATSAPP_RECIPIENTS`: one `phone:apikey` pair per line (David first, crew members as they register).
 3. Turn on GitHub Pages with "GitHub Actions" as the source (slice 2).
+4. Create a fine-grained GitHub token (Settings → Developer settings → Fine-grained tokens): repository access **only `daplein/wing-alert`**, permission **Actions: Read and write**, the longest expiry allowed. Put its expiry date in a calendar (slice 7).
+5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
 
 ## Non-goals
 

@@ -1,6 +1,6 @@
 # wing-alert
 
-Wingfoiling conditions for the Wicklow coast. A scheduled GitHub Action checks the forecast for the crew's spots and sends a short WhatsApp alert when there's a rideable window.
+Wingfoiling conditions for the Wicklow coast. A GitHub Action, started on time by a small Cloudflare Worker, checks the forecast for the crew's spots and sends a short WhatsApp alert when there's a rideable window.
 
 **Daily report:** https://daplein.github.io/wing-alert/ (forecast table, wind map, tides and shore break warnings, spot guides, weekly reports)
 
