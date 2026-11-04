@@ -114,6 +114,8 @@ All spots, thresholds and directions live in `config/spots.yaml` and `config/set
 | Sunrise, sunset | Open-Meteo forecast API (`daily`) | No | Slice 1 |
 | Wave height and period, swell height and period | [Open-Meteo Marine API](https://open-meteo.com/en/docs/marine-weather-api) | No | Slice 4 |
 | Tide predictions (Arklow, Wicklow, Dublin Port) | [Marine Institute ERDDAP](https://erddap.marine.ie/erddap/tabledap/IMI-TidePrediction.html), `IMI-TidePrediction` | No | Slice 6 |
+| Live wind and waves: Dublin Bay Buoy | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx) | No | Slice 10 |
+| Live wind and waves: M2, M5 buoys | [Marine Institute ERDDAP](https://erddap.marine.ie/erddap/tabledap/IWBNetwork.html), `IWBNetwork` | No | Slice 10 |
 | WhatsApp delivery | [CallMeBot](https://www.callmebot.com/blog/free-api-whatsapp-messages/): free, unofficial, text only, personal use | API key (secret) | Slice 1 |
 
 Checked on 2026-11-01: both Open-Meteo APIs answer for every spot with no key. The marine grid is coarse: Arklow to Magheramore share one point about 7 km offshore, and Seapoint uses one out in Dublin Bay. That's fine for swell, but too coarse for tides, hence slice 6. Tide predictions are for planning, not navigation.
@@ -291,6 +293,53 @@ The old day page stacked today and tomorrow, and each block had its own width (b
 - **FR-9.7** **Maps:** the four hours side by side on a wide screen; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript they show as a grid.
 - **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports.
 
+## Slice 10: Live readings
+
+Branch `feat/live-readings`.
+
+So far we only know what was forecast, never what actually blew. Buoys near the coast measure wind and waves. Recording them every hour, next to the forecast, lets the site show what's blowing now and lets us later check how good the forecast was. This slice only records; slice 11 shows the readings.
+
+```mermaid
+flowchart LR
+    cron([Cloudflare Worker cron<br/>every hour, :07]):::hot
+    il([Irish Lights<br/>Dublin Bay Buoy]):::ext
+    erddap([Marine Institute ERDDAP<br/>M2, M5]):::ext
+    kv[(Cloudflare KV<br/>one entry per day,<br/>kept 8 days)]:::hot
+    api[GET /obs?day=]:::hot
+    daily[Daily job<br/>twice a day]
+    archive[(data/obs/<br/>one file per day)]
+    page([Day page<br/>slice 11]):::ext
+
+    cron --> il & erddap
+    il --> kv
+    erddap --> kv
+    kv --> api
+    api --> daily --> archive
+    api -.-> page
+
+    classDef hot fill:#EB1F1F,stroke:#9E0F14,stroke-width:3px,color:#fff,font-weight:bold
+    classDef ext fill:#5B3FD9,stroke:#3A2899,stroke-width:3px,color:#fff,font-weight:bold
+```
+
+**Stations** (checked 4 Nov 2026):
+
+| ID | Station | Lat, Lon | Near | Source | History at source? |
+|---|---|---|---|---|---|
+| `dublin_bay` | Dublin Bay Buoy | 53.3319, -6.0774 | Seapoint, 5 km NE | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx): latest reading only, in a JSON field (`latestais`) of the page. Wind in kn, times in UTC | No: we must record it |
+| `m2` | M2 weather buoy | 53.4836, -5.4302 | Off north Dublin, 50 km out | [ERDDAP `IWBNetwork`](https://erddap.marine.ie/erddap/tabledap/IWBNetwork.html), hourly | Yes, years |
+| `m5` | M5 weather buoy | 51.6904, -6.7043 | Off Wexford, where southerly swell comes into the Irish Sea | ERDDAP `IWBNetwork`, hourly | Yes, years |
+
+No live station was found near the Wicklow spots: Greystones harbour has none that publishes data (only an amateur station inland). Irish Lights has no data buoy between Dublin Bay and Wexford.
+
+- **FR-10.1** The Worker from slice 7 gets a fourth cron, `7 * * * *`. On it, it reads every station and stores the readings; it starts no GitHub job.
+- **FR-10.2** A reading is: station, `time` (UTC, to the minute, as the source gives it), `wind` and `gust` (kn), `direction` (°, wind from), `wave_height` (m), `wave_period` (s). A value the source leaves out is `null`. The Dublin Bay Buoy gives its latest reading; ERDDAP gives the last 3 hours, so a late or missed run fills in.
+- **FR-10.3** Readings are stored in Cloudflare KV under one key per UTC day (`obs:2026-11-04`), grouped by station, sorted by time, one reading per station and time. Each key expires 8 days after its last write; git keeps the history (FR-10.6).
+- **FR-10.4** A station that fails (down, changed page, bad value) is logged and skipped; the others are still stored.
+- **FR-10.5** The Worker answers `GET /obs?day=2026-11-04` with that day's readings as JSON (`{"day": …, "stations": {"dublin_bay": [readings…]}}`, an empty `stations` if there are none), open to any site (CORS `*`), cached 5 minutes. It's public read-only data, so there's no key. The stations' names and positions are in the answer too, so the page and the daily job need no list of their own.
+- **FR-10.6** The daily job fetches yesterday's and today's readings (UTC) and merges them into `data/obs/<day>.json`, keeping readings already there. If the Worker doesn't answer, the run carries on without them.
+- **FR-10.7** The station list lives in the Worker (`trigger/src/stations.js`), since the Worker is what reads them. Adding a station is one entry, plus a reader if it's a new kind of source.
+- **FR-10.8** The stored data follows rules that later analysis depends on: times in UTC, wind in knots, fixed station IDs, average wind and gust kept apart.
+
 ## Project layout (planned)
 
 ```
@@ -306,7 +355,7 @@ wing_alert/
   main.py                  wiring: build parts, run the daily job
 tests/
 .github/workflows/daily.yml
-trigger/                   Cloudflare Worker that starts the jobs (slice 7)
+trigger/                   Cloudflare Worker: starts the jobs (slice 7), records live readings (slice 10)
 ```
 
 Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2` (slice 2), `matplotlib` (slice 3).
@@ -318,6 +367,7 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 3. Turn on GitHub Pages with "GitHub Actions" as the source (slice 2).
 4. Create a fine-grained GitHub token (Settings → Developer settings → Fine-grained tokens): repository access **only `daplein/wing-alert`**, permission **Actions: Read and write**, the longest expiry allowed. Put its expiry date in a calendar (slice 7).
 5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
+6. In `trigger/`, run `npx wrangler kv namespace create OBS` and put the id it prints in `wrangler.toml` (slice 10). The id isn't secret.
 
 ## Non-goals
 
@@ -330,8 +380,11 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 - Telegram group with the map image itself.
 - Model agreement: compare several models (ICON, UKMO, HARMONIE) and show "3/3 agree".
 - Met Éireann HARMONIE point forecast as an extra source.
-- Live observations: Marine Institute buoys (M2, M5), the Dublin Bay / Dún Laoghaire buoy near Seapoint. Use them in the weekly "forecast vs what happened".
-- **Patterns:** explore the archive and years of Open-Meteo historical data, e.g. "the wind backs northerly in spring afternoons" (likely sea breeze).
+- Use the live readings (slice 10) in the weekly summary: did the forecast windows really happen?
+- A live station for the Wicklow spots (Greystones harbour, Arklow harbour or a sailing club), if one with data turns up.
+- Short-range "live forecast": the Worker also keeps the next 3 hours of forecast each hour; later an "it's on now" alert when the readings run ahead of the forecast.
+- **Forecast vs actual, and patterns:** a script reads `data/` (forecast runs and readings) and works out how far off the forecast is per spot, wind direction and lead time, and patterns such as "the wind backs northerly in spring afternoons" (likely sea breeze). Results as a static page. ERDDAP's buoy history and Open-Meteo's historical forecast API let this start on past years.
+- Show sunrise and sunset on the day page (we fetch them already, FR-1.2).
 - Crew session log (where, when, how it was) to tune thresholds per spot.
 - Suggest where to park and launch by wind direction (e.g. Arklow: P1 in north-easterly, P2 in southerly, P3 when it's 20 kn+ or the shore break is big).
 - Seasonal notes from the spot guide to test against the data, e.g. Arklow spring north-westerlies that last for weeks, mostly southerly summers.

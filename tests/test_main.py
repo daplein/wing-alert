@@ -17,6 +17,7 @@ from wing_alert.config import load_settings
 from wing_alert.forecast import OpenMeteoClient
 from wing_alert.main import DailyJob, main
 from wing_alert.marine import MarineClient
+from wing_alert.observations import OBS_URL
 from wing_alert.state import AlertState
 from wing_alert.tides import TideClient
 from wing_alert.whatsapp import CallMeBotSender
@@ -92,6 +93,7 @@ def test_fr_1_6_main_sends_to_recipients_and_saves_state(tmp_path, monkeypatch, 
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
     respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
+    respx.get(OBS_URL).respond(json=_readings())
     whatsapp = respx.get(CallMeBotSender.URL).respond(text="ok")
     state = tmp_path / "state.json"
     assert (
@@ -112,6 +114,7 @@ def test_fr_1_6_main_without_recipients_prints_only(tmp_path, monkeypatch, capsy
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
     respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
+    respx.get(OBS_URL).respond(json=_readings())
     state = tmp_path / "state.json"
     assert (
         main(
@@ -129,6 +132,7 @@ def test_fr_1_8_main_fails_cleanly_when_forecast_is_down(tmp_path, monkeypatch, 
     monkeypatch.delenv("WHATSAPP_RECIPIENTS", raising=False)
     respx.get(OpenMeteoClient.URL).respond(503)
     respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
+    respx.get(OBS_URL).respond(json=_readings())
     assert (
         main(
             [
@@ -156,6 +160,7 @@ def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, ca
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
     respx.get(url__startswith=TideClient.URL).respond(text=_tide_day())
+    respx.get(OBS_URL).respond(json=_readings())
     data = tmp_path / "data"
     args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json"), "--data", str(data)]
     assert main(args, now=MORNING) == 0
@@ -167,9 +172,14 @@ def test_fr_2_1_main_archives_and_links_unless_dry_run(tmp_path, monkeypatch, ca
     assert arklow["tide_station"] == "Arklow"
     assert [tide["kind"] for tide in arklow["tides"]][:2] == ["low", "high"]
     assert "days/2026-11-06.html" in capsys.readouterr().out
+    assert json.loads((data / "obs" / "2026-11-06.json").read_text())["stations"]["m2"]
     other = tmp_path / "other"
     assert main([*args[:-1], str(other), "--dry-run"], now=MORNING) == 0
     assert not other.exists()
+
+
+def _readings():
+    return {"stations": {"m2": [{"time": "2026-11-06T06:00Z", "wind": 18.0}]}, "about": []}
 
 
 def _sea_day():
@@ -188,6 +198,7 @@ def test_fr_6_7_tide_outage_still_alerts(tmp_path, monkeypatch, capsys):
     respx.get(OpenMeteoClient.URL).respond(json=_windy_day())
     respx.get(MarineClient.URL).respond(json=_sea_day())
     respx.get(url__startswith=TideClient.URL).respond(500)
+    respx.get(OBS_URL).respond(json=_readings())
     args = ["--config", str(REPO_CONFIG), "--state", str(tmp_path / "s.json")]
     assert main([*args, "--data", str(tmp_path / "d")], now=MORNING) == 0
     captured = capsys.readouterr()

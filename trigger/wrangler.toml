@@ -1,13 +1,21 @@
-# Cloudflare Worker that starts the GitHub jobs on time (spec slice 7).
+# Cloudflare Worker that starts the GitHub jobs on time (spec slice 7)
+# and records live readings every hour (spec slice 10).
 # The GitHub token is a Worker secret: `npx wrangler secret put GITHUB_TOKEN`.
 name = "wing-alert-trigger"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
-workers_dev = false
+# Public URL for GET /obs (FR-10.5).
+workers_dev = true
+preview_urls = false
 
 [triggers]
 # UTC. Keep in sync with src/jobs.js.
-crons = ["17 5 * * *", "17 15 * * *", "17 18 * * SUN"]
+crons = ["17 5 * * *", "17 15 * * *", "17 18 * * SUN", "7 * * * *"]
+
+# Live readings, one key per UTC day (FR-10.3). The id isn't secret.
+[[kv_namespaces]]
+binding = "OBS"
+id = "3f18538b40c64f4f9b89ad1bbbacb190"
 
 [observability]
 enabled = true

@@ -16,10 +16,14 @@ test("fr_7_1 sunday cron starts the weekly job", () => {
 test("fr_7_1 every cron in wrangler.toml has a job", () => {
   const toml = readFileSync(new URL("../wrangler.toml", import.meta.url), "utf8");
   const crons = [...toml.matchAll(/"([^"]+ \* [^"]+)"/g)].map((match) => match[1]);
-  assert.equal(crons.length, 3);
+  assert.equal(crons.length, 4);
   crons.forEach((cron) => assert.ok(jobFor(cron)));
 });
 
 test("fr_7_2 unknown cron fails loudly", () => {
   assert.throws(() => jobFor("0 0 * * *"), /No job/);
+});
+
+test("fr_10_1 hourly cron records readings in the Worker", () => {
+  assert.equal(jobFor("7 * * * *"), "record");
 });

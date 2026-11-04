@@ -1,4 +1,5 @@
 import { jobFor } from "./jobs.js";
+import { answerObs, recordAll } from "./obs.js";
 
 const DISPATCH_URL =
   "https://api.github.com/repos/daplein/wing-alert/actions/workflows/daily.yml/dispatches";
@@ -32,7 +33,16 @@ async function dispatchWithRetry(job, token) {
 export default {
   async scheduled(controller, env) {
     const job = jobFor(controller.cron);
+    if (job === "record") {
+      const count = await recordAll(env.OBS, new Date(controller.scheduledTime));
+      console.log(`Recorded ${count} readings`);
+      return;
+    }
     await dispatchWithRetry(job, env.GITHUB_TOKEN);
     console.log(`Started the ${job} job`);
+  },
+
+  async fetch(request, env) {
+    return answerObs(request, env.OBS);
   },
 };
