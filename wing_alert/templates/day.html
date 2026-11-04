@@ -79,7 +79,7 @@
   {% endfor %}
   {% if measured %}
     <tr class="measured-head">
-      <th colspan="{{ day.hours | length + 1 }}">Measured <small>Irish Lights (Dublin Bay Buoy) · Marine Institute (M2, M5)</small></th>
+      <th colspan="{{ day.hours | length + 1 }}">Measured <small>Cruising Association of Ireland (East Pier) · Irish Lights (Dublin Bay Buoy) · Marine Institute (M2, M5)</small></th>
     </tr>
   {% endif %}
   {% for row in measured %}
@@ -93,6 +93,7 @@
         {% else %}<td></td>{% endif %}
       {% endfor %}
     </tr>
+    {% if row.has_waves %}
     <tr class="measured-waves" data-station="{{ row.id }}">
       <th><small>waves m</small></th>
       {% for wave in row.waves %}
@@ -101,6 +102,7 @@
         {% else %}<td></td>{% endif %}
       {% endfor %}
     </tr>
+    {% endif %}
   {% endfor %}
   </tbody>
 </table>
@@ -208,7 +210,8 @@
   function fill(row, reading) {
     var when = local(reading.time), cell = row.cells[hourOf(when) - first + 1];
     if (!cell || when.toLocaleDateString("en-CA", zone) !== "{{ day.date }}") return;
-    fillWaves(row.nextElementSibling.cells[cell.cellIndex], reading, when);
+    var waves = row.nextElementSibling;
+    if (waves && waves.classList.contains("measured-waves")) fillWaves(waves.cells[cell.cellIndex], reading, when);
     if (reading.wind == null) return;
     cell.className = band(reading.wind);
     cell.title = clock(when) + ": " + Math.round(reading.wind) + " kn";
@@ -228,9 +231,11 @@
     if (r.wave_height != null) text += ", waves " + r.wave_height.toFixed(1) + " m";
     return text;
   }
-  function showNow(stations) {
+  function showNow(stations, order) {
     var latest = [], newest = 0;
-    Object.keys(stations).forEach(function (id) {
+    order.concat(Object.keys(stations)).filter(function (id, i, all) {
+      return stations[id] && all.indexOf(id) === i;
+    }).forEach(function (id) {
       var r = stations[id][stations[id].length - 1];
       if (!r || r.wind == null || Date.now() - local(r.time) > 3 * 3600e3) return;
       latest.push(describe(id, r));
@@ -248,7 +253,7 @@
       var row = table.querySelector('tr.measured-row[data-station="' + id + '"]');
       if (row) answer.stations[id].forEach(function (r) { fill(row, r); });
     });
-    showNow(answer.stations);
+    showNow(answer.stations, (answer.about || []).map(function (s) { return s.id; }));
   }).catch(function () {});
 })();
 </script>

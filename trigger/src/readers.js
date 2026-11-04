@@ -1,6 +1,7 @@
 // Turn each source's answer into readings (FR-10.2).
 // A reading: { time: "2026-11-04T22:32Z", wind, gust, direction, wave_height, wave_period }.
 
+const EAST_PIER_URL = "https://eastpier.dublinbaybuoy.com/latest";
 const IRISH_LIGHTS_URL = "https://cilpublic.cil.ie/MetOcean/MetOcean.aspx";
 const ERDDAP_URL = "https://erddap.marine.ie/erddap/tabledap/IWBNetwork.json";
 const ERDDAP_COLUMNS = "time,WindSpeed,Gust,WindDirection,WaveHeight,WavePeriod";
@@ -9,7 +10,12 @@ const ERDDAP_LOOKBACK_HOURS = 3;
 export async function read(source, now, fetchFn = fetch) {
   if (source.kind === "irish_lights") return readIrishLights(source.mmsi, fetchFn);
   if (source.kind === "erddap") return readErddap(source.station, now, fetchFn);
+  if (source.kind === "east_pier") return readEastPier(fetchFn);
   throw new Error(`Unknown source kind "${source.kind}"`);
+}
+
+async function readEastPier(fetchFn) {
+  return parseEastPier(JSON.parse(await fetchText(EAST_PIER_URL, fetchFn)));
 }
 
 async function readIrishLights(mmsi, fetchFn) {
@@ -63,6 +69,22 @@ export function parseErddap(body) {
     wave_height: number(at(row, "WaveHeight")),
     wave_period: number(at(row, "WavePeriod")),
   }));
+}
+
+// The station's own 10-minute block: mean wind, max gust and vector-mean direction, in knots.
+export function parseEastPier(body) {
+  const block = body.window_10min;
+  if (!block || block.samples < 5) throw new Error("East Pier has no full 10-minute block");
+  return [
+    {
+      time: body.reading.received_utc.slice(0, 16) + "Z",
+      wind: number(block.mean_wind_kt),
+      gust: number(block.max_gust_kt),
+      direction: number(block.vector_mean_dir_deg),
+      wave_height: null,
+      wave_period: null,
+    },
+  ];
 }
 
 function irishLightsTime(text) {
