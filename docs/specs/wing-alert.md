@@ -325,7 +325,7 @@ flowchart LR
 
 | ID | Station | Lat, Lon | Near | Source | History at source? |
 |---|---|---|---|---|---|
-| `dublin_bay` | Dublin Bay Buoy | 53.3319, -6.0774 | Seapoint, 5 km NE | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx): latest reading only, in a JSON field (`latestais`) of the page. Wind in kn, times in UTC | No: we must record it |
+| `dublin_bay` | Dublin Bay Buoy | 53.3319, -6.0774 | Seapoint, 7 km NE | [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx): latest reading only, in a JSON field (`latestais`) of the page. Wind in kn, times in UTC | No: we must record it |
 | `m2` | M2 weather buoy | 53.4836, -5.4302 | Off north Dublin, 50 km out | [ERDDAP `IWBNetwork`](https://erddap.marine.ie/erddap/tabledap/IWBNetwork.html), hourly | Yes, years |
 | `m5` | M5 weather buoy | 51.6904, -6.7043 | Off Wexford, where southerly swell comes into the Irish Sea | ERDDAP `IWBNetwork`, hourly | Yes, years |
 
@@ -339,6 +339,28 @@ No live station was found near the Wicklow spots: Greystones harbour has none th
 - **FR-10.6** The daily job fetches yesterday's and today's readings (UTC) and merges them into `data/obs/<day>.json`, keeping readings already there. If the Worker doesn't answer, the run carries on without them.
 - **FR-10.7** The station list lives in the Worker (`trigger/src/stations.js`), since the Worker is what reads them. Adding a station is one entry, plus a reader if it's a new kind of source.
 - **FR-10.8** The stored data follows rules that later analysis depends on: times in UTC, wind in knots, fixed station IDs, average wind and gust kept apart.
+
+## Slice 11: Measured rows and "Now"
+
+Branch `feat/measured-rows`.
+
+Stations aren't spots: the Dublin Bay Buoy is 7 km off Seapoint, M5 is far south. So the readings get rows of their own under the spots, over the same hours, rather than an "actual" line under each spot. You read down from a spot's forecast to the nearest real reading.
+
+```text
+            09  10  11  12  13  14  15  16
+Brittas     14  15  17  18  18  16  15  13    ← forecast, as today
+Seapoint    ...
+─ Measured ──────────────────────────────
+Dublin Bay  12  14  16  ·   ·   ·   ·   ·     ← filled in as the hours pass
+M2          ...
+M5          ...
+```
+
+- **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
+- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Its thin line (like the spots' details) gives the day's wave range, e.g. `waves 1.2–2.2 m`. The Measured heading names the sources, and the legend says the readings are not at the spot.
+- **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
+- **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured cells since the last build. If the Worker doesn't answer, the page keeps what was built.
+- **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
 
 ## Project layout (planned)
 

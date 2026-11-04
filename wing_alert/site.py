@@ -12,6 +12,14 @@ import jinja2
 from wing_alert.archive import load_snapshots
 from wing_alert.config import Spot, load_spots
 from wing_alert.guides import guide_html, unforecast_guides
+from wing_alert.measured import (
+    load_observations,
+    local_time,
+    readings_by_hour,
+    stations_about,
+    where,
+)
+from wing_alert.observations import OBS_URL
 from wing_alert.tidechart import tide_chart
 
 SITE_URL = "https://daplein.github.io/wing-alert/"
@@ -36,16 +44,19 @@ class SiteBuilder:
         out: Path,
         maps: dict[str, Path] | None = None,
         weeks: list[dict[str, Any]] | None = None,
+        observations: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         pages = pages_by_date(snapshots)
         days = sorted(pages)
+        self._observations = observations or {}
+        self._today = max((snapshot["issued"][:10] for snapshot in snapshots), default=None)
         (out / "days").mkdir(parents=True, exist_ok=True)
         self._maps = self._copy_maps(maps or {}, out)
         self._summaries = {day: _summary(pages[day], day) for day in days}
         for day in days:
             self._render_day(out / "days" / f"{day}.html", "../", pages[day], day, days)
         if days:
-            today = max(snapshot["issued"][:10] for snapshot in snapshots)
+            today = self._today
             self._render_day(out / "index.html", "", pages[today], today, days)
         else:
             self._write(out / "index.html", self._env.get_template("empty.html").render(root=""))
@@ -56,16 +67,31 @@ class SiteBuilder:
             shutil.copy(TEMPLATES / asset, out / asset)
 
     def _render_day(self, path: Path, root: str, snapshot: dict, day: str, days: list) -> None:
+        forecast = _forecast_day(snapshot, day)
         html = self._env.get_template("day.html").render(
             root=root,
             issued=snapshot["issued"],
-            day=_forecast_day(snapshot, day),
+            day=forecast,
+            measured=self._measured(snapshot, day, forecast["hours"]),
+            obs_url=OBS_URL,
             outlook=day > _next_day(snapshot["issued"][:10]),
             maps=self._maps.get(day, []),
             strip=_strip(days, day, self._summaries),
             **_neighbours(days, days.index(day)),
         )
         self._write(path, html)
+
+    def _measured(self, snapshot: dict, day: str, hours: list[int]) -> list[dict[str, Any]]:
+        """Stations with readings that day; on the newest page every known station, so
+        the page can fill them in live (FR-11.1, FR-11.4)."""
+        by_hour = readings_by_hour(self._observations, day)
+        about = stations_about(self._observations)
+        shown = [s for s in about if s in by_hour or day == self._today]
+        shown += sorted(s for s in by_hour if s not in about)
+        return [
+            _measured_row(s, about.get(s), by_hour.get(s, {}), hours, snapshot["spots"])
+            for s in shown
+        ]
 
     def _archive_page(self, days: list[str], weeks: list[dict[str, Any]]) -> str:
         return self._env.get_template("days.html").render(
@@ -202,6 +228,31 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
     }
 
 
+def _measured_row(
+    station: str, about: dict | None, by_hour: dict[int, dict], hours: list[int], spots: list
+) -> dict[str, Any]:
+    waves = [r["wave_height"] for r in by_hour.values() if r.get("wave_height") is not None]
+    return {
+        "id": station,
+        "name": about["name"] if about else station,
+        "where": where(about, spots) if about else "",
+        "cells": [_reading_cell(by_hour.get(hour)) for hour in hours],
+        "waves": (min(waves), max(waves)) if waves else None,
+    }
+
+
+def _reading_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
+    if reading is None or reading.get("wind") is None:
+        return None
+    direction = reading.get("direction")
+    return {
+        **reading,
+        "local": f"{local_time(reading['time']):%H:%M}",
+        "band": wind_band(reading["wind"]),
+        "arrow": None if direction is None else (direction + 180) % 360,
+    }
+
+
 def _max_waves(readings: list[dict | None]) -> float | None:
     heights = [r["wave_height"] for r in readings if r and r.get("wave_height") is not None]
     return max(heights) if heights else None
@@ -249,7 +300,8 @@ def main(argv: list[str] | None = None) -> int:
     builder = SiteBuilder(make_env(), load_spots(args.config / "spots.yaml"), args.guides)
     maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
     weeks = [json.loads(path.read_text()) for path in sorted(args.data.glob("weeks/*.json"))]
-    builder.build(load_snapshots(args.data), args.out, maps, weeks)
+    observations = load_observations(args.data / "obs")
+    builder.build(load_snapshots(args.data), args.out, maps, weeks, observations)
     print(f"Site built in {args.out}")
     return 0
 

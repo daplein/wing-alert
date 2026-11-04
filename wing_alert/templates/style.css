@@ -32,6 +32,11 @@ td small { display: block; color: var(--muted); font-size: 0.7rem; }
 td.ok { border-color: var(--fg); font-weight: 700; }
 tr.details td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 0 0 8px; border-radius: 0; }
 tr.tide td { padding: 0; }
+/* Measured rows (FR-11.1): buoy readings under the spots, never outlined as rideable. */
+tr.measured-head th { padding: 14px 0 2px; border-top: 1px solid var(--line); }
+tr.measured-head small { display: inline; margin-left: 6px; }
+.now { margin: -6px 0 14px; font-size: 0.9rem; color: var(--muted); }
+.now b { color: var(--fg); }
 tr.tide-legend td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 2px 0 10px; }
 .key::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; background: var(--key); vertical-align: middle; margin-right: 4px; }
 tr.tide-legend .good { padding: 0 4px; border-radius: 3px; }
