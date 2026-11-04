@@ -16,6 +16,7 @@ from wing_alert.tidechart import tide_chart
 
 SITE_URL = "https://daplein.github.io/wing-alert/"
 TEMPLATES = Path(__file__).parent / "templates"
+ASSETS = ("style.css", "logo.svg")
 
 
 def day_url(site_url: str, day: date) -> str:
@@ -49,7 +50,8 @@ class SiteBuilder:
             self._write(out / "index.html", self._env.get_template("empty.html").render(root=""))
         self._write(out / "spots.html", self._spots_page())
         self._week_pages(weeks or [], out)
-        shutil.copy(TEMPLATES / "style.css", out / "style.css")
+        for asset in ASSETS:
+            shutil.copy(TEMPLATES / asset, out / asset)
 
     def _render(self, template: str, path: Path, root: str, snapshot: dict, links: dict) -> None:
         html = self._env.get_template(template).render(
