@@ -82,13 +82,23 @@ def test_fr_11_1_measured_rows_under_the_spots_never_outlined(tmp_path):
     assert 'class="strong" title="12:30: 22 kn, gusts 21, from 270°"' in row
     assert "ok" not in row
     assert "km N of Arklow South Beach" in row
-    assert "waves 0.8 m" in page
+
+
+def test_fr_11_2_waves_line_under_the_wind_hour_by_hour(tmp_path):
+    readings = [
+        reading("2026-11-06T12:30Z", wave_height=0.8, wave_period=5.4),
+        reading("2026-11-06T13:00Z", None, wave_height=1.1),
+    ]
+    page = site(tmp_path, obs("2026-11-06", {"dublin_bay": readings}))
+    waves = page[page.index('<tr class="measured-waves"') : page.index("</tbody>")]
+    assert 'title="12:30: waves 0.8 m, every 5 s">0.8<small>5s</small>' in waves
+    assert 'title="13:00: waves 1.1 m">1.1</td>' in waves  # no wind, still waves
 
 
 def test_fr_11_4_todays_page_lists_every_station_to_fill_in_live(tmp_path):
     page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
     assert 'data-station="dublin_bay"' in page and 'data-station="m5"' in page
-    assert "no waves measured yet" in page
+    assert '<tr class="measured-waves" data-station="dublin_bay">' in page
     assert "workers.dev/obs" in page and '<p class="now" hidden>' in page
 
 

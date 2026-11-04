@@ -357,9 +357,9 @@ M5          ...
 ```
 
 - **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
-- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Its thin line (like the spots' details) gives the day's wave range, e.g. `waves 1.2–2.2 m`. The Measured heading names the sources, and the legend says the readings are not at the spot.
+- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Under the wind, a **waves line** over the same hours: wave height (m) with the period small (`1.2` `5s`), from the same reading. The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). The Measured heading names the sources, and the legend says the readings are not at the spot.
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
-- **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured cells since the last build. If the Worker doesn't answer, the page keeps what was built.
+- **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
 
 ## Project layout (planned)

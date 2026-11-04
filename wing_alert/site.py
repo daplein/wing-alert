@@ -231,13 +231,12 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
 def _measured_row(
     station: str, about: dict | None, by_hour: dict[int, dict], hours: list[int], spots: list
 ) -> dict[str, Any]:
-    waves = [r["wave_height"] for r in by_hour.values() if r.get("wave_height") is not None]
     return {
         "id": station,
         "name": about["name"] if about else station,
         "where": where(about, spots) if about else "",
         "cells": [_reading_cell(by_hour.get(hour)) for hour in hours],
-        "waves": (min(waves), max(waves)) if waves else None,
+        "waves": [_wave_cell(by_hour.get(hour)) for hour in hours],
     }
 
 
@@ -250,6 +249,17 @@ def _reading_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
         "local": f"{local_time(reading['time']):%H:%M}",
         "band": wind_band(reading["wind"]),
         "arrow": None if direction is None else (direction + 180) % 360,
+    }
+
+
+def _wave_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Wave height and period in that hour, under the wind (FR-11.2)."""
+    if reading is None or reading.get("wave_height") is None:
+        return None
+    return {
+        "height": reading["wave_height"],
+        "period": reading.get("wave_period"),
+        "local": f"{local_time(reading['time']):%H:%M}",
     }
 
 
