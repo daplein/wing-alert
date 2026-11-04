@@ -27,6 +27,7 @@
 {% else %}
 <div class="best none">Nothing rideable</div>
 {% endif %}
+<p class="now" hidden></p>
 
 {% if maps %}
 <section class="maps">
@@ -76,10 +77,35 @@
       </td>
     </tr>
   {% endfor %}
+  {% if measured %}
+    <tr class="measured-head">
+      <th colspan="{{ day.hours | length + 1 }}">Measured <small>Irish Lights (Dublin Bay Buoy) · Marine Institute (M2, M5)</small></th>
+    </tr>
+  {% endif %}
+  {% for row in measured %}
+    <tr class="measured-row" data-station="{{ row.id }}">
+      <th>{{ row.name }}{% if row.where %}<small>{{ row.where }}</small>{% endif %}</th>
+      {% for cell in row.cells %}
+        {% if cell %}
+        <td class="{{ cell.band }}" title="{{ cell.local }}: {{ cell.wind | round | int }} kn{% if cell.gust is not none %}, gusts {{ cell.gust | round | int }}{% endif %}{% if cell.direction is not none %}, from {{ cell.direction | round | int }}°{% endif %}">
+          {% if cell.arrow is not none %}<span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{% endif %}{{ cell.wind | round | int }}{% if cell.gust is not none %}<small>{{ cell.gust | round | int }}</small>{% endif %}
+        </td>
+        {% else %}<td></td>{% endif %}
+      {% endfor %}
+    </tr>
+    <tr class="measured-waves" data-station="{{ row.id }}">
+      <th><small>waves m</small></th>
+      {% for wave in row.waves %}
+        {% if wave %}
+        <td title="{{ wave.local }}: waves {{ "%.1f" | format(wave.height) }} m{% if wave.period is not none %}, every {{ wave.period | round | int }} s{% endif %}">{{ "%.1f" | format(wave.height) }}{% if wave.period is not none %}<small>{{ wave.period | round | int }}s</small>{% endif %}</td>
+        {% else %}<td></td>{% endif %}
+      {% endfor %}
+    </tr>
+  {% endfor %}
   </tbody>
 </table>
 </div>
-<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts</p>
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
 
 <script>
 /* One map at a time on a phone, picked with the hour buttons; all four side by side
@@ -165,6 +191,65 @@
   table.addEventListener("pointerdown", onCell);
   table.addEventListener("pointerleave", clear);
   if (svg) { svg.addEventListener("pointermove", onChart); svg.addEventListener("pointerdown", onChart); }
+})();
+
+/* Today only: fetch the newest readings from the Worker, fill in the measured hours since
+   the last build and show the Now line (FR-11.4, FR-11.5). On failure the page stays as built. */
+(function () {
+  var table = document.querySelector("table.hours"), now = document.querySelector(".now");
+  var zone = { timeZone: "Europe/Dublin" };
+  if (!table || new Date().toLocaleDateString("en-CA", zone) !== "{{ day.date }}") return;
+  var first = Number(table.dataset.first), names = {};
+  function band(kn) { return kn < 10 ? "light" : kn < 20 ? "good" : kn < 30 ? "strong" : "wild"; }
+  function local(time) { return new Date(time.replace("Z", ":00Z")); }
+  function hourOf(date) { return Number(date.toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: zone.timeZone })); }
+  function clock(date) { return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: zone.timeZone }); }
+  function compass(deg) { return "N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW".split(" ")[Math.round(deg / 22.5) % 16]; }
+  function fill(row, reading) {
+    var when = local(reading.time), cell = row.cells[hourOf(when) - first + 1];
+    if (!cell || when.toLocaleDateString("en-CA", zone) !== "{{ day.date }}") return;
+    fillWaves(row.nextElementSibling.cells[cell.cellIndex], reading, when);
+    if (reading.wind == null) return;
+    cell.className = band(reading.wind);
+    cell.title = clock(when) + ": " + Math.round(reading.wind) + " kn";
+    cell.innerHTML = (reading.direction == null ? "" : '<span class="arrow" style="transform: rotate(' + Math.round((reading.direction + 180) % 360) + 'deg)">↑</span>')
+      + Math.round(reading.wind) + (reading.gust == null ? "" : "<small>" + Math.round(reading.gust) + "</small>");
+  }
+  function fillWaves(cell, reading, when) {
+    if (!cell || reading.wave_height == null) return;
+    var period = reading.wave_period == null ? "" : Math.round(reading.wave_period) + "s";
+    cell.title = clock(when) + ": waves " + reading.wave_height.toFixed(1) + " m" + (period ? ", every " + period.replace("s", " s") : "");
+    cell.innerHTML = reading.wave_height.toFixed(1) + (period ? "<small>" + period + "</small>" : "");
+  }
+  function describe(id, r) {
+    var text = (names[id] || id) + " " + Math.round(r.wind) + " kn";
+    if (r.direction != null) text += " " + compass(r.direction);
+    if (r.gust != null) text += ", gusts " + Math.round(r.gust);
+    if (r.wave_height != null) text += ", waves " + r.wave_height.toFixed(1) + " m";
+    return text;
+  }
+  function showNow(stations) {
+    var latest = [], newest = 0;
+    Object.keys(stations).forEach(function (id) {
+      var r = stations[id][stations[id].length - 1];
+      if (!r || r.wind == null || Date.now() - local(r.time) > 3 * 3600e3) return;
+      latest.push(describe(id, r));
+      newest = Math.max(newest, local(r.time).getTime());
+    });
+    if (!latest.length) return;
+    now.innerHTML = "<b>Now " + clock(new Date(newest)) + "</b> · " + latest.join(" · ");
+    now.hidden = false;
+  }
+  var day = new Date().toISOString().slice(0, 10);
+  fetch("{{ obs_url }}?day=" + day).then(function (r) { return r.ok ? r.json() : null; }).then(function (answer) {
+    if (!answer) return;
+    (answer.about || []).forEach(function (s) { names[s.id] = s.name; });
+    Object.keys(answer.stations).forEach(function (id) {
+      var row = table.querySelector('tr.measured-row[data-station="' + id + '"]');
+      if (row) answer.stations[id].forEach(function (r) { fill(row, r); });
+    });
+    showNow(answer.stations);
+  }).catch(function () {});
 })();
 </script>
 {% endblock %}
