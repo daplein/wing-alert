@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Protocol
 from zoneinfo import ZoneInfo
@@ -16,6 +16,12 @@ from wing_alert.config import ConfigError, Settings, Spot, load_settings, load_s
 from wing_alert.forecast import ForecastError, OpenMeteoClient, SpotForecast
 from wing_alert.marine import MarineClient, MarineError
 from wing_alert.message import format_alert
+from wing_alert.observations import (
+    OBS_URL,
+    ObservationArchive,
+    ObservationClient,
+    ObservationError,
+)
 from wing_alert.scoring import Window, find_windows, rank
 from wing_alert.shorebreak import rate_window
 from wing_alert.site import SITE_URL, day_url
@@ -45,6 +51,8 @@ class DailyJob:
         site_url: str | None = None,
         marine: MarineClient | None = None,
         tides: TideClient | None = None,
+        observations: ObservationClient | None = None,
+        obs_archive: ObservationArchive | None = None,
     ) -> None:
         self._spots = spots
         self._settings = settings
@@ -57,10 +65,13 @@ class DailyJob:
         self._site_url = site_url
         self._marine = marine
         self._tides = tides
+        self._observations = observations
+        self._obs_archive = obs_archive
 
     def run(self, now: datetime) -> str | None:
         """Archive the forecast, then alert on new or changed windows.
         Returns the message, or None if there was nothing to send."""
+        self._keep_readings(now)
         stations = self._station_tides(now)
         forecasts = [self._conditions(spot, stations) for spot in self._spots]
         self._keep_record(now, forecasts, stations)
@@ -70,6 +81,17 @@ class DailyJob:
             for window in find_windows(forecast, self._settings, now)
         ]
         return self._alert(windows, now)
+
+    def _keep_readings(self, now: datetime) -> None:
+        """Yesterday and today in UTC; without the Worker the run carries on (FR-10.6)."""
+        if not (self._observations and self._obs_archive):
+            return
+        today = now.replace(tzinfo=DUBLIN).astimezone(UTC).date()
+        for day in (today - timedelta(days=1), today):
+            try:
+                self._obs_archive.merge(day, self._observations.fetch(day))
+            except ObservationError as error:
+                print(error, file=sys.stderr)
 
     def _station_tides(self, now: datetime) -> dict[str, StationTides]:
         """Each station once per run; a failing one is left out (FR-6.7)."""
@@ -155,6 +177,8 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
         site_url=args.site_url,
         marine=MarineClient(http, settings.forecast_days),
         tides=TideClient(http, settings.forecast_days),
+        observations=ObservationClient(http, args.obs_url),
+        obs_archive=None if args.dry_run else ObservationArchive(args.data / "obs"),
     )
 
 
@@ -164,5 +188,6 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--state", type=Path, default=Path("state.json"))
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--site-url", default=SITE_URL)
+    parser.add_argument("--obs-url", default=OBS_URL, help="the Worker's /obs address")
     parser.add_argument("--dry-run", action="store_true", help="print only: no send, no files")
     return parser.parse_args(argv)
