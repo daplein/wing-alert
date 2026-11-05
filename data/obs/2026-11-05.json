@@ -191,6 +191,14 @@
     "direction": 91,
     "wave_height": 1.6,
     "wave_period": 5
+   },
+   {
+    "time": "2026-11-05T21:05Z",
+    "wind": 10,
+    "gust": 22,
+    "direction": 117,
+    "wave_height": 1.1,
+    "wave_period": 5
    }
   ],
   "east_pier": [
@@ -359,6 +367,14 @@
     "wind": 17.8,
     "gust": 22.7,
     "direction": 123.2,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-05T21:06Z",
+    "wind": 19,
+    "gust": 24.1,
+    "direction": 124.2,
     "wave_height": null,
     "wave_period": null
    }
