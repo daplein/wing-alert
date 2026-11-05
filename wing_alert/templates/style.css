@@ -174,3 +174,6 @@ table.week th { padding: 6px 12px 6px 0; vertical-align: top; }
 .video { display: block; color: var(--fg); font-size: 0.85rem; }
 .video img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: var(--light); }
 .video span { display: block; margin-top: 4px; }
+/* Going from page to page cross-fades instead of blanking, so stepping the large map into
+   the next day looks like one move (FR-9.7). Browsers without view transitions just load. */
+@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
