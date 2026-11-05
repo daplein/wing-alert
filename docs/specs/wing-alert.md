@@ -401,6 +401,11 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 4. Create a fine-grained GitHub token (Settings → Developer settings → Fine-grained tokens): repository access **only `daplein/wing-alert`**, permission **Actions: Read and write**, the longest expiry allowed. Put its expiry date in a calendar (slice 7).
 5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
 6. In `trigger/`, run `npx wrangler kv namespace create OBS` and put the id it prints in `wrangler.toml` (slice 10). The id isn't secret.
+7. Add the repo secret `ANTHROPIC_API_KEY`, from console.anthropic.com, with a low monthly spend limit (slice 15). Session reports (slice 14) reuse the same KV namespace, so they need no setup.
+
+## Slices 14–15: Session log
+
+Riders log how a session went (nickname, no login), and a language model reads the notes. Spec in its own file: [session-log.md](session-log.md).
 
 ## Slice 12: Tides and waves inside the table
 
@@ -445,8 +450,15 @@ When you scroll down to the last spots and the buoys, the hours row is gone, and
 - **Forecast vs actual, and patterns:** a script reads `data/` (forecast runs and readings) and works out how far off the forecast is per spot, wind direction and lead time, and patterns such as "the wind backs northerly in spring afternoons" (likely sea breeze). Results as a static page. ERDDAP's buoy history and Open-Meteo's historical forecast API let this start on past years.
 - Day length in the best box, e.g. `9 h 18 of light, 4 min less than yesterday`.
 - A faint sun arc behind the tide chart, with the sun at the current time on today's page.
-- Crew session log (where, when, how it was) to tune thresholds per spot.
+- **Crew session log** (where, when, how it was) to tune thresholds per spot. Store each report next to the forecast run that covered it, e.g. Arklow on 4 Nov 2026, 15:45–16:30: "full on chop, shore break medium, stable wind, 4.5–5.0 m, 3/5 for average+ riders, 0/5 for beginners". These reports are what any score below would be checked against.
+- **Last light (proposed change to FR-1.2):** an hour now counts only if it ends by sunset − 30 min, so on 4 Nov 2026 (sunset 16:48) the Arklow window ended at 16:00 while a crew member rode 15:45–16:30. Option: end the last window at sunset − 30 min (16:18) instead of dropping the whole hour, or make the margin smaller.
+- **Spot notes (local knowledge):** a few lines per spot in `spots.yaml`, written by riders who know it, keyed by wind direction or sea state where it matters (e.g. "Arklow: shore break makes getting out tricky with an easterly sea", "sheltered in a SW"). Shown on the spot and day pages next to the forecast.
+- **Say why, in words:** turn data we already have into a short reason per window: chop vs waves (height and period: 1 m at 4 s is wind chop, no swell), gusty vs steady (gust minus base), how long the wind has been blowing from this direction (hours before the window), shore break. E.g. "Full on chop, steady ENE since morning, careful getting out."
+- **Wing size:** suggest a wing size from base wind and gusts for a few rider weights (a small table in YAML). E.g. 15–17 kn gusting 22 → 4.5–5.0 m for about 80 kg.
+- **Scores 0–5 per hour** (overall, beginners, waves), as a crew member suggested. Wait until the session log has enough reports to check them against; until then good / not good plus the reason in words.
+- **Weather to feel:** air temperature, cloud and rain from Open-Meteo, e.g. "nippy, no sun".
 - Suggest where to park and launch by wind direction (e.g. Arklow: P1 in north-easterly, P2 in southerly, P3 when it's 20 kn+ or the shore break is big).
 - Seasonal notes from the spot guide to test against the data, e.g. Arklow spring north-westerlies that last for weeks, mostly southerly summers.
 - Animated wind map, or a full wind field over the sea.
 - WhatsApp images and groups through Meta's official Cloud API.
+- **Who logged it, for real:** if the session log (slice 14) is ever abused or the crew grows, give each person their own link with a secret token (or a real login) instead of a free nickname.
