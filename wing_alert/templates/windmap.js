@@ -105,7 +105,7 @@
     return shown.map(function (s, i) {
       var reading = s.at[hour];
       return arrow(frame.extent, dots[i], reading, nudges[i]) + dot(dots[i]) +
-        label(frame.extent, dots[i], s, reading);
+        label(frame, dots[i], s, reading);
     }).join("");
   }
 
@@ -141,21 +141,43 @@
       3 * PT + '" stroke-linejoin="round"' + (extra || "");
   }
 
+  var MEASURE = document.createElement("canvas").getContext("2d");
+
+  /* Measured on a canvas, so it works even while the map is hidden. */
+  function textWidth(text, size, bold) {
+    MEASURE.font = (bold ? "bold " : "") + size * PT + "px " + FONT;
+    return MEASURE.measureText(text).width;
+  }
+
+  /* A centred line's x, moved just enough to stay inside the frame, clear of its border. */
+  function within(frame, x, width) {
+    var half = width / 2 + 3 * PT;  // the white outline and the frame's line
+    return Math.min(Math.max(x, frame.x + half), frame.x + frame.w - half);
+  }
+
   /* Numbers next to the dot on the land side, away from the arrow; the name beyond them. */
-  function label(extent, xy, spot, reading) {
+  function label(frame, xy, spot, reading) {
+    if (!frame.extent.sea[0]) return labelBelow(frame, xy, spot, reading);
+    return '<text x="' + (xy[0] - LABEL_GAP * PT) + '" y="' + xy[1] + '" text-anchor="end"' +
+      ' dominant-baseline="central"' + halo(11.5) + '><tspan fill="' + INK + '">' +
+      escape(spot.name) + '</tspan>' + numbers(reading) + ' dx="' + 4 * PT + '">' + windText(reading) +
+      "</tspan></text>";
+  }
+
+  function numbers(reading) {
     var colour = TEXT_COLOURS[band(reading.knots)];
-    var numbers = '<tspan fill="' + colour + '" font-weight="bold" font-size="' + 12 * PT + '"';
-    if (extent.sea[0]) {
-      return '<text x="' + (xy[0] - LABEL_GAP * PT) + '" y="' + xy[1] + '" text-anchor="end"' +
-        ' dominant-baseline="central"' + halo(11.5) + '><tspan fill="' + INK + '">' +
-        escape(spot.name) + '</tspan>' + numbers + ' dx="' + 4 * PT + '">' + windText(reading) +
-        "</tspan></text>";
-    }
-    var top = xy[1] + LABEL_GAP * PT;
-    return '<text x="' + xy[0] + '" y="' + top + '" text-anchor="middle" dominant-baseline="hanging"' +
-      halo(12) + '>' + numbers + '>' + windText(reading) + '</tspan></text>' +
-      '<text x="' + xy[0] + '" y="' + (top + 16 * PT) + '" text-anchor="middle"' +
-      ' dominant-baseline="hanging" fill="' + INK + '"' + halo(11.5) + '>' + escape(spot.name) + "</text>";
+    return '<tspan fill="' + colour + '" font-weight="bold" font-size="' + 12 * PT + '"';
+  }
+
+  /* Numbers and name stacked under the dot. The inset's dot is near its left edge, so each
+     line is kept inside the frame rather than running under its border. */
+  function labelBelow(frame, xy, spot, reading) {
+    var top = xy[1] + LABEL_GAP * PT, wind = windText(reading);
+    return '<text x="' + within(frame, xy[0], textWidth(wind, 12, true)) + '" y="' + top +
+      '" text-anchor="middle" dominant-baseline="hanging"' + halo(12) + '>' + numbers(reading) + '>' +
+      wind + '</tspan></text><text x="' + within(frame, xy[0], textWidth(spot.name, 11.5, false)) +
+      '" y="' + (top + 16 * PT) + '" text-anchor="middle" dominant-baseline="hanging" fill="' + INK +
+      '"' + halo(11.5) + '>' + escape(spot.name) + "</text>";
   }
 
   function escape(text) {
@@ -202,12 +224,9 @@
       insetNotes(inset) + texts(data, hour, main, height) + "</svg>";
   }
 
-  /* The tab's width depends on the font; a canvas measures it even while the map is hidden. */
+  /* The tab is as wide as its text in the font the browser picked. */
   function sizeTab(holder) {
-    var rect = holder.querySelector("rect.tab");
-    var context = document.createElement("canvas").getContext("2d");
-    context.font = "bold " + 9.5 * PT + "px " + FONT;
-    rect.setAttribute("width", context.measureText("Dublin Bay").width + 5 * PT);
+    holder.querySelector("rect.tab").setAttribute("width", textWidth("Dublin Bay", 9.5, true) + 5 * PT);
   }
 
   /* On a wide screen a click opens the map large, with the hours one key or button apart;
