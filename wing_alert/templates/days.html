@@ -2,13 +2,28 @@
 {% block title %}Wing alert · All days{% endblock %}
 {% block content %}
 <h1>All days</h1>
-<ul class="toc">
-{% for d in days | reverse %}
-  <li><a href="{{ root }}days/{{ d }}.html">{{ d | iso_label }}</a> {% set day = summaries[d] %}{% if day.peak is not none %}· <span class="peak {{ day.band }}">{{ day.peak }} kn</span>{% endif %}{% if day.warning %} <span class="break level{{ day.warning }}">⚠️ shore break</span>{% endif %}</li>
+{% for month in months %}
+<section class="month">
+<h2>{{ month.label }}{% if month.rideable %} <span class="tally">· {{ month.rideable }} rideable day{% if month.rideable != 1 %}s{% endif %} · mostly {{ month.mostly }}</span>{% endif %}</h2>
+<div class="cal">
+  {% for name in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] %}<div class="dow">{{ name }}</div>{% endfor %}<div class="dow wk-head">Week</div>
+  {% for week in month.weeks %}
+  {% for cell in week.days %}
+  {% if not cell %}<div class="blank"></div>
+  {% elif not cell.summary %}<div class="day off"><span class="num">{{ cell.number }}</span></div>
+  {% else %}{% set day = cell.summary %}
+  <a class="day{% if cell.today %} today{% endif %}{% if cell.outlook %} outlook{% endif %}" href="{{ root }}days/{{ cell.date }}.html">
+    <span class="num">{{ cell.number }}{% if cell.today %}<span class="today-word"> · today</span>{% endif %}</span>
+    {% if day.peak is not none %}<span class="peak {{ day.band }}">{{ day.peak }}<span class="unit"> kn</span></span>
+    <span class="best-spot" title="{{ day.spot_name }}">{{ day.spot_name }}</span>
+    {% else %}<span class="peak none">–</span>{% endif %}
+    {% if day.warning %}<span class="break level{{ day.warning }}" title="{{ day.reason }}"><span class="icon">{{ day.warning | warning }}</span><span class="words">shore break</span></span>{% endif %}
+  </a>
+  {% endif %}
+  {% endfor %}
+  <div class="wk">{% if week.report %}{% set r = week.report %}<b>{{ r.good_days }} good day{% if r.good_days != 1 %}s{% endif %}</b> · {{ r.missed }} missed{% if r.best %} · best {{ r.best.spot_name }}, {{ r.best.date | short_label }}{% endif %} <a href="{{ root }}weeks/{{ r.start }}.html">Report ›</a>{% elif week.pending %}<span class="muted">Report on Sunday</span>{% endif %}</div>
+  {% endfor %}
+</div>
+</section>
 {% endfor %}
-</ul>
-{% if weeks %}
-<h2>Weekly reports</h2>
-<ul class="toc">{% for w in weeks | reverse %}<li><a href="{{ root }}weeks/{{ w }}.html">Week of {{ w | iso_label }}</a></li>{% endfor %}</ul>
-{% endif %}
 {% endblock %}
