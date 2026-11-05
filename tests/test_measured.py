@@ -154,3 +154,8 @@ def test_fr_11_3_site_command_reads_kept_readings(tmp_path):
     args = ["--data", str(data), "--config", str(repo / "config"), "--guides", str(tmp_path)]
     assert main([*args, "--out", str(out)]) == 0
     assert 'data-station="m5"' in (out / "index.html").read_text()
+
+
+def test_fr_11_4_live_readings_before_the_first_hour_leave_the_name_alone(tmp_path):
+    page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
+    assert "column >= 1 ? row.cells[column] : null" in page
