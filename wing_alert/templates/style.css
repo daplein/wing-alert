@@ -107,13 +107,28 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px;
 .maps button { flex: 1; font: inherit; font-size: 0.9rem; padding: 6px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
 .maps button.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
 .maps .images { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.maps img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.maps .windmap svg { width: 100%; height: auto; border-radius: 10px; display: block; }
+/* Click a map on a wide screen to see it large (FR-9.7). */
+@media (min-width: 900px) { .maps .windmap { cursor: zoom-in; } }
+.map-zoom { border: 0; padding: 12px; border-radius: 14px; background: var(--bg); color: var(--fg);
+  max-width: 96vw; max-height: 96vh; }
+.map-zoom:focus { outline: none; }
+.map-zoom::backdrop { background: rgba(0, 0, 0, .7); }
+.zoom-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+.zoom-hours { display: flex; gap: 6px; flex: 1; }
+.map-zoom button { font: inherit; font-size: 0.95rem; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.zoom-hours button { flex: 1; }
+.zoom-hours button.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+.zoom-step, .zoom-close { font-size: 1.2rem; line-height: 1; }
+.zoom-map svg { display: block; height: calc(96vh - 90px); width: auto; max-width: calc(96vw - 24px);
+  border-radius: 10px; }
 @media (max-width: 899px) {
   .maps .images { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .js .maps .times { display: flex; }
   .js .maps .images { display: block; }
-  .js .maps img { display: none; max-width: 520px; margin: 0 auto; }
-  .js .maps img.on { display: block; }
+  .js .maps .windmap { display: none; max-width: 520px; margin: 0 auto; }
+  .js .maps .windmap.on { display: block; }
 }
 /* Table: spot names stay pinned while the hours scroll sideways. */
 tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg); z-index: 1; }

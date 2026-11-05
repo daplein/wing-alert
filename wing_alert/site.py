@@ -10,8 +10,10 @@ from typing import Any
 import jinja2
 
 from wing_alert.archive import load_snapshots
+from wing_alert.coast import load_coast
 from wing_alert.config import Spot, load_spots, load_station_links
 from wing_alert.guides import guide_html, unforecast_guides
+from wing_alert.mapdata import coast_data, map_data
 from wing_alert.measured import (
     load_observations,
     local_time,
@@ -24,7 +26,7 @@ from wing_alert.tidechart import tide_chart
 
 SITE_URL = "https://daplein.github.io/wing-alert/"
 TEMPLATES = Path(__file__).parent / "templates"
-ASSETS = ("style.css", "logo.svg")
+ASSETS = ("style.css", "logo.svg", "windmap.js")
 STRIP_BEFORE, STRIP_AFTER = 2, 3  # days either side of the current page in the day strip
 
 
@@ -50,7 +52,6 @@ class SiteBuilder:
         self,
         snapshots: list[dict[str, Any]],
         out: Path,
-        maps: dict[str, Path] | None = None,
         weeks: list[dict[str, Any]] | None = None,
         observations: dict[str, dict[str, Any]] | None = None,
     ) -> None:
@@ -59,7 +60,7 @@ class SiteBuilder:
         self._observations = observations or {}
         self._today = max((snapshot["issued"][:10] for snapshot in snapshots), default=None)
         (out / "days").mkdir(parents=True, exist_ok=True)
-        self._maps = self._copy_maps(maps or {}, out)
+        self._write_coast(out)
         self._summaries = {day: _summary(pages[day], day) for day in days}
         for day in days:
             self._render_day(out / "days" / f"{day}.html", "../", pages[day], day, days)
@@ -85,7 +86,7 @@ class SiteBuilder:
             measured_note=None if measured else measured_note(day, self._today, self._observations),
             obs_url=OBS_URL,
             outlook=day > _next_day(snapshot["issued"][:10]),
-            maps=self._maps.get(day, []),
+            maps=map_data(snapshot, day),
             strip=_strip(days, day, self._summaries),
             **_neighbours(days, days.index(day)),
         )
@@ -117,14 +118,10 @@ class SiteBuilder:
             self._write(out / "weeks" / f"{week['start']}.html", html)
 
     @staticmethod
-    def _copy_maps(maps: dict[str, Path], out: Path) -> dict[str, list[str]]:
-        """Copies the maps; returns each date's map names (`YYYY-MM-DD-HH`), in hour order."""
+    def _write_coast(out: Path) -> None:
+        """One coastline for every page; the browser draws the maps from it (FR-3.5)."""
         (out / "maps").mkdir(parents=True, exist_ok=True)
-        by_day: dict[str, list[str]] = {}
-        for name, path in sorted(maps.items()):
-            shutil.copy(path, out / "maps" / f"{name}.png")
-            by_day.setdefault(name[:10], []).append(name)
-        return by_day
+        (out / "maps" / "coast.json").write_text(json.dumps(coast_data(load_coast())))
 
     def _spots_page(self) -> str:
         guides = [(spot, guide_html(self._guides / f"{spot.id}.md")) for spot in self._spots]
@@ -350,10 +347,9 @@ def main(argv: list[str] | None = None) -> int:
     spots = load_spots(args.config / "spots.yaml")
     links = load_station_links(args.config / "stations.yaml")
     builder = SiteBuilder(make_env(), spots, args.guides, links)
-    maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
     weeks = [json.loads(path.read_text()) for path in sorted(args.data.glob("weeks/*.json"))]
     observations = load_observations(args.data / "obs")
-    builder.build(load_snapshots(args.data), args.out, maps, weeks, observations)
+    builder.build(load_snapshots(args.data), args.out, weeks, observations)
     print(f"Site built in {args.out}")
     return 0
 

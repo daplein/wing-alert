@@ -109,17 +109,6 @@ def test_fr_9_8_all_days_page_lists_every_date(tmp_path):
     assert "Friday 6 November" in archive and "Saturday 7 November" in archive
 
 
-def test_fr_9_7_maps_switch_by_hour(tmp_path):
-    out = tmp_path / "site"
-    png = tmp_path / "map.png"
-    png.write_bytes(b"png")
-    maps = {f"2026-11-06-{h:02d}": png for h in (9, 12, 15, 18)}
-    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run_covering(MORNING, 6)], out, maps)
-    page = (out / "index.html").read_text()
-    assert page.count('<button type="button" data-hour=') == 4
-    assert 'src="maps/2026-11-06-15.png" data-hour="15"' in page
-
-
 def build(tmp_path, issued_list, guides=None):
     data = tmp_path / "data"
     for issued in issued_list:
