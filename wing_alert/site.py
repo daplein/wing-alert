@@ -237,7 +237,6 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
         "name": spot["name"],
         "windows": [window for window in windows if window["spot"] == spot["id"]],
         "cells": [_cell(by_hour.get(hour), tags.get(hour)) for hour in hours],
-        "waves": [_forecast_wave_cell(by_hour.get(hour)) for hour in hours],
     }
 
 
@@ -255,47 +254,35 @@ def _measured_row(
         "name": about["name"] if about else station,
         "where": where(about, spots) if about else "",
         "cells": [_reading_cell(by_hour.get(hour)) for hour in hours],
-        "waves": [_wave_cell(by_hour.get(hour)) for hour in hours],
-        "has_waves": (about or {}).get("waves", True),
     }
 
 
 def _reading_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
-    if reading is None or reading.get("wind") is None:
+    """Wind and waves in that hour; a buoy may send waves without wind (FR-11.2)."""
+    if reading is None or (reading.get("wind") is None and reading.get("wave_height") is None):
         return None
-    direction = reading.get("direction")
+    direction, wind = reading.get("direction"), reading.get("wind")
     return {
+        "gust": None,
+        **_sea(reading),
         **reading,
+        "wind": wind,
         "local": f"{local_time(reading['time']):%H:%M}",
-        "band": wind_band(reading["wind"]),
+        "band": "" if wind is None else wind_band(wind),
         "arrow": None if direction is None else (direction + 180) % 360,
     }
-
-
-def _wave_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Wave height and period in that hour, under the wind (FR-11.2)."""
-    if reading is None or reading.get("wave_height") is None:
-        return None
-    return {
-        "height": reading["wave_height"],
-        "period": reading.get("wave_period"),
-        "local": f"{local_time(reading['time']):%H:%M}",
-    }
-
-
-def _forecast_wave_cell(hour: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Forecast wave height and period at the spot, under its wind (FR-12.2)."""
-    if hour is None or hour.get("wave_height") is None:
-        return None
-    period, local = hour.get("wave_period"), hour["time"][11:]
-    return {"height": hour["wave_height"], "period": period, "local": local}
 
 
 def _cell(hour: dict[str, Any] | None, tide: dict[str, str] | None) -> dict[str, Any] | None:
     if hour is None:
         return None
     arrow = (hour["direction"] + 180) % 360
-    return {**hour, "band": wind_band(hour["wind"]), "arrow": arrow, "tide": tide}
+    return {**_sea(hour), **hour, "band": wind_band(hour["wind"]), "arrow": arrow, "tide": tide}
+
+
+def _sea(hour: dict[str, Any]) -> dict[str, Any]:
+    """Waves for the cell; None when the sea forecast or the sensor is missing (FR-12.2)."""
+    return {"wave_height": hour.get("wave_height"), "wave_period": hour.get("wave_period")}
 
 
 def wind_band(knots: float) -> str:

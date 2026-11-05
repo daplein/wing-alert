@@ -359,7 +359,7 @@ M5          ...
 ```
 
 - **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
-- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Under the wind, a **waves line** over the same hours: wave height (m) with the period small (`1.2` `5s`), from the same reading. The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) gets no waves line. The footer credits the sources (FR-11.6), and the legend says the readings are not at the spot.
+- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. The **waves** from the same reading sit in the same cell, under the wind, as for the spots (FR-12.2). The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) just has no waves in its cells; an hour with waves but no wind shows the waves alone. The footer credits the sources (FR-11.6), and the legend says the readings are not at the spot.
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
@@ -402,12 +402,14 @@ The grey line under each spot (`08:00–16:00 ⚠️ · waves 1.1 m · HW 09:05 
 
 ```text
             09     10  11  12  13     14
-Arklow      ←18High ←18 ←19 ←16 ←12   ←16Low
-  waves m   0.9    1.0 1.1 1.1 1.0    0.9
+             High                   Low
+Arklow      ←18   ←18  ←19  ←16  ←12  ←16    ← wind
+             24    24   26   21   16   22    ← gusts
+            ≈0.9  ≈1.0 ≈1.1 ≈1.1 ≈1.0 ≈0.9   ← waves (m), period small on wide screens
 ```
 
 - **FR-12.1** **Tide tags in the cells.** The spot's cell for the hour nearest each high water gets a small `High` tag on its top edge, clear of the numbers, and the one nearest each low water `Low` (spot's own station, FR-6.2). Plain words, not HW/LW, so nobody needs a tide table to read it. Its title gives the exact time, e.g. `High tide 09:05`. A tide outside the table's hours gets no tag. Replaces FR-6.5.
-- **FR-12.2** **Waves line per spot,** under its wind, over the same hours, as for the buoys (FR-11.2): forecast wave height (m) with the period small (`1.1` `5s`), from the Marine API (FR-4.1). Spots that share a marine grid point show the same numbers; that's honest, not a bug.
+- **FR-12.2** **Waves in the wind cell.** Each hour's cell shows, under the gust and a thin divider, the forecast wave height from the Marine API (FR-4.1): `≈1.1` with the period small (`4s`). On a phone only the height shows (`1.1`), as the arrows go too. The cell's title adds `· waves 1.1 m every 4 s`. The legend explains it once with 🌊, not an emoji per cell (it would crowd the narrow cells and look different on each phone). A separate waves row took a whole line per spot for two small numbers. Spots that share a marine grid point show the same numbers; that's honest, not a bug.
 - **FR-12.3** **No line under the spot.** The window, waves and tide times line goes. The ⚠️ beside the name gets the window and reason as its title, e.g. `10:00–15:00 · Shore break: watch out · 1.1 m waves at 5 s`.
 
 ## Slice 13: Hours that stay put, and an hour cursor

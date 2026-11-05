@@ -33,9 +33,11 @@ td.ok { border-color: var(--fg); font-weight: 700; }
 /* Hours pinned at the top while the page scrolls down past the table (FR-13.1). */
 .pinned { position: sticky; top: 0; z-index: 3; background: var(--bg); overflow-x: hidden; padding: 4px 0; }
 .pinned::-webkit-scrollbar { display: none; }
-/* A waves line under every spot and buoy (FR-11.2, FR-12.2). */
-tr.waves td { color: var(--muted); padding: 0 0 8px; font-size: 0.8rem; }
-tr.waves th { padding-top: 0; }
+/* Waves under the gust in every wind cell (FR-11.2, FR-12.2): a thin line sets them apart. */
+.sea { display: block; margin: 3px 4px 0; padding-top: 2px; border-top: 1px solid rgba(127, 127, 127, .35);
+  font-size: 0.72rem; color: var(--fg); font-weight: 500; white-space: nowrap; }
+.sea .approx { color: var(--accent); margin-right: 1px; }
+.sea .period { color: var(--muted); font-size: 0.65rem; }
 /* High and low tide on the hour nearest it (FR-12.1). The tag sits on the cell's top
    edge and the cells get a little headroom, so it never covers the numbers. */
 tr.spot-row td { position: relative; padding-top: 8px; }
@@ -108,6 +110,8 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
   .arrow { display: none; }
   td small { font-size: 0.65rem; }
   .tide-tag { font-size: 0.5rem; padding: 0 2px; }
+  .sea { margin: 2px 1px 0; font-size: 0.65rem; }
+  .sea .approx, .sea .period { display: none; }  /* narrow cells: just the height */
   .strip { gap: 4px; }
   .strip a { padding: 5px 1px; font-size: 0.74rem; }
   .strip .peak { font-size: 0.74rem; padding: 0 3px; }

@@ -260,4 +260,4 @@ def test_fr_13_1_hours_sit_in_a_pinned_header_with_the_same_columns(tmp_path):
 
 def test_fr_13_2_every_hourly_row_takes_part_in_the_hour_cursor(tmp_path):
     page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
-    assert '<tr class="waves hourly">' in page and 'closest("tr.hourly td")' in page
+    assert '<tr class="spot-row hourly">' in page and 'closest("tr.hourly td")' in page

@@ -40,13 +40,9 @@
 </section>
 {% endif %}
 
-{% macro waves_cells(waves) %}
-  {% for wave in waves %}
-    {% if wave %}
-    <td title="{{ wave.local }}: waves {{ "%.1f" | format(wave.height) }} m{% if wave.period is not none %}, every {{ wave.period | round | int }} s{% endif %}">{{ "%.1f" | format(wave.height) }}{% if wave.period is not none %}<small>{{ wave.period | round | int }}s</small>{% endif %}</td>
-    {% else %}<td></td>{% endif %}
-  {% endfor %}
-{% endmacro %}
+{# Waves sit in the wind cell, under the gust (FR-12.2): ≈ height in m, period small. #}
+{% macro sea(cell) %}{% if cell.wave_height is not none %}<span class="sea"><span class="approx">≈</span>{{ "%.1f" | format(cell.wave_height) }}{% if cell.wave_period is not none %} <span class="period">{{ cell.wave_period | round | int }}s</span>{% endif %}</span>{% endif %}{% endmacro %}
+{% macro sea_title(cell) %}{% if cell.wave_height is not none %} · waves {{ "%.1f" | format(cell.wave_height) }} m{% if cell.wave_period is not none %} every {{ cell.wave_period | round | int }} s{% endif %}{% endif %}{% endmacro %}
 {% set columns %}<colgroup><col class="names">{% for hour in day.hours %}<col>{% endfor %}</colgroup>{% endset %}
 <div class="table-wrap">
 {# The hours sit in their own table so they can stay pinned while the page scrolls down (FR-13.1). #}
@@ -77,16 +73,12 @@
       <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>{% for w in row.windows if w.shore_break %} <span title="{{ w.start[11:] }}–{{ w.end[11:] }} · Shore break: {{ 'dangerous' if w.shore_break == 2 else 'watch out' }} · {{ w.shore_break_reason }}">{{ w.shore_break | warning }}</span>{% endfor %}</th>
       {% for cell in row.cells %}
         {% if cell %}
-        <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
-          <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
+        <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°{{ sea_title(cell) }}">
+          <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>{{ sea(cell) }}
           {% if cell.tide %}<span class="tide-tag {{ cell.tide.kind }}" title="{{ cell.tide.kind | capitalize }} tide {{ cell.tide.time }}">{{ cell.tide.kind | capitalize }}</span>{% endif %}
         </td>
         {% else %}<td></td>{% endif %}
       {% endfor %}
-    </tr>
-    <tr class="waves hourly">
-      <th><small>waves m</small></th>
-      {{ waves_cells(row.waves) }}
     </tr>
   {% endfor %}
   {% if measured %}
@@ -99,24 +91,18 @@
       <th>{% if row.page %}<a href="{{ row.page }}" title="Live readings from {{ row.source }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.where %}<small>{{ row.where }}</small>{% endif %}</th>
       {% for cell in row.cells %}
         {% if cell %}
-        <td class="{{ cell.band }}" title="{{ cell.local }}: {{ cell.wind | round | int }} kn{% if cell.gust is not none %}, gusts {{ cell.gust | round | int }}{% endif %}{% if cell.direction is not none %}, from {{ cell.direction | round | int }}°{% endif %}">
-          {% if cell.arrow is not none %}<span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{% endif %}{{ cell.wind | round | int }}{% if cell.gust is not none %}<small>{{ cell.gust | round | int }}</small>{% endif %}
+        <td class="{{ cell.band }}" title="{{ cell.local }}:{% if cell.wind is not none %} {{ cell.wind | round | int }} kn{% if cell.gust is not none %}, gusts {{ cell.gust | round | int }}{% endif %}{% if cell.direction is not none %}, from {{ cell.direction | round | int }}°{% endif %}{% endif %}{{ sea_title(cell) }}">
+          {% if cell.wind is not none %}{% if cell.arrow is not none %}<span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{% endif %}{{ cell.wind | round | int }}{% if cell.gust is not none %}<small>{{ cell.gust | round | int }}</small>{% endif %}{% endif %}{{ sea(cell) }}
         </td>
         {% else %}<td></td>{% endif %}
       {% endfor %}
     </tr>
-    {% if row.has_waves %}
-    <tr class="waves measured-waves hourly" data-station="{{ row.id }}">
-      <th><small>waves m</small></th>
-      {{ waves_cells(row.waves) }}
-    </tr>
-    {% endif %}
   {% endfor %}
   </tbody>
 </table>
 </div>
 </div>
-<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts · 🌊 ≈ = waves (m) and their period{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
 
 <script>
 /* One map at a time on a phone, picked with the hour buttons; all four side by side
@@ -233,19 +219,28 @@
     var when = local(reading.time), column = hourOf(when) - first + 1;
     var cell = column >= 1 ? row.cells[column] : null;  /* before the first hour: not the name cell */
     if (!cell || when.toLocaleDateString("en-CA", zone) !== "{{ day.date }}") return;
-    var waves = row.nextElementSibling;
-    if (waves && waves.classList.contains("measured-waves")) fillWaves(waves.cells[cell.cellIndex], reading, when);
-    if (reading.wind == null) return;
-    cell.className = band(reading.wind);
-    cell.title = clock(when) + ": " + Math.round(reading.wind) + " kn";
-    cell.innerHTML = (reading.direction == null ? "" : '<span class="arrow" style="transform: rotate(' + Math.round((reading.direction + 180) % 360) + 'deg)">↑</span>')
-      + Math.round(reading.wind) + (reading.gust == null ? "" : "<small>" + Math.round(reading.gust) + "</small>");
+    if (reading.wind == null && reading.wave_height == null) return;
+    cell.className = reading.wind == null ? "" : band(reading.wind);
+    cell.title = clock(when) + ":" + windTitle(reading) + seaTitle(reading);
+    cell.innerHTML = windHtml(reading) + seaHtml(reading);
   }
-  function fillWaves(cell, reading, when) {
-    if (!cell || reading.wave_height == null) return;
-    var period = reading.wave_period == null ? "" : Math.round(reading.wave_period) + "s";
-    cell.title = clock(when) + ": waves " + reading.wave_height.toFixed(1) + " m" + (period ? ", every " + period.replace("s", " s") : "");
-    cell.innerHTML = reading.wave_height.toFixed(1) + (period ? "<small>" + period + "</small>" : "");
+  function windTitle(r) {
+    return r.wind == null ? "" : " " + Math.round(r.wind) + " kn" + (r.gust == null ? "" : ", gusts " + Math.round(r.gust));
+  }
+  function windHtml(r) {
+    if (r.wind == null) return "";
+    return (r.direction == null ? "" : '<span class="arrow" style="transform: rotate(' + Math.round((r.direction + 180) % 360) + 'deg)">↑</span>')
+      + Math.round(r.wind) + (r.gust == null ? "" : "<small>" + Math.round(r.gust) + "</small>");
+  }
+  /* Waves in the same cell, as built (FR-12.2). */
+  function seaTitle(r) {
+    if (r.wave_height == null) return "";
+    return " · waves " + r.wave_height.toFixed(1) + " m" + (r.wave_period == null ? "" : " every " + Math.round(r.wave_period) + " s");
+  }
+  function seaHtml(r) {
+    if (r.wave_height == null) return "";
+    return '<span class="sea"><span class="approx">≈</span>' + r.wave_height.toFixed(1)
+      + (r.wave_period == null ? "" : ' <span class="period">' + Math.round(r.wave_period) + "s</span>") + "</span>";
   }
   function describe(id, r) {
     var text = (names[id] || id) + " " + Math.round(r.wind) + " kn";
