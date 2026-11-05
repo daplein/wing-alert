@@ -21,8 +21,10 @@ h1 { font-size: 1.35rem; margin: 18px 0 2px; }
 .scroll { overflow-x: auto; }
 /* Every block fills the same column, so their edges line up. */
 .best, .maps, .scroll, table.hours { width: 100%; }
-table.hours { table-layout: fixed; border-collapse: separate; border-spacing: 2px; font-size: 0.85rem;
-  min-width: calc(var(--name-col) + var(--hours) * 30px); --name-col: 170px; }
+table.hours { table-layout: fixed; border-collapse: separate; font-size: 0.85rem;
+  /* Each hour needs its cell plus the gap beside it, or the last hour gets cut off. */
+  min-width: calc(var(--name-col) + var(--hours) * (var(--cell) + var(--gap)) + var(--gap));
+  --name-col: 170px; --cell: 30px; --gap: 2px; border-spacing: var(--gap); }
 table.hours col.names { width: var(--name-col); }
 th { text-align: left; font-weight: 600; padding: 4px 8px 4px 0; }
 th small { display: block; font-weight: 400; color: var(--muted); }
@@ -136,7 +138,8 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
 tbody th { box-shadow: 0 -3px 0 var(--bg); }
 @media (max-width: 600px) {
   header, main, footer { padding-left: 10px; padding-right: 10px; }
-  table.hours { --name-col: 84px; font-size: 0.8rem; border-spacing: 1px; min-width: calc(var(--name-col) + var(--hours) * 26px); }
+  /* 84 + 10 hours x 23 fits a 340 px screen; longer summer days scroll sideways (FR-2.8). */
+  table.hours { --name-col: 84px; --cell: 22px; --gap: 1px; font-size: 0.8rem; }
   tbody th { font-size: 0.78rem; line-height: 1.2; padding-right: 4px; }
   .arrow { display: none; }
   td small { font-size: 0.65rem; }
