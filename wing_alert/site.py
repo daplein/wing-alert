@@ -10,7 +10,7 @@ from typing import Any
 import jinja2
 
 from wing_alert.archive import load_snapshots
-from wing_alert.config import Spot, load_spots
+from wing_alert.config import Spot, load_spots, load_station_links
 from wing_alert.guides import guide_html, unforecast_guides
 from wing_alert.measured import (
     load_observations,
@@ -33,10 +33,17 @@ def day_url(site_url: str, day: date) -> str:
 
 
 class SiteBuilder:
-    def __init__(self, env: jinja2.Environment, spots: list[Spot], guides: Path) -> None:
+    def __init__(
+        self,
+        env: jinja2.Environment,
+        spots: list[Spot],
+        guides: Path,
+        station_links: dict[str, dict[str, str]] | None = None,
+    ) -> None:
         self._env = env
         self._spots = spots
         self._guides = guides
+        self._links = station_links or {}
 
     def build(
         self,
@@ -90,6 +97,7 @@ class SiteBuilder:
         shown += sorted(s for s in by_hour if s not in about)
         return [
             _measured_row(s, about.get(s), by_hour.get(s, {}), hours, snapshot["spots"])
+            | self._links.get(s, {})
             for s in shown
         ]
 
@@ -316,7 +324,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--guides", type=Path, default=Path("docs/spots"))
     parser.add_argument("--out", type=Path, default=Path("_site"))
     args = parser.parse_args(argv)
-    builder = SiteBuilder(make_env(), load_spots(args.config / "spots.yaml"), args.guides)
+    spots = load_spots(args.config / "spots.yaml")
+    links = load_station_links(args.config / "stations.yaml")
+    builder = SiteBuilder(make_env(), spots, args.guides, links)
     maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
     weeks = [json.loads(path.read_text()) for path in sorted(args.data.glob("weeks/*.json"))]
     observations = load_observations(args.data / "obs")

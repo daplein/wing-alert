@@ -363,6 +363,7 @@ M5          ...
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
+- **FR-11.6** **Links to the sources.** Each station's name links to the live page of the source its readings come from, and the Measured heading links each source by name. The links live in `config/stations.yaml` (station id → source name and page), so the Worker needs no change. East Pier: [Cruising Association of Ireland](https://cruising.ie/dlr-east-pier-weather-station/); Dublin Bay Buoy: [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx); M2 and M5: [Marine Institute weather buoys](https://www.marine.ie/site-area/data-services/real-time-observations/irish-weather-buoy-network-imos).
 
 ## Project layout (planned)
 

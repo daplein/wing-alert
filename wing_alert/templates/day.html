@@ -91,12 +91,12 @@
   {% endfor %}
   {% if measured %}
     <tr class="measured-head">
-      <th colspan="{{ day.hours | length + 1 }}">Measured <small>Cruising Association of Ireland (East Pier) · Irish Lights (Dublin Bay Buoy) · Marine Institute (M2, M5)</small></th>
+      <th colspan="{{ day.hours | length + 1 }}">Measured <small>{% for source, rows in measured | selectattr("source", "defined") | groupby("source") %}<a href="{{ rows[0].page }}">{{ source }}</a> ({{ rows | map(attribute="name") | join(", ") }}){% if not loop.last %} · {% endif %}{% endfor %}</small></th>
     </tr>
   {% endif %}
   {% for row in measured %}
     <tr class="measured-row hourly" data-station="{{ row.id }}">
-      <th>{{ row.name }}{% if row.where %}<small>{{ row.where }}</small>{% endif %}</th>
+      <th>{% if row.page %}<a href="{{ row.page }}" title="Live readings from {{ row.source }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.where %}<small>{{ row.where }}</small>{% endif %}</th>
       {% for cell in row.cells %}
         {% if cell %}
         <td class="{{ cell.band }}" title="{{ cell.local }}: {{ cell.wind | round | int }} kn{% if cell.gust is not none %}, gusts {{ cell.gust | round | int }}{% endif %}{% if cell.direction is not none %}, from {{ cell.direction | round | int }}°{% endif %}">

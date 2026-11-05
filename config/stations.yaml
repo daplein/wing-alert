@@ -1,0 +1,15 @@
+# Where each live station's readings come from (FR-11.6). The day page links each
+# station's name to its page and names the source in the Measured heading.
+# Station ids match trigger/src/stations.js.
+east_pier:
+  source: Cruising Association of Ireland
+  page: https://cruising.ie/dlr-east-pier-weather-station/
+dublin_bay:
+  source: Irish Lights MetOcean
+  page: https://cilpublic.cil.ie/MetOcean/MetOcean.aspx
+m2:
+  source: Marine Institute
+  page: https://www.marine.ie/site-area/data-services/real-time-observations/irish-weather-buoy-network-imos
+m5:
+  source: Marine Institute
+  page: https://www.marine.ie/site-area/data-services/real-time-observations/irish-weather-buoy-network-imos

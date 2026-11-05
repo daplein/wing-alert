@@ -159,3 +159,19 @@ def test_fr_11_3_site_command_reads_kept_readings(tmp_path):
 def test_fr_11_4_live_readings_before_the_first_hour_leave_the_name_alone(tmp_path):
     page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
     assert "column >= 1 ? row.cells[column] : null" in page
+
+
+def test_fr_11_6_station_names_and_sources_link_to_the_live_pages(tmp_path):
+    from pathlib import Path
+
+    from wing_alert.config import load_station_links
+
+    links = load_station_links(Path("config/stations.yaml"))
+    run = build_snapshot(MORNING, [forecast(ARKLOW, hours(NOON, [18, 20, 18]))], SETTINGS)
+    observations = obs("2026-11-06", {"dublin_bay": [reading("2026-11-06T12:00Z")]})
+    out = tmp_path / "site"
+    SiteBuilder(make_env(), [ARKLOW], tmp_path, links).build([run], out, observations=observations)
+    page = (out / "days/2026-11-06.html").read_text()
+    metocean = "https://cilpublic.cil.ie/MetOcean/MetOcean.aspx"
+    assert f'<a href="{metocean}" title="Live readings from Irish Lights MetOcean">' in page
+    assert f'<a href="{metocean}">Irish Lights MetOcean</a> (Dublin Bay Buoy)' in page
