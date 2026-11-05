@@ -189,7 +189,7 @@
       hour + ":00</text>" + footer;
   }
 
-  function render(data, hour, coast) {
+  function render(data, hour, coast, prefix) {
     var top = PAD + 15 * PT * 0.76 + 6 * PT + 4;  // cap height of the title, then its 6 pt pad
     var main = fit(WICKLOW, { x: (WIDTH - MAP_WIDTH) / 2, y: top, w: MAP_WIDTH, h: 10000 });
     main.y = top;
@@ -197,8 +197,8 @@
     var height = Math.ceil(main.y + main.h * 1.012 + 2 * 7 * 1.2 * PT + PAD);
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + WIDTH + " " + height +
       '" font-family="' + FONT + '" letter-spacing="' + SPACING + '"><rect width="100%" height="100%" fill="white"/>' +
-      base(main, coast, "main-" + hour) + spots(main, data, hour) + frameRect(main, "#8aa3b5", 1) +
-      base(inset, coast, "inset-" + hour) + spots(inset, data, hour) + frameRect(inset, FRAME, 1.5) +
+      base(main, coast, prefix + "main-" + hour) + spots(main, data, hour) + frameRect(main, "#8aa3b5", 1) +
+      base(inset, coast, prefix + "inset-" + hour) + spots(inset, data, hour) + frameRect(inset, FRAME, 1.5) +
       insetNotes(inset) + texts(data, hour, main, height) + "</svg>";
   }
 
@@ -210,12 +210,53 @@
     rect.setAttribute("width", context.measureText("Dublin Bay").width + 5 * PT);
   }
 
+  /* On a wide screen a click opens the map large, with the hours one key or button apart.
+     A phone already pinch-zooms the sharp SVG, so it keeps the page as it is. */
+  function enlarger(data, coast) {
+    var dialog = document.createElement("dialog"), hours = data.hours, shown = 0;
+    dialog.className = "map-zoom";
+    dialog.tabIndex = -1;  // takes the focus itself, so no button lights up on opening
+    dialog.innerHTML = '<div class="zoom-bar"><button type="button" class="zoom-step" data-step="-1"' +
+      ' aria-label="Earlier hour">‹</button><span class="zoom-hours"></span><button type="button"' +
+      ' class="zoom-step" data-step="1" aria-label="Later hour">›</button><button type="button"' +
+      ' class="zoom-close" aria-label="Close">×</button></div><div class="zoom-map"></div>';
+    dialog.querySelector(".zoom-hours").innerHTML = hours.map(function (h) {
+      return '<button type="button" data-hour="' + h + '">' + h + ":00</button>";
+    }).join("");
+    function show(index) {
+      shown = (index + hours.length) % hours.length;
+      var holder = dialog.querySelector(".zoom-map");
+      holder.innerHTML = render(data, hours[shown], coast, "zoom-");
+      sizeTab(holder);
+      dialog.querySelectorAll(".zoom-hours button").forEach(function (b, i) {
+        b.classList.toggle("on", i === shown);
+      });
+    }
+    dialog.addEventListener("click", function (event) {
+      var button = event.target.closest("button");
+      if (event.target === dialog || (button && button.classList.contains("zoom-close"))) dialog.close();
+      else if (button && button.dataset.step) show(shown + Number(button.dataset.step));
+      else if (button && button.dataset.hour) show(hours.indexOf(button.dataset.hour));
+    });
+    dialog.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        show(shown + (event.key === "ArrowLeft" ? -1 : 1));
+        event.preventDefault();
+      }
+    });
+    document.body.appendChild(dialog);
+    return function open(hour) { show(hours.indexOf(hour)); dialog.showModal(); dialog.focus(); };
+  }
+
+  var WIDE = window.matchMedia("(min-width: 900px)");
   var script = document.currentScript;
   var data = JSON.parse(document.getElementById("map-data").textContent);
   fetch(script.dataset.coast).then(function (r) { return r.json(); }).then(function (coast) {
+    var open = enlarger(data, coast);
     document.querySelectorAll(".windmap").forEach(function (holder) {
-      holder.innerHTML = render(data, holder.dataset.hour, coast);
+      holder.innerHTML = render(data, holder.dataset.hour, coast, "");
       sizeTab(holder);
+      holder.addEventListener("click", function () { if (WIDE.matches) open(holder.dataset.hour); });
     });
   });
 })();
