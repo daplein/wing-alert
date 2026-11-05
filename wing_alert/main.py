@@ -28,7 +28,6 @@ from wing_alert.site import SITE_URL, day_url
 from wing_alert.state import AlertState
 from wing_alert.tides import StationTides, TideClient, TideError
 from wing_alert.whatsapp import CallMeBotSender, DeliveryError, DrySender, parse_recipients
-from wing_alert.windmap import MapWriter
 
 DUBLIN = ZoneInfo("Europe/Dublin")
 
@@ -47,7 +46,6 @@ class DailyJob:
         state: AlertState,
         persist: bool,
         archive: Archive | None = None,
-        maps: MapWriter | None = None,
         site_url: str | None = None,
         marine: MarineClient | None = None,
         tides: TideClient | None = None,
@@ -61,7 +59,6 @@ class DailyJob:
         self._state = state
         self._persist = persist
         self._archive = archive
-        self._maps = maps
         self._site_url = site_url
         self._marine = marine
         self._tides = tides
@@ -125,8 +122,6 @@ class DailyJob:
             return
         snapshot = build_snapshot(now, forecasts, self._settings, stations)
         self._archive.save(snapshot)
-        if self._maps:
-            self._maps.write(snapshot)
 
     def _alert(self, windows: list[Window], now: datetime) -> str | None:
         last = now.date() + timedelta(days=self._settings.alert_days)
@@ -173,7 +168,6 @@ def build_job(args: argparse.Namespace, http: httpx.Client) -> DailyJob:
         state=AlertState(args.state),
         persist=live,
         archive=None if args.dry_run else Archive(args.data),
-        maps=None if args.dry_run else MapWriter(args.data),
         site_url=args.site_url,
         marine=MarineClient(http, settings.forecast_days),
         tides=TideClient(http, settings.forecast_days),

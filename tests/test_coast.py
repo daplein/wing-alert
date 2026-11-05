@@ -1,10 +1,18 @@
-from matplotlib.path import Path as Shape
-
 from wing_alert.coast import FAR_WEST, load_coast, stitch
 
 
+def inside(point, shape) -> bool:
+    """Even-odd rule: a ray going east crosses the shape's edge an odd number of times."""
+    x, y = point
+    crossings = 0
+    for (x1, y1), (x2, y2) in zip(shape, shape[1:] + shape[:1], strict=True):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            crossings += 1
+    return crossings % 2 == 1
+
+
 def is_land(point, land) -> bool:
-    return any(Shape(shape).contains_point(point) for shape in land)
+    return any(inside(point, shape) for shape in land)
 
 
 def test_fr_3_6_stitches_ways_that_run_end_to_start():

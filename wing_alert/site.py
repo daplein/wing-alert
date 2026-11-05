@@ -52,7 +52,6 @@ class SiteBuilder:
         self,
         snapshots: list[dict[str, Any]],
         out: Path,
-        maps: dict[str, Path] | None = None,
         weeks: list[dict[str, Any]] | None = None,
         observations: dict[str, dict[str, Any]] | None = None,
     ) -> None:
@@ -348,10 +347,9 @@ def main(argv: list[str] | None = None) -> int:
     spots = load_spots(args.config / "spots.yaml")
     links = load_station_links(args.config / "stations.yaml")
     builder = SiteBuilder(make_env(), spots, args.guides, links)
-    maps = {path.stem: path for path in sorted(args.data.glob("*/*/*.png"))}
     weeks = [json.loads(path.read_text()) for path in sorted(args.data.glob("weeks/*.json"))]
     observations = load_observations(args.data / "obs")
-    builder.build(load_snapshots(args.data), args.out, maps, weeks, observations)
+    builder.build(load_snapshots(args.data), args.out, weeks, observations)
     print(f"Site built in {args.out}")
     return 0
 
