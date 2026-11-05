@@ -413,7 +413,7 @@ Arklow      ←18HW  ←18 ←19 ←16 ←12    ←16LW
 
 When you scroll down to the last spots and the buoys, the hours row is gone, and it's hard to tell which column is which hour.
 
-- **FR-13.1** **Pinned hours.** The hours row stays at the top of the screen while the page scrolls down past the table, and still lines up with the columns when the table scrolls sideways on a phone. The "now" hour stays highlighted in it.
+- **FR-13.1** **Pinned hours.** The hours row stays at the top of the screen while the page scrolls down past the table, and still lines up with the columns when the table scrolls sideways on a phone.
 - **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves line and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
 
 ## Non-goals
