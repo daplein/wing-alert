@@ -261,10 +261,22 @@
     return null;
   }
 
+  /* The coastline is kept for the rest of the tab's session, so the next day's page draws
+     its maps, and opens its large map, before it first shows: no flicker between days. */
+  function withCoast(url, draw) {
+    var key = "coast " + new URL(url, location.href).href, kept = null;
+    try { kept = JSON.parse(sessionStorage.getItem(key)); } catch (e) { /* not kept */ }
+    if (kept) return draw(kept);
+    fetch(url).then(function (r) { return r.text(); }).then(function (text) {
+      try { sessionStorage.setItem(key, text); } catch (e) { /* storage full or off */ }
+      draw(JSON.parse(text));
+    });
+  }
+
   var WIDE = window.matchMedia("(min-width: 900px)");
   var script = document.currentScript;
   var data = JSON.parse(document.getElementById("map-data").textContent);
-  fetch(script.dataset.coast).then(function (r) { return r.json(); }).then(function (coast) {
+  withCoast(script.dataset.coast, function (coast) {
     var open = enlarger(data, coast, document.querySelector(".maps").dataset);
     document.querySelectorAll(".windmap").forEach(function (holder) {
       holder.innerHTML = render(data, holder.dataset.hour, coast, "");
