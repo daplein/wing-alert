@@ -1,0 +1,131 @@
+{
+ "day": "2026-11-04",
+ "about": [
+  {
+   "id": "east_pier",
+   "name": "East Pier",
+   "lat": 53.3002,
+   "lon": -6.1242,
+   "waves": false
+  },
+  {
+   "id": "dublin_bay",
+   "name": "Dublin Bay Buoy",
+   "lat": 53.3319,
+   "lon": -6.0774,
+   "waves": true
+  },
+  {
+   "id": "m2",
+   "name": "M2 buoy",
+   "lat": 53.4836,
+   "lon": -5.4302,
+   "waves": true
+  },
+  {
+   "id": "m5",
+   "name": "M5 buoy",
+   "lat": 51.6904,
+   "lon": -6.7043,
+   "waves": true
+  }
+ ],
+ "stations": {
+  "dublin_bay": [
+   {
+    "time": "2026-11-04T22:38Z",
+    "wind": 20,
+    "gust": 33,
+    "direction": 73,
+    "wave_height": 2,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-04T22:59Z",
+    "wind": 16,
+    "gust": 30,
+    "direction": 87,
+    "wave_height": 1.9,
+    "wave_period": 5
+   }
+  ],
+  "east_pier": [
+   {
+    "time": "2026-11-04T23:07Z",
+    "wind": 22.8,
+    "gust": 28.6,
+    "direction": 97.5,
+    "wave_height": null,
+    "wave_period": null
+   }
+  ],
+  "m2": [
+   {
+    "time": "2026-11-04T20:00Z",
+    "wind": 25.2,
+    "gust": 30.9,
+    "direction": 73,
+    "wave_height": 1.5,
+    "wave_period": 4.3
+   },
+   {
+    "time": "2026-11-04T21:00Z",
+    "wind": 23.1,
+    "gust": 28.5,
+    "direction": 78,
+    "wave_height": 2,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-04T22:00Z",
+    "wind": 25.4,
+    "gust": 31.8,
+    "direction": 80,
+    "wave_height": 2.2,
+    "wave_period": 4.8
+   },
+   {
+    "time": "2026-11-04T23:00Z",
+    "wind": 22.8,
+    "gust": 28.2,
+    "direction": 87,
+    "wave_height": 2.2,
+    "wave_period": 5
+   }
+  ],
+  "m5": [
+   {
+    "time": "2026-11-04T20:00Z",
+    "wind": 19.9,
+    "gust": 28.1,
+    "direction": 70,
+    "wave_height": 2.1,
+    "wave_period": 4.8
+   },
+   {
+    "time": "2026-11-04T21:00Z",
+    "wind": 19.9,
+    "gust": 27.6,
+    "direction": 66,
+    "wave_height": 2.5,
+    "wave_period": 5.2
+   },
+   {
+    "time": "2026-11-04T22:00Z",
+    "wind": 17.2,
+    "gust": 25.4,
+    "direction": 73,
+    "wave_height": 2.1,
+    "wave_period": 4.8
+   },
+   {
+    "time": "2026-11-04T23:00Z",
+    "wind": 18.4,
+    "gust": 25.7,
+    "direction": 67,
+    "wave_height": 2.1,
+    "wave_period": 4.8
+   }
+  ]
+ }
+}
