@@ -18,6 +18,7 @@
 <footer>
   Forecast from <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).
   Tides from the <a href="https://www.marine.ie/">Marine Institute</a> (CC BY 4.0).
+  {% if live_sources %}Live readings from {% for s in live_sources %}{% if not loop.first %}{{ " and " if loop.last else ", " }}{% endif %}<a href="{{ s.page }}">{{ s.source }}</a>{% endfor %}.{% endif %}
   Wicklow wingfoiling crew · <a href="https://github.com/daplein/wing-alert">source</a>
 </footer>
 </body>

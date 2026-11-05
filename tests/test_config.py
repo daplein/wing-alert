@@ -83,3 +83,17 @@ def test_fr_1_1_rejects_invalid_settings(tmp_path, text):
 def test_fr_1_1_missing_file_is_a_config_error(tmp_path):
     with pytest.raises(ConfigError):
         load_spots(tmp_path / "nope.yaml")
+
+
+def test_fr_11_6_station_links_need_a_source_and_a_page(tmp_path):
+    from wing_alert.config import load_station_links
+
+    path = tmp_path / "stations.yaml"
+    path.write_text("m2: {source: Marine Institute}")
+    with pytest.raises(ConfigError):
+        load_station_links(path)
+    path.write_text("- m2")
+    with pytest.raises(ConfigError):
+        load_station_links(path)
+    path.write_text("m2: {source: Marine Institute, page: https://marine.ie}")
+    assert load_station_links(path)["m2"]["page"] == "https://marine.ie"
