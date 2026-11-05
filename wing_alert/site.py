@@ -44,6 +44,7 @@ class SiteBuilder:
         self._spots = spots
         self._guides = guides
         self._links = station_links or {}
+        env.globals["live_sources"] = live_sources(self._links)
 
     def build(
         self,
@@ -238,6 +239,12 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
         "cells": [_cell(by_hour.get(hour), tags.get(hour)) for hour in hours],
         "waves": [_forecast_wave_cell(by_hour.get(hour)) for hour in hours],
     }
+
+
+def live_sources(links: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+    """Each source once, in config order, for the footer credits (FR-11.6)."""
+    sources = {link["source"]: link for link in links.values()}
+    return [{"source": name, "page": link["page"]} for name, link in sources.items()]
 
 
 def _measured_row(

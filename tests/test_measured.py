@@ -174,4 +174,18 @@ def test_fr_11_6_station_names_and_sources_link_to_the_live_pages(tmp_path):
     page = (out / "days/2026-11-06.html").read_text()
     metocean = "https://cilpublic.cil.ie/MetOcean/MetOcean.aspx"
     assert f'<a href="{metocean}" title="Live readings from Irish Lights MetOcean">' in page
-    assert f'<a href="{metocean}">Irish Lights MetOcean</a> (Dublin Bay Buoy)' in page
+    footer = page[page.index("<footer>") :]
+    assert f'<a href="{metocean}">Irish Lights MetOcean</a>' in footer  # credited once, below
+    assert "<th colspan" in page and ">Measured</th>" in page
+
+
+def test_fr_11_6_footer_names_each_source_once():
+    from wing_alert.site import live_sources
+
+    links = {
+        "m2": {"source": "Marine Institute", "page": "https://marine.ie"},
+        "m5": {"source": "Marine Institute", "page": "https://marine.ie"},
+        "dublin_bay": {"source": "Irish Lights MetOcean", "page": "https://cil.ie"},
+    }
+    names = [s["source"] for s in live_sources(links)]
+    assert names == ["Marine Institute", "Irish Lights MetOcean"]

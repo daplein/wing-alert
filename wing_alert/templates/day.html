@@ -91,7 +91,7 @@
   {% endfor %}
   {% if measured %}
     <tr class="measured-head">
-      <th colspan="{{ day.hours | length + 1 }}">Measured <small>{% for source, rows in measured | selectattr("source", "defined") | groupby("source") %}<a href="{{ rows[0].page }}">{{ source }}</a> ({{ rows | map(attribute="name") | join(", ") }}){% if not loop.last %} · {% endif %}{% endfor %}</small></th>
+      <th colspan="{{ day.hours | length + 1 }}">Measured</th>
     </tr>
   {% endif %}
   {% for row in measured %}
