@@ -17,9 +17,7 @@ def months(
     return [_month(year, month, summaries, reports, today) for year, month in shown]
 
 
-def _month(
-    year: int, month: int, summaries: dict, reports: dict, today: str
-) -> dict[str, Any]:
+def _month(year: int, month: int, summaries: dict, reports: dict, today: str) -> dict[str, Any]:
     in_month = [day for day in sorted(summaries) if day[:7] == f"{year:04d}-{month:02d}"]
     return {
         "label": f"{date(year, month, 1):%B %Y}",

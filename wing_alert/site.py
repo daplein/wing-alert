@@ -14,7 +14,6 @@ from wing_alert.coast import load_coast
 from wing_alert.config import Spot, load_spots, load_station_links
 from wing_alert.guides import guide_html, unforecast_guides
 from wing_alert.mapdata import coast_data, map_data
-from wing_alert.month_grid import months
 from wing_alert.measured import (
     load_observations,
     local_time,
@@ -22,6 +21,7 @@ from wing_alert.measured import (
     stations_about,
     where,
 )
+from wing_alert.month_grid import months
 from wing_alert.observations import OBS_URL
 from wing_alert.tidechart import tide_chart
 
