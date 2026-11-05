@@ -81,9 +81,26 @@
       {% endfor %}
     </tr>
   {% endfor %}
-  {% if measured %}
+  {% if measured or measured_note %}
     <tr class="measured-head">
       <th colspan="{{ day.hours | length + 1 }}">Measured</th>
+    </tr>
+  {% endif %}
+  {% if measured_note %}
+    {% set when = measured_note.weekday %}
+    <tr class="measured-note">
+      <td colspan="{{ day.hours | length + 1 }}">
+      {% if measured_note.kind == "future" %}
+        {# Back to the Future, one line picked at random when the page opens (FR-11.7). #}
+        <span class="quote">⚡ Great Scott! These readings haven't happened yet. Come back on {{ when }}, or hit 88 mph.</span>
+        <span class="quote" hidden>🚗 Readings? Where we're going, we don't need readings. Back on {{ when }}.</span>
+        <span class="quote" hidden>⚡ 1.21 gigawatts won't help: the buoys only measure what's already blown. Back on {{ when }}.</span>
+      {% elif measured_note.kind == "before" %}
+        ⚡ No buoy readings: the flux capacitor only came online {{ measured_note.since | iso_label }}.
+      {% else %}
+        No buoy readings were recorded this day.
+      {% endif %}
+      </td>
     </tr>
   {% endif %}
   {% for row in measured %}
@@ -105,6 +122,14 @@
 <p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts · 🌊 ≈ = waves (m) and their period{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
 
 <script>
+/* A different Back to the Future line on each visit (FR-11.7). */
+(function () {
+  var quotes = document.querySelectorAll(".measured-note .quote");
+  if (!quotes.length) return;
+  var pick = Math.floor(Math.random() * quotes.length);
+  quotes.forEach(function (q, i) { q.hidden = i !== pick; });
+})();
+
 /* One map at a time on a phone, picked with the hour buttons; all four side by side
    on a wider screen (CSS). Opens on the next hour still to come today. */
 (function () {

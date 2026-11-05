@@ -192,3 +192,30 @@ def test_fr_11_6_footer_names_each_source_once():
     }
     names = [s["source"] for s in live_sources(links)]
     assert names == ["Marine Institute", "Irish Lights MetOcean"]
+
+
+def test_fr_11_7_says_why_there_are_no_readings():
+    from wing_alert.site import measured_note
+
+    kept = {"2026-11-04": {}, "2026-11-05": {}}
+    today = "2026-11-05"
+    assert measured_note("2026-11-07", today, kept) == {
+        "kind": "future",
+        "weekday": "Saturday",
+        "since": "2026-11-04",
+    }
+    assert measured_note("2026-11-01", today, kept)["kind"] == "before"
+    assert measured_note("2026-11-04", today, kept)["kind"] == "gap"
+    assert measured_note(today, today, kept) is None  # today keeps its rows
+    assert measured_note("2026-11-07", today, {}) is None  # nothing recorded ever
+
+
+def test_fr_11_7_future_page_has_three_back_to_the_future_lines(tmp_path):
+    later = hours(NOON.replace(day=7), [18, 20, 18])
+    run = build_snapshot(MORNING, [forecast(ARKLOW, hours(NOON, [18]) + later)], SETTINGS)
+    out = tmp_path / "site"
+    observations = obs("2026-11-06", {"m5": [reading("2026-11-06T12:00Z")]})
+    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run], out, observations=observations)
+    page = (out / "days/2026-11-07.html").read_text()
+    assert page.count('class="quote"') == 3 and "Great Scott!" in page
+    assert "Come back on Saturday, or hit 88 mph." in page

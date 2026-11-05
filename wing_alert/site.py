@@ -76,11 +76,13 @@ class SiteBuilder:
 
     def _render_day(self, path: Path, root: str, snapshot: dict, day: str, days: list) -> None:
         forecast = _forecast_day(snapshot, day)
+        measured = self._measured(snapshot, day, forecast["hours"])
         html = self._env.get_template("day.html").render(
             root=root,
             issued=snapshot["issued"],
             day=forecast,
-            measured=self._measured(snapshot, day, forecast["hours"]),
+            measured=measured,
+            measured_note=None if measured else measured_note(day, self._today, self._observations),
             obs_url=OBS_URL,
             outlook=day > _next_day(snapshot["issued"][:10]),
             maps=self._maps.get(day, []),
@@ -238,6 +240,15 @@ def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[st
         "windows": [window for window in windows if window["spot"] == spot["id"]],
         "cells": [_cell(by_hour.get(hour), tags.get(hour)) for hour in hours],
     }
+
+
+def measured_note(day: str, today: str | None, observations: dict) -> dict[str, str] | None:
+    """Why a day page has no measured rows (FR-11.7); None before any readings exist."""
+    if not observations or day == today:
+        return None
+    first = min(observations)
+    kind = "future" if today and day > today else "before" if day < first else "gap"
+    return {"kind": kind, "weekday": f"{date.fromisoformat(day):%A}", "since": first}
 
 
 def live_sources(links: dict[str, dict[str, str]]) -> list[dict[str, str]]:

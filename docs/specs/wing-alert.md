@@ -364,6 +364,14 @@ M5          ...
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
 - **FR-11.6** **Links to the sources.** Each station's name links to the live page of the source its readings come from, and the footer of every page credits each source by name, with the same link, next to the Open-Meteo and tide credits. The Measured heading is just "Measured". The links live in `config/stations.yaml` (station id → source name and page), so the Worker needs no change. East Pier: [Cruising Association of Ireland](https://cruising.ie/dlr-east-pier-weather-station/); Dublin Bay Buoy: [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx); M2 and M5: [Marine Institute weather buoys](https://www.marine.ie/site-area/data-services/real-time-observations/irish-weather-buoy-network-imos).
+- **FR-11.7** **No readings, said nicely.** Once any readings exist, a day page without measured rows still shows the Measured heading, with one grey line under it instead of an empty gap:
+  - **future day:** one of three *Back to the Future* lines, picked at random each time the page opens (the first one without JavaScript), ending with that day's name:
+    - ⚡ Great Scott! These readings haven't happened yet. Come back on Saturday, or hit 88 mph.
+    - 🚗 Readings? Where we're going, we don't need readings. Back on Saturday.
+    - ⚡ 1.21 gigawatts won't help: the buoys only measure what's already blown. Back on Saturday.
+  - **past day before the first kept readings:** ⚡ No buoy readings: the flux capacitor only came online Wednesday 4 November (the date of the oldest file in `data/obs/`).
+  - **past day after that, with nothing kept** (the Worker was down): plainly, "No buoy readings were recorded this day." A real gap gets no joke.
+  - **today** is unchanged: its rows show, and hours still to come are simply empty.
 
 ## Project layout (planned)
 
