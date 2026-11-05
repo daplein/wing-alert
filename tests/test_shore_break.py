@@ -136,7 +136,7 @@ def test_fr_4_4_day_page_shows_waves_and_reason(tmp_path):
     page = (out / "index.html").read_text()
     assert "Shore break: dangerous · 1.6 m waves at 6 s" in page
     assert 'title="12:00: waves 1.6 m, every 6 s">1.6<small>6s</small>' in page  # FR-12.2
-    assert 'title="High water 12:00">HW</span>' in page  # FR-12.1
+    assert 'title="High tide 12:00">High</span>' in page  # FR-12.1
     assert 'class="tidechart"' in page  # FR-6.4
 
 

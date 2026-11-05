@@ -79,7 +79,7 @@
         {% if cell %}
         <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
           <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
-          {% if cell.tide %}<span class="tide-tag {{ cell.tide.kind }}" title="{{ 'High' if cell.tide.kind == 'high' else 'Low' }} water {{ cell.tide.time }}">{{ 'HW' if cell.tide.kind == 'high' else 'LW' }}</span>{% endif %}
+          {% if cell.tide %}<span class="tide-tag {{ cell.tide.kind }}" title="{{ cell.tide.kind | capitalize }} tide {{ cell.tide.time }}">{{ cell.tide.kind | capitalize }}</span>{% endif %}
         </td>
         {% else %}<td></td>{% endif %}
       {% endfor %}
@@ -116,7 +116,7 @@
 </table>
 </div>
 </div>
-<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts · HW / LW = high / low water{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
 
 <script>
 /* One map at a time on a phone, picked with the hour buttons; all four side by side

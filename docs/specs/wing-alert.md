@@ -401,11 +401,11 @@ The grey line under each spot (`08:00–16:00 ⚠️ · waves 1.1 m · HW 09:05 
 
 ```text
             09     10  11  12  13     14
-Arklow      ←18HW  ←18 ←19 ←16 ←12    ←16LW
+Arklow      ←18High ←18 ←19 ←16 ←12   ←16Low
   waves m   0.9    1.0 1.1 1.1 1.0    0.9
 ```
 
-- **FR-12.1** **Tide tags in the cells.** The spot's cell for the hour nearest each high water gets a small `HW` tag in its corner, the one nearest each low water `LW` (spot's own station, FR-6.2). Its title gives the exact time, e.g. `High water 09:05`. A tide outside the table's hours gets no tag. Replaces FR-6.5.
+- **FR-12.1** **Tide tags in the cells.** The spot's cell for the hour nearest each high water gets a small `High` tag on its top edge, clear of the numbers, and the one nearest each low water `Low` (spot's own station, FR-6.2). Plain words, not HW/LW, so nobody needs a tide table to read it. Its title gives the exact time, e.g. `High tide 09:05`. A tide outside the table's hours gets no tag. Replaces FR-6.5.
 - **FR-12.2** **Waves line per spot,** under its wind, over the same hours, as for the buoys (FR-11.2): forecast wave height (m) with the period small (`1.1` `5s`), from the Marine API (FR-4.1). Spots that share a marine grid point show the same numbers; that's honest, not a bug.
 - **FR-12.3** **No line under the spot.** The window, waves and tide times line goes. The ⚠️ beside the name gets the window and reason as its title, e.g. `10:00–15:00 · Shore break: watch out · 1.1 m waves at 5 s`.
 

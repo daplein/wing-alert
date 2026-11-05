@@ -36,10 +36,11 @@ td.ok { border-color: var(--fg); font-weight: 700; }
 /* A waves line under every spot and buoy (FR-11.2, FR-12.2). */
 tr.waves td { color: var(--muted); padding: 0 0 8px; font-size: 0.8rem; }
 tr.waves th { padding-top: 0; }
-/* High and low water on the hour nearest it (FR-12.1). */
-tr.spot-row td { position: relative; }
-.tide-tag { position: absolute; top: 1px; right: 2px; font-size: 0.55rem; font-weight: 700; line-height: 1;
-  padding: 1px 2px; border-radius: 3px; color: var(--bg); }
+/* High and low tide on the hour nearest it (FR-12.1). The tag sits on the cell's top
+   edge and the cells get a little headroom, so it never covers the numbers. */
+tr.spot-row td { position: relative; padding-top: 8px; }
+.tide-tag { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size: 0.6rem;
+  font-weight: 700; line-height: 1.2; padding: 0 4px; border-radius: 4px; color: var(--bg); white-space: nowrap; }
 .tide-tag.high { background: var(--accent); }
 .tide-tag.low { background: var(--muted); }
 /* The hour under the mouse or finger, down the whole table (FR-13.2). */
@@ -106,9 +107,7 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
   tbody th { font-size: 0.78rem; line-height: 1.2; padding-right: 4px; }
   .arrow { display: none; }
   td small { font-size: 0.65rem; }
-  /* Narrow cells: the tag sits on the cell's top edge, clear of the numbers. */
-  .tide-tag { top: -6px; right: 50%; transform: translateX(50%); font-size: 0.5rem; padding: 0 2px; }
-  tr.spot-row td { padding-top: 6px; }
+  .tide-tag { font-size: 0.5rem; padding: 0 2px; }
   .strip { gap: 4px; }
   .strip a { padding: 5px 1px; font-size: 0.74rem; }
   .strip .peak { font-size: 0.74rem; padding: 0 3px; }
