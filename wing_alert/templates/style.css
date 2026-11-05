@@ -101,12 +101,14 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px;
 .break { font-size: 0.68rem; font-weight: 600; color: #d97700; line-height: 1.15; margin-top: 2px; }
 .break.level2 { color: #d62828; }
 .strip .step { flex: 0 0 auto; display: flex; align-items: center; font-size: 1.3rem; border: none; color: var(--accent); padding: 0 4px; }
-/* Maps: four side by side on a wide screen; one at a time with hour buttons on a phone. */
+/* Maps: side by side on a wide screen, in rows of three past four maps (--cols, FR-9.7);
+   one at a time with hour buttons on a phone. */
 .maps { margin: 0 0 14px; }
 .maps .times { display: none; gap: 6px; margin-bottom: 8px; }
 .maps button { flex: 1; font: inherit; font-size: 0.9rem; padding: 6px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
 .maps button.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
-.maps .images { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.maps .images { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 8px; }
+.maps button.step { flex: 0 0 auto; padding: 6px 12px; color: var(--accent); font-size: 1.1rem; line-height: 1; }
 .maps .windmap svg { width: 100%; height: auto; border-radius: 10px; display: block; }
 /* Click a map on a wide screen to see it large (FR-9.7). */
 @media (min-width: 900px) { .maps .windmap { cursor: zoom-in; } }

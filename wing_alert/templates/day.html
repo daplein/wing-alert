@@ -30,12 +30,15 @@
 <p class="now" hidden></p>
 
 {% if maps.hours %}
-<section class="maps">
+{# Stepping past the day's first or last map goes on to the day before or after (FR-9.7). #}
+<section class="maps" data-previous="{% if previous %}{{ root }}days/{{ previous }}.html{% endif %}" data-next="{% if next %}{{ root }}days/{{ next }}.html{% endif %}">
   <div class="times" role="group" aria-label="Map hour">
+    <button type="button" class="step" data-step="-1" aria-label="Earlier map">‹</button>
     {% for hour in maps.hours %}<button type="button" data-hour="{{ hour }}">{{ hour }}:00</button>{% endfor %}
+    <button type="button" class="step" data-step="1" aria-label="Later map">›</button>
   </div>
   {# Drawn in the browser from the forecast and the coastline (windmap.js). #}
-  <div class="images">
+  <div class="images" style="--cols: {{ maps.hours | length if maps.hours | length <= 4 else 3 }}">
     {% for hour in maps.hours %}<div class="windmap" data-hour="{{ hour }}" role="img" aria-label="Wind map for {{ day.date | day_label }} at {{ hour }}:00"></div>{% endfor %}
   </div>
   <script type="application/json" id="map-data">{{ maps | tojson }}</script>
@@ -133,26 +136,41 @@
   quotes.forEach(function (q, i) { q.hidden = i !== pick; });
 })();
 
-/* One map at a time on a phone, picked with the hour buttons; all four side by side
-   on a wider screen (CSS). Opens on the next hour still to come today. */
+/* One map at a time on a phone, picked with the hour buttons; side by side on a wider
+   screen (CSS). Opens on the next hour still to come today, or on the map a step from
+   the day before or after asked for (#map-first, #map-last). ‹ › step across days (FR-9.7). */
 (function () {
   var maps = document.querySelector(".maps");
   if (!maps) return;
   document.documentElement.classList.add("js");
-  var buttons = maps.querySelectorAll("button"), images = maps.querySelectorAll(".windmap");
+  var buttons = maps.querySelectorAll("button[data-hour]"), images = maps.querySelectorAll(".windmap");
+  var hours = Array.prototype.map.call(buttons, function (b) { return b.dataset.hour; }), shown;
   function show(hour) {
+    shown = hours.indexOf(hour);
     buttons.forEach(function (b) { b.classList.toggle("on", b.dataset.hour === hour); });
     images.forEach(function (i) { i.classList.toggle("on", i.dataset.hour === hour); });
   }
-  buttons.forEach(function (b) { b.onclick = function () { show(b.dataset.hour); }; });
-  var hours = Array.prototype.map.call(buttons, function (b) { return b.dataset.hour; });
-  var now = new Date(), today = now.toLocaleDateString("en-CA", { timeZone: "Europe/Dublin" });
-  var pick = hours[Math.min(1, hours.length - 1)];
-  if (today === "{{ day.date }}") {
-    var hour = Number(now.toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Dublin" }));
-    pick = hours.filter(function (h) { return Number(h) >= hour; })[0] || hours[hours.length - 1];
+  function step(by) {
+    var to = shown + by;
+    if (to >= 0 && to < hours.length) return show(hours[to]);
+    var page = to < 0 ? maps.dataset.previous : maps.dataset.next;
+    if (page) location.href = page + (to < 0 ? "#map-last" : "#map-first");
   }
-  show(pick);
+  buttons.forEach(function (b) { b.onclick = function () { show(b.dataset.hour); }; });
+  maps.querySelectorAll("button[data-step]").forEach(function (b) {
+    b.onclick = function () { step(Number(b.dataset.step)); };
+  });
+  show(firstMap());
+  if (/^#map-/.test(location.hash)) maps.scrollIntoView();
+
+  function firstMap() {
+    if (location.hash === "#map-first") return hours[0];
+    if (location.hash === "#map-last") return hours[hours.length - 1];
+    var now = new Date(), today = now.toLocaleDateString("en-CA", { timeZone: "Europe/Dublin" });
+    if (today !== "{{ day.date }}") return hours[Math.min(1, hours.length - 1)];
+    var hour = Number(now.toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Dublin" }));
+    return hours.filter(function (h) { return Number(h) >= hour; })[0] || hours[hours.length - 1];
+  }
 })();
 
 /* The pinned hours follow the table when it scrolls sideways (FR-13.1). */

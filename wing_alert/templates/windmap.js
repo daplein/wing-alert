@@ -210,9 +210,10 @@
     rect.setAttribute("width", context.measureText("Dublin Bay").width + 5 * PT);
   }
 
-  /* On a wide screen a click opens the map large, with the hours one key or button apart.
-     A phone already pinch-zooms the sharp SVG, so it keeps the page as it is. */
-  function enlarger(data, coast) {
+  /* On a wide screen a click opens the map large, with the hours one key or button apart;
+     past the day's first or last hour it goes on to the day before or after, opening that
+     page's large map (FR-9.7). A phone already pinch-zooms the sharp SVG. */
+  function enlarger(data, coast, days) {
     var dialog = document.createElement("dialog"), hours = data.hours, shown = 0;
     dialog.className = "map-zoom";
     dialog.tabIndex = -1;  // takes the focus itself, so no button lights up on opening
@@ -224,7 +225,8 @@
       return '<button type="button" data-hour="' + h + '">' + h + ":00</button>";
     }).join("");
     function show(index) {
-      shown = (index + hours.length) % hours.length;
+      if (index < 0 || index >= hours.length) return otherDay(index < 0);
+      shown = index;
       var holder = dialog.querySelector(".zoom-map");
       holder.innerHTML = render(data, hours[shown], coast, "zoom-");
       sizeTab(holder);
@@ -244,19 +246,32 @@
         event.preventDefault();
       }
     });
+    function otherDay(earlier) {
+      var page = earlier ? days.previous : days.next;
+      if (page) location.href = page + (earlier ? "#map-last" : "#map-first");
+    }
     document.body.appendChild(dialog);
     return function open(hour) { show(hours.indexOf(hour)); dialog.showModal(); dialog.focus(); };
+  }
+
+  /* The map a step from the day before or after asked for, if any. */
+  function askedFor(hours) {
+    if (location.hash === "#map-first") return hours[0];
+    if (location.hash === "#map-last") return hours[hours.length - 1];
+    return null;
   }
 
   var WIDE = window.matchMedia("(min-width: 900px)");
   var script = document.currentScript;
   var data = JSON.parse(document.getElementById("map-data").textContent);
   fetch(script.dataset.coast).then(function (r) { return r.json(); }).then(function (coast) {
-    var open = enlarger(data, coast);
+    var open = enlarger(data, coast, document.querySelector(".maps").dataset);
     document.querySelectorAll(".windmap").forEach(function (holder) {
       holder.innerHTML = render(data, holder.dataset.hour, coast, "");
       sizeTab(holder);
       holder.addEventListener("click", function () { if (WIDE.matches) open(holder.dataset.hour); });
     });
+    var hour = askedFor(data.hours);
+    if (hour && WIDE.matches) open(hour);
   });
 })();
