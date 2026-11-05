@@ -87,7 +87,7 @@ def site(tmp_path, observations, issued=MORNING):
 def test_fr_11_1_measured_rows_under_the_spots_never_outlined(tmp_path):
     readings = [reading("2026-11-06T12:30Z", 22, wave_height=0.8), reading("2026-11-06T13:00Z")]
     page = site(tmp_path, obs("2026-11-06", {"dublin_bay": readings}))
-    assert page.index('<tr class="spot-row">') < page.index("Measured")
+    assert page.index('<tr class="spot-row hourly">') < page.index("Measured")
     row = page[
         page.index('data-station="dublin_bay"') : page.index("</tr>", page.index("dublin_bay"))
     ]
@@ -102,7 +102,7 @@ def test_fr_11_2_waves_line_under_the_wind_hour_by_hour(tmp_path):
         reading("2026-11-06T13:00Z", None, wave_height=1.1),
     ]
     page = site(tmp_path, obs("2026-11-06", {"dublin_bay": readings}))
-    waves = page[page.index('<tr class="measured-waves"') : page.index("</tbody>")]
+    waves = page[page.index('<tr class="waves measured-waves') : page.index("</tbody>")]
     assert 'title="12:30: waves 0.8 m, every 5 s">0.8<small>5s</small>' in waves
     assert 'title="13:00: waves 1.1 m">1.1</td>' in waves  # no wind, still waves
 
@@ -110,7 +110,7 @@ def test_fr_11_2_waves_line_under_the_wind_hour_by_hour(tmp_path):
 def test_fr_11_4_todays_page_lists_every_station_to_fill_in_live(tmp_path):
     page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
     assert 'data-station="dublin_bay"' in page and 'data-station="m5"' in page
-    assert '<tr class="measured-waves" data-station="dublin_bay">' in page
+    assert '<tr class="waves measured-waves hourly" data-station="dublin_bay">' in page
     assert "workers.dev/obs" in page and '<p class="now" hidden>' in page
 
 
@@ -123,7 +123,7 @@ def test_fr_11_3_past_days_only_show_stations_with_readings(tmp_path):
     SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run, newer], out, observations=observations)
     page = (out / "days/2026-11-06.html").read_text()
     assert 'data-station="m5"' in page and 'data-station="dublin_bay"' not in page
-    assert '<tr class="measured-row" data-station="m5">' in page
+    assert '<tr class="measured-row hourly" data-station="m5">' in page
 
 
 def test_fr_11_2_no_waves_line_for_a_station_without_a_wave_sensor(tmp_path):
@@ -131,7 +131,7 @@ def test_fr_11_2_no_waves_line_for_a_station_without_a_wave_sensor(tmp_path):
     observations = obs("2026-11-06", {"east_pier": [reading("2026-11-06T12:00Z")]}, (pier,))
     page = site(tmp_path, observations)
     assert 'data-station="east_pier"' in page
-    assert '<tr class="measured-waves" data-station="east_pier">' not in page
+    assert '<tr class="waves measured-waves hourly" data-station="east_pier">' not in page
 
 
 def test_fr_11_1_station_missing_from_about_uses_its_id(tmp_path):

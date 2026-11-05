@@ -237,7 +237,7 @@ So one tide line for the whole coast is wrong, and the Marine API's modelled sea
 - **FR-6.2** High and low waters are found as in FR-4.2. They feed the shore break rule (FR-4.3), so "worse at high tide" uses the spot's own high water.
 - **FR-6.3** The snapshot keeps, per station, its name, the levels every 30 minutes and the high/low waters; each spot records its station.
 - **FR-6.4** **Tide chart** on the day page (drawn inside the table since slice 9, FR-9.6), in place of the single "Tides:" line: one line per station over the day (00:00–24:00, height in m), with the hours where any spot is rideable shaded. A small inline SVG, so it scales on a phone and follows dark mode.
-- **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`.
+- **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`. *Replaced by FR-12.1: tags in the cells.*
 - **FR-6.6** **Map:** each spot's label adds the tide at that hour: `HW` or `LW` within 1 h of it, otherwise `↑` (rising) or `↓` (falling).
 - **FR-6.7** If the tide service fails, the run carries on without tides (no chart, no tide lines, no tide step-up in the shore break), like FR-4.4.
 
@@ -290,7 +290,7 @@ The old day page stacked today and tomorrow, and each block had its own width (b
 - **FR-9.3** **One page per date.** A date's page comes from the latest run that covers it: the newest run for today and the days ahead, the last run issued that day once it has passed. So the same link starts as an outlook and ends as the record. Days after tomorrow say "Outlook: may still change".
 - **FR-9.4** **Day strip** at the top of every day page: 2 days back and 3 ahead, with ‹ › to the next ones. Each day shows the peak wind of its windows (a number in the table's wind colours, or "–" with no window), not a go/no-go light: a marginal 11 kn day must not look like "go". A shore break warning is said in words under it, "⚠️ shore break", orange for watch out and red for dangerous, with the reason on mouseover. The day page itself gives the reason on a phone.
 - **FR-9.5** **Order:** day strip, date, best spot, maps, then the table.
-- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row.
+- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row. *That line is replaced by slice 12.*
 - **FR-9.7** **Maps:** the four hours side by side on a wide screen; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript they show as a grid.
 - **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports.
 
@@ -392,6 +392,29 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 4. Create a fine-grained GitHub token (Settings → Developer settings → Fine-grained tokens): repository access **only `daplein/wing-alert`**, permission **Actions: Read and write**, the longest expiry allowed. Put its expiry date in a calendar (slice 7).
 5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
 6. In `trigger/`, run `npx wrangler kv namespace create OBS` and put the id it prints in `wrangler.toml` (slice 10). The id isn't secret.
+
+## Slice 12: Tides and waves inside the table
+
+Branch `spec/table-layout` (slices 12 and 13 together).
+
+The grey line under each spot (`08:00–16:00 ⚠️ · waves 1.1 m · HW 09:05 20:55 LW 01:20 13:10`) repeats what the cells already show (the window is the outlined cells, the ⚠️ is beside the name), and "HW/LW" with times is hard to read. A single "waves 1.1 m" for the whole day hides how the sea changes. So the tides and waves move into the table, onto the hours they belong to, and the line goes.
+
+```text
+            09     10  11  12  13     14
+Arklow      ←18HW  ←18 ←19 ←16 ←12    ←16LW
+  waves m   0.9    1.0 1.1 1.1 1.0    0.9
+```
+
+- **FR-12.1** **Tide tags in the cells.** The spot's cell for the hour nearest each high water gets a small `HW` tag in its corner, the one nearest each low water `LW` (spot's own station, FR-6.2). Its title gives the exact time, e.g. `High water 09:05`. A tide outside the table's hours gets no tag. Replaces FR-6.5.
+- **FR-12.2** **Waves line per spot,** under its wind, over the same hours, as for the buoys (FR-11.2): forecast wave height (m) with the period small (`1.1` `5s`), from the Marine API (FR-4.1). Spots that share a marine grid point show the same numbers; that's honest, not a bug.
+- **FR-12.3** **No line under the spot.** The window, waves and tide times line goes. The ⚠️ beside the name gets the window and reason as its title, e.g. `10:00–15:00 · Shore break: watch out · 1.1 m waves at 5 s`.
+
+## Slice 13: Hours that stay put, and an hour cursor
+
+When you scroll down to the last spots and the buoys, the hours row is gone, and it's hard to tell which column is which hour.
+
+- **FR-13.1** **Pinned hours.** The hours row stays at the top of the screen while the page scrolls down past the table, and still lines up with the columns when the table scrolls sideways on a phone. The "now" hour stays highlighted in it.
+- **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves line and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
 
 ## Non-goals
 

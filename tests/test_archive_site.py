@@ -87,7 +87,7 @@ def test_fr_9_6_table_knows_its_first_hour_for_the_hover_link(tmp_path):
     out = site_from(tmp_path, [run_covering(MORNING, 6)])
     page = (out / "index.html").read_text()
     assert 'class="hours"' in page and 'data-first="7"' in page
-    assert '<tr class="spot-row">' in page
+    assert '<tr class="spot-row hourly">' in page
 
 
 def test_fr_9_4_day_strip_names_the_shore_break_and_why():
@@ -225,3 +225,39 @@ def test_fr_2_2_site_command_builds_from_the_archive(tmp_path, capsys):
     ]
     assert main([*args, "--out", str(out)]) == 0
     assert "Arklow" in (out / "spots.html").read_text()
+
+
+def test_fr_12_1_tags_the_hour_nearest_each_tide():
+    from wing_alert.site import _tide_tags
+
+    spot = {
+        "tides": [
+            {"time": "2026-11-06T09:05", "kind": "high"},
+            {"time": "2026-11-06T13:40", "kind": "low"},
+            {"time": "2026-11-07T10:00", "kind": "high"},
+        ]
+    }
+    assert _tide_tags(spot, "2026-11-06") == {
+        9: {"kind": "high", "time": "09:05"},
+        14: {"kind": "low", "time": "13:40"},
+    }
+
+
+def test_fr_12_3_no_line_under_the_spot_and_the_warning_says_why(tmp_path):
+    run = run_covering(MORNING, 6)
+    run["windows"][0].update(shore_break=1, shore_break_reason="1.1 m waves at 5 s")
+    page = (site_from(tmp_path, [run]) / "index.html").read_text()
+    assert 'class="details"' not in page
+    assert 'title="12:00–15:00 · Shore break: watch out · 1.1 m waves at 5 s"' in page
+
+
+def test_fr_13_1_hours_sit_in_a_pinned_header_with_the_same_columns(tmp_path):
+    page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
+    pinned = page[page.index('<div class="pinned">') : page.index('<div class="scroll">')]
+    assert "<th>07</th>" in pinned and pinned.count("<col>") == page.count("<col>") // 2
+    assert "<thead>" not in page[page.index('<div class="scroll">') :]
+
+
+def test_fr_13_2_every_hourly_row_takes_part_in_the_hour_cursor(tmp_path):
+    page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
+    assert '<tr class="waves hourly">' in page and 'closest("tr.hourly td")' in page

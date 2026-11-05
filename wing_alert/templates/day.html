@@ -40,10 +40,25 @@
 </section>
 {% endif %}
 
+{% macro waves_cells(waves) %}
+  {% for wave in waves %}
+    {% if wave %}
+    <td title="{{ wave.local }}: waves {{ "%.1f" | format(wave.height) }} m{% if wave.period is not none %}, every {{ wave.period | round | int }} s{% endif %}">{{ "%.1f" | format(wave.height) }}{% if wave.period is not none %}<small>{{ wave.period | round | int }}s</small>{% endif %}</td>
+    {% else %}<td></td>{% endif %}
+  {% endfor %}
+{% endmacro %}
+{% set columns %}<colgroup><col class="names">{% for hour in day.hours %}<col>{% endfor %}</colgroup>{% endset %}
+<div class="table-wrap">
+{# The hours sit in their own table so they can stay pinned while the page scrolls down (FR-13.1). #}
+<div class="pinned">
+<table class="hours hours-head" style="--hours: {{ day.hours | length }}">
+  {{ columns }}
+  <thead><tr><th></th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
+</table>
+</div>
 <div class="scroll">
 <table class="hours" style="--hours: {{ day.hours | length }}" data-first="{{ day.hours[0] }}">
-  <colgroup><col class="names">{% for hour in day.hours %}<col>{% endfor %}</colgroup>
-  <thead><tr><th></th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
+  {{ columns }}
   <tbody>
   {% if day.tide %}
     <tr class="tide">
@@ -58,23 +73,20 @@
     </tr>
   {% endif %}
   {% for row in day.rows %}
-    <tr class="spot-row">
-      <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>{% for w in row.windows if w.shore_break %} {{ w.shore_break | warning }}{% endfor %}</th>
+    <tr class="spot-row hourly">
+      <th><a href="{{ root }}spots.html#{{ row.id }}">{{ row.name }}</a>{% for w in row.windows if w.shore_break %} <span title="{{ w.start[11:] }}–{{ w.end[11:] }} · Shore break: {{ 'dangerous' if w.shore_break == 2 else 'watch out' }} · {{ w.shore_break_reason }}">{{ w.shore_break | warning }}</span>{% endfor %}</th>
       {% for cell in row.cells %}
         {% if cell %}
         <td class="{{ cell.band }}{% if cell.good %} ok{% endif %}" title="{{ cell.wind | round | int }} kn, gusts {{ cell.gust | round | int }}, from {{ cell.direction | round | int }}°">
           <span class="arrow" style="transform: rotate({{ cell.arrow | round | int }}deg)">↑</span>{{ cell.wind | round | int }}<small>{{ cell.gust | round | int }}</small>
+          {% if cell.tide %}<span class="tide-tag {{ cell.tide.kind }}" title="{{ 'High' if cell.tide.kind == 'high' else 'Low' }} water {{ cell.tide.time }}">{{ 'HW' if cell.tide.kind == 'high' else 'LW' }}</span>{% endif %}
         </td>
         {% else %}<td></td>{% endif %}
       {% endfor %}
     </tr>
-    <tr class="details">
-      <td colspan="{{ day.hours | length + 1 }}">
-        {% for w in row.windows %}<strong>{{ w.start[11:] }}–{{ w.end[11:] }}</strong> {{ w.shore_break | warning }} · {% else %}No window · {% endfor %}
-        {% if row.waves is not none %}waves {{ "%.1f" | format(row.waves) }} m · {% endif %}
-        {% if row.tides.high %}HW {{ row.tides.high | join(" ") }} {% endif %}
-        {% if row.tides.low %}LW {{ row.tides.low | join(" ") }}{% endif %}
-      </td>
+    <tr class="waves hourly">
+      <th><small>waves m</small></th>
+      {{ waves_cells(row.waves) }}
     </tr>
   {% endfor %}
   {% if measured %}
@@ -83,7 +95,7 @@
     </tr>
   {% endif %}
   {% for row in measured %}
-    <tr class="measured-row" data-station="{{ row.id }}">
+    <tr class="measured-row hourly" data-station="{{ row.id }}">
       <th>{{ row.name }}{% if row.where %}<small>{{ row.where }}</small>{% endif %}</th>
       {% for cell in row.cells %}
         {% if cell %}
@@ -94,20 +106,17 @@
       {% endfor %}
     </tr>
     {% if row.has_waves %}
-    <tr class="measured-waves" data-station="{{ row.id }}">
+    <tr class="waves measured-waves hourly" data-station="{{ row.id }}">
       <th><small>waves m</small></th>
-      {% for wave in row.waves %}
-        {% if wave %}
-        <td title="{{ wave.local }}: waves {{ "%.1f" | format(wave.height) }} m{% if wave.period is not none %}, every {{ wave.period | round | int }} s{% endif %}">{{ "%.1f" | format(wave.height) }}{% if wave.period is not none %}<small>{{ wave.period | round | int }}s</small>{% endif %}</td>
-        {% else %}<td></td>{% endif %}
-      {% endfor %}
+      {{ waves_cells(row.waves) }}
     </tr>
     {% endif %}
   {% endfor %}
   </tbody>
 </table>
 </div>
-<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
+</div>
+<p class="legend"><span class="light">&lt;10</span> <span class="good">10–20</span> <span class="strong">20–30</span> <span class="wild">30+</span> kn · outlined = rideable hour · small number = gusts · HW / LW = high / low water{% if measured %} · measured = buoy readings, not at the spot{% endif %}</p>
 
 <script>
 /* One map at a time on a phone, picked with the hour buttons; all four side by side
@@ -132,13 +141,21 @@
   show(pick);
 })();
 
-/* One moment across the page: hovering or tapping an hour cell, or moving along the
-   tide chart, marks that hour in the table header and shows each station's tide height
-   then, in the Tide cell on the left (not under the finger). */
+/* The pinned hours follow the table when it scrolls sideways (FR-13.1). */
 (function () {
-  var table = document.querySelector("table.hours");
+  var scroll = document.querySelector(".scroll"), pinned = document.querySelector(".pinned");
+  if (!scroll || !pinned) return;
+  scroll.addEventListener("scroll", function () { pinned.scrollLeft = scroll.scrollLeft; }, { passive: true });
+})();
+
+/* One moment across the page: hovering or tapping an hour cell, or moving along the
+   tide chart, lights up that hour down the whole table and in the pinned hours (FR-13.2),
+   and shows each station's tide height then, in the Tide cell on the left. */
+(function () {
+  var table = document.querySelector("table.hours[data-first]");
   if (!table) return;
-  var heads = table.tHead.rows[0].cells, first = Number(table.dataset.first);
+  var heads = document.querySelector("table.hours-head").tHead.rows[0].cells, first = Number(table.dataset.first);
+  var rows = table.querySelectorAll("tr.hourly"), column = [];
   var count = heads.length - 1, svg = table.querySelector(".tidechart");
   var readout = table.querySelector(".tide-readout"), resting = readout ? readout.innerHTML : "";
   var series = svg ? JSON.parse(svg.dataset.series) : [], picked = null;
@@ -153,8 +170,13 @@
     var minutes = Math.round(hour * 12) * 5, h = Math.floor(minutes / 60), m = minutes % 60;
     return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
   }
-  function markHour(column) {
-    for (var i = 1; i < heads.length; i++) heads[i].classList.toggle("now", i === column + 1);
+  function markHour(index) {
+    for (var i = 1; i < heads.length; i++) heads[i].classList.toggle("now", i === index + 1);
+    column.forEach(function (cell) { cell.classList.remove("col-on"); });
+    column = [];
+    if (index < 0) return;
+    rows.forEach(function (row) { var cell = row.cells[index + 1]; if (cell) column.push(cell); });
+    column.forEach(function (cell) { cell.classList.add("col-on"); });
   }
   function pick(cell) {
     if (picked) picked.classList.remove("picked");
@@ -178,9 +200,9 @@
     showTide(first + share * count);
   }
   function onCell(event) {
-    var cell = event.target.closest("tr.spot-row td");
+    var cell = event.target.closest("tr.hourly td");
     if (!cell) return;
-    pick(cell);
+    pick(cell.parentNode.classList.contains("spot-row") ? cell : null);
     markHour(cell.cellIndex - 1);
     showTide(first + cell.cellIndex - 0.5);  /* the middle of that hour */
   }
@@ -198,7 +220,7 @@
 /* Today only: fetch the newest readings from the Worker, fill in the measured hours since
    the last build and show the Now line (FR-11.4, FR-11.5). On failure the page stays as built. */
 (function () {
-  var table = document.querySelector("table.hours"), now = document.querySelector(".now");
+  var table = document.querySelector("table.hours[data-first]"), now = document.querySelector(".now");
   var zone = { timeZone: "Europe/Dublin" };
   if (!table || new Date().toLocaleDateString("en-CA", zone) !== "{{ day.date }}") return;
   var first = Number(table.dataset.first), names = {};

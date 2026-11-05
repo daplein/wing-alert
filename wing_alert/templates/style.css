@@ -30,13 +30,26 @@ thead th { color: var(--muted); font-weight: 500; text-align: center; padding: 0
 td { text-align: center; border-radius: 6px; padding: 4px 0; border: 2px solid transparent; }
 td small { display: block; color: var(--muted); font-size: 0.7rem; }
 td.ok { border-color: var(--fg); font-weight: 700; }
-tr.details td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 0 0 8px; border-radius: 0; }
+/* Hours pinned at the top while the page scrolls down past the table (FR-13.1). */
+.pinned { position: sticky; top: 0; z-index: 3; background: var(--bg); overflow-x: hidden; padding: 4px 0; }
+.pinned::-webkit-scrollbar { display: none; }
+/* A waves line under every spot and buoy (FR-11.2, FR-12.2). */
+tr.waves td { color: var(--muted); padding: 0 0 8px; font-size: 0.8rem; }
+tr.waves th { padding-top: 0; }
+/* High and low water on the hour nearest it (FR-12.1). */
+tr.spot-row td { position: relative; }
+.tide-tag { position: absolute; top: 1px; right: 2px; font-size: 0.55rem; font-weight: 700; line-height: 1;
+  padding: 1px 2px; border-radius: 3px; color: var(--bg); }
+.tide-tag.high { background: var(--accent); }
+.tide-tag.low { background: var(--muted); }
+/* The hour under the mouse or finger, down the whole table (FR-13.2). */
+td.col-on { background-image: linear-gradient(var(--cursor), var(--cursor)); }
+:root { --cursor: rgba(14, 124, 134, .3); }
+@media (prefers-color-scheme: dark) { :root { --cursor: rgba(79, 195, 204, .38); } }
 tr.tide td { padding: 0; }
 /* Measured rows (FR-11.1): buoy readings under the spots, never outlined as rideable. */
 tr.measured-head th { padding: 14px 0 2px; border-top: 1px solid var(--line); }
 tr.measured-head small { display: inline; margin-left: 6px; }
-tr.measured-waves td { color: var(--muted); padding: 0 0 8px; }
-tr.measured-waves th { padding-top: 0; }
 .now { margin: -6px 0 14px; font-size: 0.9rem; color: var(--muted); }
 .now b { color: var(--fg); }
 tr.tide-legend td { text-align: left; font-size: 0.75rem; color: var(--muted); padding: 2px 0 10px; }
@@ -47,7 +60,7 @@ tr.tide-legend .good { padding: 0 4px; border-radius: 3px; }
 .arrow { display: inline-block; margin-right: 2px; }
 /* The hour under the mouse or finger: its cell grows a little, its hour lights up. */
 tr.spot-row td { transition: transform .12s ease-out; }
-tr.spot-row td.picked { transform: scale(1.15); position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+tr.spot-row td.picked { transform: scale(1.15); z-index: 2; box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
 thead th.now { background: var(--accent); color: var(--bg); font-weight: 700; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) {
   tr.spot-row td { transition: none; }
@@ -93,6 +106,9 @@ tbody th, thead th:first-child { position: sticky; left: 0; background: var(--bg
   tbody th { font-size: 0.78rem; line-height: 1.2; padding-right: 4px; }
   .arrow { display: none; }
   td small { font-size: 0.65rem; }
+  /* Narrow cells: the tag sits on the cell's top edge, clear of the numbers. */
+  .tide-tag { top: -6px; right: 50%; transform: translateX(50%); font-size: 0.5rem; padding: 0 2px; }
+  tr.spot-row td { padding-top: 6px; }
   .strip { gap: 4px; }
   .strip a { padding: 5px 1px; font-size: 0.74rem; }
   .strip .peak { font-size: 0.74rem; padding: 0 3px; }

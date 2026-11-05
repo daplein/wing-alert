@@ -198,10 +198,14 @@ def _rideable(windows: list[dict]) -> set[int]:
     }
 
 
-def _day_tides(spot: dict, day: str) -> dict[str, list[str]]:
-    """The spot's station tides that day as HH:MM lists (FR-6.5)."""
-    tides = [tide for tide in spot.get("tides", []) if tide["time"][:10] == day]
-    return {kind: [t["time"][11:] for t in tides if t["kind"] == kind] for kind in ("high", "low")}
+def _tide_tags(spot: dict, day: str) -> dict[int, dict[str, str]]:
+    """The spot's station tides that day, keyed by the nearest hour (FR-12.1)."""
+    tags = {}
+    for tide in spot.get("tides", []):
+        if tide["time"][:10] == day:
+            hour, minute = int(tide["time"][11:13]), int(tide["time"][14:16])
+            tags[hour + (minute >= 30)] = {"kind": tide["kind"], "time": tide["time"][11:]}
+    return tags
 
 
 def _daylight_hours(daylight: dict[str, str] | None) -> list[int]:
@@ -218,13 +222,13 @@ def _ranked_spots(snapshot: dict[str, Any], windows: list[dict]) -> list[dict[st
 
 def _row(spot: dict, day: str, hours: list[int], windows: list[dict]) -> dict[str, Any]:
     by_hour = {int(h["time"][11:13]): h for h in spot["hours"] if h["time"][:10] == day}
+    tags = _tide_tags(spot, day)
     return {
         "id": spot["id"],
         "name": spot["name"],
         "windows": [window for window in windows if window["spot"] == spot["id"]],
-        "cells": [_cell(by_hour.get(hour)) for hour in hours],
-        "waves": _max_waves([by_hour.get(hour) for hour in hours]),
-        "tides": _day_tides(spot, day),
+        "cells": [_cell(by_hour.get(hour), tags.get(hour)) for hour in hours],
+        "waves": [_forecast_wave_cell(by_hour.get(hour)) for hour in hours],
     }
 
 
@@ -264,15 +268,19 @@ def _wave_cell(reading: dict[str, Any] | None) -> dict[str, Any] | None:
     }
 
 
-def _max_waves(readings: list[dict | None]) -> float | None:
-    heights = [r["wave_height"] for r in readings if r and r.get("wave_height") is not None]
-    return max(heights) if heights else None
+def _forecast_wave_cell(hour: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Forecast wave height and period at the spot, under its wind (FR-12.2)."""
+    if hour is None or hour.get("wave_height") is None:
+        return None
+    period, local = hour.get("wave_period"), hour["time"][11:]
+    return {"height": hour["wave_height"], "period": period, "local": local}
 
 
-def _cell(hour: dict[str, Any] | None) -> dict[str, Any] | None:
+def _cell(hour: dict[str, Any] | None, tide: dict[str, str] | None) -> dict[str, Any] | None:
     if hour is None:
         return None
-    return {**hour, "band": wind_band(hour["wind"]), "arrow": (hour["direction"] + 180) % 360}
+    arrow = (hour["direction"] + 180) % 360
+    return {**hour, "band": wind_band(hour["wind"]), "arrow": arrow, "tide": tide}
 
 
 def wind_band(knots: float) -> str:
