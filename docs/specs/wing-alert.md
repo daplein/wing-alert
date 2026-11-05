@@ -392,6 +392,11 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 4. Create a fine-grained GitHub token (Settings → Developer settings → Fine-grained tokens): repository access **only `daplein/wing-alert`**, permission **Actions: Read and write**, the longest expiry allowed. Put its expiry date in a calendar (slice 7).
 5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
 6. In `trigger/`, run `npx wrangler kv namespace create OBS` and put the id it prints in `wrangler.toml` (slice 10). The id isn't secret.
+7. Add the repo secret `ANTHROPIC_API_KEY`, from console.anthropic.com, with a low monthly spend limit (slice 15). Session reports (slice 14) reuse the same KV namespace, so they need no setup.
+
+## Slices 14–15: Session log
+
+Riders log how a session went (nickname, no login), and a language model reads the notes. Spec in its own file: [session-log.md](session-log.md).
 
 ## Non-goals
 
@@ -414,3 +419,4 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 - Seasonal notes from the spot guide to test against the data, e.g. Arklow spring north-westerlies that last for weeks, mostly southerly summers.
 - Animated wind map, or a full wind field over the sea.
 - WhatsApp images and groups through Meta's official Cloud API.
+- **Who logged it, for real:** if the session log (slice 14) is ever abused or the crew grows, give each person their own link with a secret token (or a real login) instead of a free nickname.
