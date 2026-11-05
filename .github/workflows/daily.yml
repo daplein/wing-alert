@@ -51,6 +51,9 @@ jobs:
           [ -f state.json ] && git add state.json
           git diff --cached --quiet && exit 0
           git commit -m "Data $(date -u +%Y-%m-%dT%H:%M)"
+          # A PR merged while this job ran would make a plain push fail.
+          # The run only touches data/ and state.json, so rebasing is safe.
+          git pull --rebase --autostash
           git push
       - name: Build the site
         run: uv run python -m wing_alert.site
