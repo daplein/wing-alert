@@ -86,7 +86,7 @@ def test_fr_9_4_day_strip_shows_peak_wind_and_links_neighbours(tmp_path):
 def test_fr_9_6_table_knows_its_first_hour_for_the_hover_link(tmp_path):
     out = site_from(tmp_path, [run_covering(MORNING, 6)])
     page = (out / "index.html").read_text()
-    assert 'class="hours"' in page and 'data-first="7"' in page
+    assert 'class="hours sun"' in page and 'data-first="7"' in page
     assert '<tr class="spot-row hourly">' in page
 
 
@@ -254,10 +254,28 @@ def test_fr_12_3_no_line_under_the_spot_and_the_warning_says_why(tmp_path):
 def test_fr_13_1_hours_sit_in_a_pinned_header_with_the_same_columns(tmp_path):
     page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
     pinned = page[page.index('<div class="pinned">') : page.index('<div class="scroll">')]
-    assert "<th>07</th>" in pinned and pinned.count("<col>") == page.count("<col>") // 2
+    assert "<th>08</th>" in pinned and pinned.count("<col>") == page.count("<col>") // 2
     assert "<thead>" not in page[page.index('<div class="scroll">') :]
 
 
 def test_fr_13_2_every_hourly_row_takes_part_in_the_hour_cursor(tmp_path):
     page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
     assert '<tr class="spot-row hourly">' in page and 'closest("tr.hourly td")' in page
+
+
+def test_fr_13_3_sun_times_and_how_far_into_the_hour():
+    from wing_alert.site import _sun
+
+    sun = _sun({"sunrise": "2026-11-05T07:30", "sunset": "2026-11-05T16:45"}, list(range(7, 17)))
+    assert sun["rise"] == "07:30" and sun["set"] == "16:45"
+    assert sun["rise_pct"] == 50.0 and sun["set_pct"] == 75.0
+    assert sun["chart_rise_pct"] == 5.0 and sun["chart_set_pct"] == 97.5  # of 10 hours
+    assert _sun(None, [7, 8]) is None
+
+
+def test_fr_13_3_pinned_row_says_when_the_sun_rises_and_sets(tmp_path):
+    page = (site_from(tmp_path, [run_covering(MORNING, 6)]) / "index.html").read_text()
+    pinned = page[page.index('<div class="pinned">') : page.index('<div class="scroll">')]
+    assert '<span class="icon">🌅</span> 07:' in pinned
+    assert '<span class="icon">🌇</span> 16:' in pinned
+    assert "--rise: " in page and "--chart-set: " in page

@@ -425,7 +425,8 @@ Arklow      ←18   ←18  ←19  ←16  ←12  ←16    ← wind
 When you scroll down to the last spots and the buoys, the hours row is gone, and it's hard to tell which column is which hour.
 
 - **FR-13.1** **Pinned hours.** The hours row stays at the top of the screen while the page scrolls down past the table, and still lines up with the columns when the table scrolls sideways on a phone.
-- **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves line and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
+- **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
+- **FR-13.3** **Sunrise and sunset on the hours.** The table's first column is the hour the sun rises and its last the hour it sets (FR-1.2). The dark part of those two columns is shaded night blue, to the minute: in the first column up to sunrise, in the last from sunset, across the tide chart, the spots and the measured rows. The pinned hours row says when, under those two hours: `🌅 07:28` and `🌇 16:46` (on a phone just the time). Without sunrise and sunset (the forecast had none) there's no shading.
 
 ## Non-goals
 
@@ -442,7 +443,8 @@ When you scroll down to the last spots and the buoys, the hours row is gone, and
 - A live station for the Wicklow spots (Greystones harbour, Arklow harbour or a sailing club), if one with data turns up.
 - Short-range "live forecast": the Worker also keeps the next 3 hours of forecast each hour; later an "it's on now" alert when the readings run ahead of the forecast.
 - **Forecast vs actual, and patterns:** a script reads `data/` (forecast runs and readings) and works out how far off the forecast is per spot, wind direction and lead time, and patterns such as "the wind backs northerly in spring afternoons" (likely sea breeze). Results as a static page. ERDDAP's buoy history and Open-Meteo's historical forecast API let this start on past years.
-- Show sunrise and sunset on the day page (we fetch them already, FR-1.2).
+- Day length in the best box, e.g. `9 h 18 of light, 4 min less than yesterday`.
+- A faint sun arc behind the tide chart, with the sun at the current time on today's page.
 - Crew session log (where, when, how it was) to tune thresholds per spot.
 - Suggest where to park and launch by wind direction (e.g. Arklow: P1 in north-easterly, P2 in southerly, P3 when it's 20 kn+ or the shore break is big).
 - Seasonal notes from the spot guide to test against the data, e.g. Arklow spring north-westerlies that last for weeks, mostly southerly summers.

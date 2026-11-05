@@ -189,7 +189,25 @@ def _forecast_day(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
         "best": windows[0] if windows else None,
         "tide": tide_chart(_stations_in_spot_order(snapshot), day, _rideable(windows), hours),
         "hours": hours,
+        "sun": _sun(snapshot["daylight"].get(day), hours),
         "rows": [_row(spot, day, hours, windows) for spot in _ranked_spots(snapshot, windows)],
+    }
+
+
+def _sun(daylight: dict[str, str] | None, hours: list[int]) -> dict[str, Any] | None:
+    """Sunrise and sunset, and how far into the first and last hour they fall (FR-13.3)."""
+    if not daylight:
+        return None
+    rise, sunset = daylight["sunrise"][11:], daylight["sunset"][11:]
+    rise_share, set_share = int(rise[3:]) / 60, int(sunset[3:]) / 60
+    count = len(hours)
+    return {
+        "rise": rise,
+        "set": sunset,
+        "rise_pct": round(rise_share * 100, 1),
+        "set_pct": round(set_share * 100, 1),
+        "chart_rise_pct": round(rise_share / count * 100, 2),
+        "chart_set_pct": round((count - 1 + set_share) / count * 100, 2),
     }
 
 

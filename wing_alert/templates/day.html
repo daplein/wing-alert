@@ -49,11 +49,11 @@
 <div class="pinned">
 <table class="hours hours-head" style="--hours: {{ day.hours | length }}">
   {{ columns }}
-  <thead><tr><th></th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}</th>{% endfor %}</tr></thead>
+  <thead><tr><th></th>{% for hour in day.hours %}<th>{{ "%02d" | format(hour) }}{% if day.sun and loop.first %}<small class="sun" title="Sunrise {{ day.sun.rise }}"><span class="icon">🌅</span> {{ day.sun.rise }}</small>{% elif day.sun and loop.last %}<small class="sun" title="Sunset {{ day.sun.set }}"><span class="icon">🌇</span> {{ day.sun.set }}</small>{% endif %}</th>{% endfor %}</tr></thead>
 </table>
 </div>
 <div class="scroll">
-<table class="hours" style="--hours: {{ day.hours | length }}" data-first="{{ day.hours[0] }}">
+<table class="hours{% if day.sun %} sun{% endif %}" style="--hours: {{ day.hours | length }}{% if day.sun %}; --rise: {{ day.sun.rise_pct }}%; --set: {{ day.sun.set_pct }}%; --chart-rise: {{ day.sun.chart_rise_pct }}%; --chart-set: {{ day.sun.chart_set_pct }}%{% endif %}" data-first="{{ day.hours[0] }}">
   {{ columns }}
   <tbody>
   {% if day.tide %}
