@@ -29,14 +29,17 @@
 {% endif %}
 <p class="now" hidden></p>
 
-{% if maps %}
+{% if maps.hours %}
 <section class="maps">
   <div class="times" role="group" aria-label="Map hour">
-    {% for name in maps %}<button type="button" data-hour="{{ name[11:] }}">{{ name[11:] }}:00</button>{% endfor %}
+    {% for hour in maps.hours %}<button type="button" data-hour="{{ hour }}">{{ hour }}:00</button>{% endfor %}
   </div>
+  {# Drawn in the browser from the forecast and the coastline (windmap.js). #}
   <div class="images">
-    {% for name in maps %}<img src="{{ root }}maps/{{ name }}.png" data-hour="{{ name[11:] }}" alt="Wind map for {{ day.date | day_label }} at {{ name[11:] }}:00" loading="lazy">{% endfor %}
+    {% for hour in maps.hours %}<div class="windmap" data-hour="{{ hour }}" role="img" aria-label="Wind map for {{ day.date | day_label }} at {{ hour }}:00"></div>{% endfor %}
   </div>
+  <script type="application/json" id="map-data">{{ maps | tojson }}</script>
+  <script src="{{ root }}windmap.js" data-coast="{{ root }}maps/coast.json"></script>
 </section>
 {% endif %}
 
@@ -136,7 +139,7 @@
   var maps = document.querySelector(".maps");
   if (!maps) return;
   document.documentElement.classList.add("js");
-  var buttons = maps.querySelectorAll("button"), images = maps.querySelectorAll("img");
+  var buttons = maps.querySelectorAll("button"), images = maps.querySelectorAll(".windmap");
   function show(hour) {
     buttons.forEach(function (b) { b.classList.toggle("on", b.dataset.hour === hour); });
     images.forEach(function (i) { i.classList.toggle("on", i.dataset.hour === hour); });
