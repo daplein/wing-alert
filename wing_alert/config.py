@@ -67,6 +67,17 @@ def load_settings(path: Path) -> Settings:
     return settings
 
 
+def load_station_links(path: Path) -> dict[str, dict[str, str]]:
+    """Each live station's source and web page, keyed by station id (FR-11.6)."""
+    raw = _read_yaml(path)
+    if not isinstance(raw, dict):
+        raise ConfigError(f"{path}: expected a mapping of stations")
+    for station, link in raw.items():
+        if not isinstance(link, dict) or not {"source", "page"} <= set(link):
+            raise ConfigError(f"{path}: {station} needs a source and a page")
+    return raw
+
+
 def _read_yaml(path: Path) -> Any:
     try:
         return yaml.safe_load(path.read_text())

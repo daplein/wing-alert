@@ -237,7 +237,7 @@ So one tide line for the whole coast is wrong, and the Marine API's modelled sea
 - **FR-6.2** High and low waters are found as in FR-4.2. They feed the shore break rule (FR-4.3), so "worse at high tide" uses the spot's own high water.
 - **FR-6.3** The snapshot keeps, per station, its name, the levels every 30 minutes and the high/low waters; each spot records its station.
 - **FR-6.4** **Tide chart** on the day page (drawn inside the table since slice 9, FR-9.6), in place of the single "Tides:" line: one line per station over the day (00:00–24:00, height in m), with the hours where any spot is rideable shaded. A small inline SVG, so it scales on a phone and follows dark mode.
-- **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`.
+- **FR-6.5** **Table:** under each spot name, its station's tides that day, one line each: `HW 05:50 17:45` and `LW 09:15 23:00`. *Replaced by FR-12.1: tags in the cells.*
 - **FR-6.6** **Map:** each spot's label adds the tide at that hour: `HW` or `LW` within 1 h of it, otherwise `↑` (rising) or `↓` (falling).
 - **FR-6.7** If the tide service fails, the run carries on without tides (no chart, no tide lines, no tide step-up in the shore break), like FR-4.4.
 
@@ -290,7 +290,7 @@ The old day page stacked today and tomorrow, and each block had its own width (b
 - **FR-9.3** **One page per date.** A date's page comes from the latest run that covers it: the newest run for today and the days ahead, the last run issued that day once it has passed. So the same link starts as an outlook and ends as the record. Days after tomorrow say "Outlook: may still change".
 - **FR-9.4** **Day strip** at the top of every day page: 2 days back and 3 ahead, with ‹ › to the next ones. Each day shows the peak wind of its windows (a number in the table's wind colours, or "–" with no window), not a go/no-go light: a marginal 11 kn day must not look like "go". A shore break warning is said in words under it, "⚠️ shore break", orange for watch out and red for dangerous, with the reason on mouseover. The day page itself gives the reason on a phone.
 - **FR-9.5** **Order:** day strip, date, best spot, maps, then the table.
-- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row.
+- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row. *That line is replaced by slice 12.*
 - **FR-9.7** **Maps:** the four hours side by side on a wide screen; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript they show as a grid.
 - **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports.
 
@@ -359,10 +359,19 @@ M5          ...
 ```
 
 - **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
-- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. Under the wind, a **waves line** over the same hours: wave height (m) with the period small (`1.2` `5s`), from the same reading. The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) gets no waves line. The Measured heading names the sources, and the legend says the readings are not at the spot.
+- **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. The **waves** from the same reading sit in the same cell, under the wind, as for the spots (FR-12.2). The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) just has no waves in its cells; an hour with waves but no wind shows the waves alone. The footer credits the sources (FR-11.6), and the legend says the readings are not at the spot.
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
 - **FR-11.5** **Now line** on today's page only, under the best box, from the same fetch: the time of the newest reading and each station's latest wind (and waves where measured), e.g. `Now 14:10 · Dublin Bay 17 kn W, gusts 24, waves 0.6 m · M2 …`. Hidden if there's nothing from the last 3 hours.
+- **FR-11.6** **Links to the sources.** Each station's name links to the live page of the source its readings come from, and the footer of every page credits each source by name, with the same link, next to the Open-Meteo and tide credits. The Measured heading is just "Measured". The links live in `config/stations.yaml` (station id → source name and page), so the Worker needs no change. East Pier: [Cruising Association of Ireland](https://cruising.ie/dlr-east-pier-weather-station/); Dublin Bay Buoy: [Irish Lights MetOcean](https://cilpublic.cil.ie/MetOcean/MetOcean.aspx); M2 and M5: [Marine Institute weather buoys](https://www.marine.ie/site-area/data-services/real-time-observations/irish-weather-buoy-network-imos).
+- **FR-11.7** **No readings, said nicely.** Once any readings exist, a day page without measured rows still shows the Measured heading, with one grey line under it instead of an empty gap:
+  - **future day:** one of three *Back to the Future* lines, picked at random each time the page opens (the first one without JavaScript), ending with that day's name:
+    - ⚡ Great Scott! These readings haven't happened yet. Come back on Saturday, or hit 88 mph.
+    - 🚗 Readings? Where we're going, we don't need readings. Back on Saturday.
+    - ⚡ 1.21 gigawatts won't help: the buoys only measure what's already blown. Back on Saturday.
+  - **past day before the first kept readings:** ⚡ No buoy readings: the flux capacitor only came online Wednesday 4 November (the date of the oldest file in `data/obs/`).
+  - **past day after that, with nothing kept** (the Worker was down): plainly, "No buoy readings were recorded this day." A real gap gets no joke.
+  - **today** is unchanged: its rows show, and hours still to come are simply empty.
 
 ## Project layout (planned)
 
@@ -393,6 +402,32 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 5. Create a free Cloudflare account. In `trigger/`, run `npx wrangler login`, then `npx wrangler deploy`, then `npx wrangler secret put GITHUB_TOKEN` (paste the token) (slice 7).
 6. In `trigger/`, run `npx wrangler kv namespace create OBS` and put the id it prints in `wrangler.toml` (slice 10). The id isn't secret.
 
+## Slice 12: Tides and waves inside the table
+
+Branch `spec/table-layout` (slices 12 and 13 together).
+
+The grey line under each spot (`08:00–16:00 ⚠️ · waves 1.1 m · HW 09:05 20:55 LW 01:20 13:10`) repeats what the cells already show (the window is the outlined cells, the ⚠️ is beside the name), and "HW/LW" with times is hard to read. A single "waves 1.1 m" for the whole day hides how the sea changes. So the tides and waves move into the table, onto the hours they belong to, and the line goes.
+
+```text
+            09     10  11  12  13     14
+             High                   Low
+Arklow      ←18   ←18  ←19  ←16  ←12  ←16    ← wind
+             24    24   26   21   16   22    ← gusts
+            ≈0.9  ≈1.0 ≈1.1 ≈1.1 ≈1.0 ≈0.9   ← waves (m), period small on wide screens
+```
+
+- **FR-12.1** **Tide tags in the cells.** The spot's cell for the hour nearest each high water gets a small `High` tag on its top edge, clear of the numbers, and the one nearest each low water `Low` (spot's own station, FR-6.2). Plain words, not HW/LW, so nobody needs a tide table to read it. Its title gives the exact time, e.g. `High tide 09:05`. A tide outside the table's hours gets no tag. Replaces FR-6.5.
+- **FR-12.2** **Waves in the wind cell.** Each hour's cell shows, under the gust and a thin divider, the forecast wave height from the Marine API (FR-4.1): `≈1.1` with the period small (`4s`). On a phone only the height shows (`1.1`), as the arrows go too. The cell's title adds `· waves 1.1 m every 4 s`. The legend explains it once with 🌊, not an emoji per cell (it would crowd the narrow cells and look different on each phone). A separate waves row took a whole line per spot for two small numbers. Spots that share a marine grid point show the same numbers; that's honest, not a bug.
+- **FR-12.3** **No line under the spot.** The window, waves and tide times line goes. The ⚠️ beside the name gets the window and reason as its title, e.g. `10:00–15:00 · Shore break: watch out · 1.1 m waves at 5 s`.
+
+## Slice 13: Hours that stay put, and an hour cursor
+
+When you scroll down to the last spots and the buoys, the hours row is gone, and it's hard to tell which column is which hour.
+
+- **FR-13.1** **Pinned hours.** The hours row stays at the top of the screen while the page scrolls down past the table, and still lines up with the columns when the table scrolls sideways on a phone.
+- **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
+- **FR-13.3** **Sunrise and sunset on the hours.** The table's first column is the hour the sun rises and its last the hour it sets (FR-1.2). The dark part of those two columns is shaded night blue, to the minute: in the first column up to sunrise, in the last from sunset, across the tide chart, the spots and the measured rows. The pinned hours row says when, under those two hours: `🌅 07:28` and `🌇 16:46` (on a phone just the time). Without sunrise and sunset (the forecast had none) there's no shading.
+
 ## Non-goals
 
 - No app, no server, no accounts.
@@ -408,7 +443,8 @@ Python 3.12+, `uv`, `httpx`, `pyyaml`, `pytest`, `respx`, `ruff`. Later: `jinja2
 - A live station for the Wicklow spots (Greystones harbour, Arklow harbour or a sailing club), if one with data turns up.
 - Short-range "live forecast": the Worker also keeps the next 3 hours of forecast each hour; later an "it's on now" alert when the readings run ahead of the forecast.
 - **Forecast vs actual, and patterns:** a script reads `data/` (forecast runs and readings) and works out how far off the forecast is per spot, wind direction and lead time, and patterns such as "the wind backs northerly in spring afternoons" (likely sea breeze). Results as a static page. ERDDAP's buoy history and Open-Meteo's historical forecast API let this start on past years.
-- Show sunrise and sunset on the day page (we fetch them already, FR-1.2).
+- Day length in the best box, e.g. `9 h 18 of light, 4 min less than yesterday`.
+- A faint sun arc behind the tide chart, with the sun at the current time on today's page.
 - **Crew session log** (where, when, how it was) to tune thresholds per spot. Store each report next to the forecast run that covered it, e.g. Arklow on 4 Nov 2026, 15:45–16:30: "full on chop, shore break medium, stable wind, 4.5–5.0 m, 3/5 for average+ riders, 0/5 for beginners". These reports are what any score below would be checked against.
 - **Last light (proposed change to FR-1.2):** an hour now counts only if it ends by sunset − 30 min, so on 4 Nov 2026 (sunset 16:48) the Arklow window ended at 16:00 while a crew member rode 15:45–16:30. Option: end the last window at sunset − 30 min (16:18) instead of dropping the whole hour, or make the margin smaller.
 - **Spot notes (local knowledge):** a few lines per spot in `spots.yaml`, written by riders who know it, keyed by wind direction or sea state where it matters (e.g. "Arklow: shore break makes getting out tricky with an easterly sea", "sheltered in a SW"). Shown on the spot and day pages next to the forecast.

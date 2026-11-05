@@ -87,30 +87,31 @@ def site(tmp_path, observations, issued=MORNING):
 def test_fr_11_1_measured_rows_under_the_spots_never_outlined(tmp_path):
     readings = [reading("2026-11-06T12:30Z", 22, wave_height=0.8), reading("2026-11-06T13:00Z")]
     page = site(tmp_path, obs("2026-11-06", {"dublin_bay": readings}))
-    assert page.index('<tr class="spot-row">') < page.index("Measured")
+    assert page.index('<tr class="spot-row hourly">') < page.index("Measured")
     row = page[
         page.index('data-station="dublin_bay"') : page.index("</tr>", page.index("dublin_bay"))
     ]
-    assert 'class="strong" title="12:30: 22 kn, gusts 21, from 270°"' in row
+    assert 'class="strong" title="12:30: 22 kn, gusts 21, from 270° · waves 0.8 m"' in row
     assert "ok" not in row
     assert "km N of Arklow South Beach" in row
 
 
-def test_fr_11_2_waves_line_under_the_wind_hour_by_hour(tmp_path):
+def test_fr_11_2_waves_in_the_wind_cell_hour_by_hour(tmp_path):
     readings = [
         reading("2026-11-06T12:30Z", wave_height=0.8, wave_period=5.4),
         reading("2026-11-06T13:00Z", None, wave_height=1.1),
     ]
     page = site(tmp_path, obs("2026-11-06", {"dublin_bay": readings}))
-    waves = page[page.index('<tr class="measured-waves"') : page.index("</tbody>")]
-    assert 'title="12:30: waves 0.8 m, every 5 s">0.8<small>5s</small>' in waves
-    assert 'title="13:00: waves 1.1 m">1.1</td>' in waves  # no wind, still waves
+    row = page[page.index('data-station="dublin_bay"') : page.index("</tbody>")]
+    sea = '<span class="sea"><span class="approx">≈</span>0.8 <span class="period">5s</span></span>'
+    assert sea in row and "· waves 0.8 m every 5 s" in row
+    assert 'title="13:00: · waves 1.1 m">' in row  # no wind, still waves
 
 
 def test_fr_11_4_todays_page_lists_every_station_to_fill_in_live(tmp_path):
     page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
     assert 'data-station="dublin_bay"' in page and 'data-station="m5"' in page
-    assert '<tr class="measured-waves" data-station="dublin_bay">' in page
+    assert '<tr class="measured-row hourly" data-station="dublin_bay">' in page
     assert "workers.dev/obs" in page and '<p class="now" hidden>' in page
 
 
@@ -123,7 +124,7 @@ def test_fr_11_3_past_days_only_show_stations_with_readings(tmp_path):
     SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run, newer], out, observations=observations)
     page = (out / "days/2026-11-06.html").read_text()
     assert 'data-station="m5"' in page and 'data-station="dublin_bay"' not in page
-    assert '<tr class="measured-row" data-station="m5">' in page
+    assert '<tr class="measured-row hourly" data-station="m5">' in page
 
 
 def test_fr_11_2_no_waves_line_for_a_station_without_a_wave_sensor(tmp_path):
@@ -131,7 +132,9 @@ def test_fr_11_2_no_waves_line_for_a_station_without_a_wave_sensor(tmp_path):
     observations = obs("2026-11-06", {"east_pier": [reading("2026-11-06T12:00Z")]}, (pier,))
     page = site(tmp_path, observations)
     assert 'data-station="east_pier"' in page
-    assert '<tr class="measured-waves" data-station="east_pier">' not in page
+    start = page.index('data-station="east_pier"')
+    pier = page[start : page.index("</tr>", start)]
+    assert 'class="sea"' not in pier
 
 
 def test_fr_11_1_station_missing_from_about_uses_its_id(tmp_path):
@@ -154,3 +157,65 @@ def test_fr_11_3_site_command_reads_kept_readings(tmp_path):
     args = ["--data", str(data), "--config", str(repo / "config"), "--guides", str(tmp_path)]
     assert main([*args, "--out", str(out)]) == 0
     assert 'data-station="m5"' in (out / "index.html").read_text()
+
+
+def test_fr_11_4_live_readings_before_the_first_hour_leave_the_name_alone(tmp_path):
+    page = site(tmp_path, obs("2026-11-05", {"m5": [reading("2026-11-05T12:00Z")]}))
+    assert "column >= 1 ? row.cells[column] : null" in page
+
+
+def test_fr_11_6_station_names_and_sources_link_to_the_live_pages(tmp_path):
+    from pathlib import Path
+
+    from wing_alert.config import load_station_links
+
+    links = load_station_links(Path("config/stations.yaml"))
+    run = build_snapshot(MORNING, [forecast(ARKLOW, hours(NOON, [18, 20, 18]))], SETTINGS)
+    observations = obs("2026-11-06", {"dublin_bay": [reading("2026-11-06T12:00Z")]})
+    out = tmp_path / "site"
+    SiteBuilder(make_env(), [ARKLOW], tmp_path, links).build([run], out, observations=observations)
+    page = (out / "days/2026-11-06.html").read_text()
+    metocean = "https://cilpublic.cil.ie/MetOcean/MetOcean.aspx"
+    assert f'<a href="{metocean}" title="Live readings from Irish Lights MetOcean">' in page
+    footer = page[page.index("<footer>") :]
+    assert f'<a href="{metocean}">Irish Lights MetOcean</a>' in footer  # credited once, below
+    assert "<th colspan" in page and ">Measured</th>" in page
+
+
+def test_fr_11_6_footer_names_each_source_once():
+    from wing_alert.site import live_sources
+
+    links = {
+        "m2": {"source": "Marine Institute", "page": "https://marine.ie"},
+        "m5": {"source": "Marine Institute", "page": "https://marine.ie"},
+        "dublin_bay": {"source": "Irish Lights MetOcean", "page": "https://cil.ie"},
+    }
+    names = [s["source"] for s in live_sources(links)]
+    assert names == ["Marine Institute", "Irish Lights MetOcean"]
+
+
+def test_fr_11_7_says_why_there_are_no_readings():
+    from wing_alert.site import measured_note
+
+    kept = {"2026-11-04": {}, "2026-11-05": {}}
+    today = "2026-11-05"
+    assert measured_note("2026-11-07", today, kept) == {
+        "kind": "future",
+        "weekday": "Saturday",
+        "since": "2026-11-04",
+    }
+    assert measured_note("2026-11-01", today, kept)["kind"] == "before"
+    assert measured_note("2026-11-04", today, kept)["kind"] == "gap"
+    assert measured_note(today, today, kept) is None  # today keeps its rows
+    assert measured_note("2026-11-07", today, {}) is None  # nothing recorded ever
+
+
+def test_fr_11_7_future_page_has_three_back_to_the_future_lines(tmp_path):
+    later = hours(NOON.replace(day=7), [18, 20, 18])
+    run = build_snapshot(MORNING, [forecast(ARKLOW, hours(NOON, [18]) + later)], SETTINGS)
+    out = tmp_path / "site"
+    observations = obs("2026-11-06", {"m5": [reading("2026-11-06T12:00Z")]})
+    SiteBuilder(make_env(), [ARKLOW], tmp_path).build([run], out, observations=observations)
+    page = (out / "days/2026-11-07.html").read_text()
+    assert page.count('class="quote"') == 3 and "Great Scott!" in page
+    assert "Come back on Saturday, or hit 88 mph." in page
