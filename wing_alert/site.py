@@ -14,6 +14,7 @@ from wing_alert.coast import load_coast
 from wing_alert.config import Spot, load_spots, load_station_links
 from wing_alert.guides import guide_html, unforecast_guides
 from wing_alert.mapdata import coast_data, map_data
+from wing_alert.month_grid import months
 from wing_alert.measured import (
     load_observations,
     local_time,
@@ -69,7 +70,7 @@ class SiteBuilder:
             self._render_day(out / "index.html", "", pages[today], today, days)
         else:
             self._write(out / "index.html", self._env.get_template("empty.html").render(root=""))
-        self._write(out / "days.html", self._archive_page(days, weeks or []))
+        self._write(out / "days.html", self._archive_page(weeks or []))
         self._write(out / "spots.html", self._spots_page())
         self._week_pages(weeks or [], out)
         for asset in ASSETS:
@@ -105,9 +106,9 @@ class SiteBuilder:
             for s in shown
         ]
 
-    def _archive_page(self, days: list[str], weeks: list[dict[str, Any]]) -> str:
+    def _archive_page(self, weeks: list[dict[str, Any]]) -> str:
         return self._env.get_template("days.html").render(
-            root="", days=days, summaries=self._summaries, weeks=[w["start"] for w in weeks]
+            root="", months=months(self._summaries, weeks, self._today or "")
         )
 
     def _week_pages(self, weeks: list[dict[str, Any]], out: Path) -> None:
@@ -153,8 +154,9 @@ def _next_day(day: str) -> str:
 
 
 def _summary(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
-    """What the day strip shows for a date: the peak wind of its windows (a number, not
-    a go/no-go light) and, apart from it, the worst shore break and why."""
+    """What the day strip and calendar show for a date: the peak wind of its windows (a
+    number, not a go/no-go light), the best spot and, apart from them, the worst shore
+    break and why (FR-9.4, FR-16.2)."""
     windows = [window for window in snapshot["windows"] if window["date"] == day]
     peak = max((window["wind_max"] for window in windows), default=None)
     worst = max(windows, key=lambda window: window.get("shore_break") or 0, default=None)
@@ -163,6 +165,7 @@ def _summary(snapshot: dict[str, Any], day: str) -> dict[str, Any]:
         "band": wind_band(peak) if peak is not None else None,
         "warning": (worst or {}).get("shore_break") or 0,
         "reason": (worst or {}).get("shore_break_reason") or "",
+        "spot_name": windows[0]["spot_name"] if windows else None,
     }
 
 

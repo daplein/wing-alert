@@ -156,6 +156,31 @@ tbody th { box-shadow: 0 -3px 0 var(--bg); }
   .strip .step { padding: 0 1px; }
   .best { font-size: 1rem; }
 }
+/* All days calendar (FR-16): Monday-first month grids, week summary at the end of each row. */
+.month h2 .tally { font-size: 0.95rem; font-weight: 400; color: var(--muted); }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(0, 1.4fr); gap: 6px; }
+.cal .dow { font-size: 0.75rem; color: var(--muted); text-align: center; }
+.cal .day { display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 8px; color: var(--fg); min-width: 0; }
+.cal a.day:hover { text-decoration: none; border-color: var(--accent); }
+.cal .day.off { opacity: .45; border-style: dashed; min-height: 40px; }
+.cal .day.outlook { border-style: dashed; }
+.cal .day.today { border: 2px solid var(--accent); }
+.cal .num { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.cal .peak { align-self: flex-start; margin-top: 0; }
+.cal .best-spot { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal .break .icon { display: none; }
+.cal .wk { font-size: 0.75rem; color: var(--muted); align-self: center; line-height: 1.3; }
+.cal .wk b { color: var(--fg); }
+@media (max-width: 600px) {
+  .cal { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .cal .wk-head, .cal .wk:empty { display: none; }
+  .cal .wk { grid-column: 1 / -1; padding: 0 2px 6px; }
+  .cal .day { min-height: 52px; padding: 3px 2px; align-items: center; }
+  .cal .day.off { min-height: 30px; }
+  .cal .num .today-word, .cal .unit, .cal .best-spot, .cal .break .words { display: none; }
+  .cal .break .icon { display: inline; }
+  .cal .peak { align-self: center; font-size: 0.72rem; padding: 0 3px; }
+}
 /* Tide chart (FR-6.4): inline SVG, so it follows the page colours. */
 .tidechart { width: 100%; height: 70px; display: block; touch-action: pan-y; cursor: crosshair; }
 .tidechart .cursor { stroke: var(--fg); stroke-width: 1.5; vector-effect: non-scaling-stroke; visibility: hidden; }

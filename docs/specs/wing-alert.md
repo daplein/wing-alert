@@ -293,7 +293,7 @@ The old day page stacked today and tomorrow, and each block had its own width (b
 - **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row. *That line is replaced by slice 12.*
 - **FR-9.7** **Maps:** the day's map hours (FR-3.1) side by side on a wide screen, wrapping into rows of three when there are more than four; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript there are no maps (FR-3.4). On a wide screen a click opens a map large over the page, with hour buttons and ← → to step through the hours; Esc or a click outside closes it. On a phone, pinch-zoom does that job.
   - **Across days:** stepping past the last hour goes on to the next day's first map, and back from the first hour to the previous day's last, both in the large map and with the phone's hour buttons. Its title says the day. Each page keeps only its own day's map data (FR-3.4): crossing a day opens that day's page with the same map view already open, on its first or last map (`days/2026-11-07.html#map-first`, `#map-last`: a page doesn't know the other day's map hours). This must not flicker: the tab keeps the coastline (session storage), so the new page opens its large map before it first shows, and page changes cross-fade where the browser can (CSS view transitions; not when the device asks for reduced motion). There's no step past the first or last day the site has.
-- **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports.
+- **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports. *Laid out as a calendar since slice 16.*
 
 ## Slice 10: Live readings
 
@@ -434,6 +434,28 @@ When you scroll down to the last spots and the buoys, the hours row is gone, and
 - **FR-13.2** **Hour cursor through the whole table.** Hovering or tapping any cell, or moving along the tide chart, highlights that hour's whole column: the tide chart's line, every spot, its waves and the measured rows, and the hour in the pinned row. It clears when the mouse leaves the table (a finger leaves it up, as in FR-9.6).
 - **FR-13.3** **Sunrise and sunset on the hours.** The table's first column is the hour the sun rises and its last the hour it sets (FR-1.2). The dark part of those two columns is shaded night blue, to the minute: in the first column up to sunrise, in the last from sunset, across the tide chart, the spots and the measured rows. The pinned hours row says when, under those two hours: `🌅 07:28` and `🌇 16:46` (on a phone just the time). Without sunrise and sunset (the forecast had none) there's no shading.
 
+## Slice 16: Calendar
+
+Branch `feat/calendar`.
+
+The All days page was a list of dates, newest first, in columns that read sideways: you couldn't see a week at a glance. Now it's a calendar, with the weekly reports on the weeks they cover.
+
+```text
+November 2026 · 5 rideable days · mostly Arklow
+ Mon    Tue    Wed    Thu    Fri    Sat    Sun   Week
+                                           1     0 good days
+                                          18 kn  Report ›
+                                          Arklow
+  2      3      4      5      6      7      8    Report on
+ 16 kn  17 kn  21 kn  20 kn  12 kn   –      –    Sunday
+ Arklow Maghe… Arklow Arklow Seapo…
+```
+
+- **FR-16.1** **One month grid per month with a day page**, newest month first, weeks Monday to Sunday (like the weekly reports). A month with no day page isn't shown. In a shown month, a day with no page is greyed out and isn't a link.
+- **FR-16.2** **Each day** links to its page and shows, as in the day strip (FR-9.4), the peak wind of its windows (or "–") and the shore break warning, plus the **best spot**: the spot of its top-ranked window (FR-1.5), full name on mouseover. Today is outlined, and days after tomorrow (outlooks, FR-9.3) have a dashed border. On a phone there's no spot name and the warning is just ⚠️ or 🚨.
+- **FR-16.3** **Week summary** at the end of each week row, from its weekly report (FR-5.4): good days, missed, the best session's spot and day, and a link to the report. It sits on the row with the week's Sunday, so a week split across two months shows once. This week, until its report comes, says "Report on Sunday". On a phone the summary is a thin line under the week.
+- **FR-16.4** **Month heading** with its rideable days: days up to today with at least one window, and the spot that was best most often (a tie goes to the one seen first), e.g. `November 2026 · 5 rideable days · mostly Arklow`. With none, just the month.
+
 ## Non-goals
 
 - No app, no server, no accounts.
@@ -445,7 +467,7 @@ When you scroll down to the last spots and the buoys, the hours row is gone, and
 - Telegram group with the map image itself.
 - Model agreement: compare several models (ICON, UKMO, HARMONIE) and show "3/3 agree".
 - Met Éireann HARMONIE point forecast as an extra source.
-- Use the live readings (slice 10) in the weekly summary: did the forecast windows really happen?
+- **Did the forecast come true?** Use the live readings (slice 10) to mark past days on the calendar (slice 16) and in the weekly summary: did the forecast windows really happen? Only Seapoint has stations close by (East Pier, Dublin Bay Buoy); M2 and M5 are tens of km from any spot, so the Wicklow spots need a nearby station or a forecast fetched at the buoys to compare like with like.
 - A live station for the Wicklow spots (Greystones harbour, Arklow harbour or a sailing club), if one with data turns up.
 - Short-range "live forecast": the Worker also keeps the next 3 hours of forecast each hour; later an "it's on now" alert when the readings run ahead of the forecast.
 - **Forecast vs actual, and patterns:** a script reads `data/` (forecast runs and readings) and works out how far off the forecast is per spot, wind direction and lead time, and patterns such as "the wind backs northerly in spring afternoons" (likely sea breeze). Results as a static page. ERDDAP's buoy history and Open-Meteo's historical forecast API let this start on past years.

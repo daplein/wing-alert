@@ -100,13 +100,17 @@ def test_fr_9_4_day_strip_names_the_shore_break_and_why():
         "band": "strong",
         "warning": 2,
         "reason": "1.6 m waves at 6 s",
+        "spot_name": "Arklow South Beach",
     }
 
 
-def test_fr_9_8_all_days_page_lists_every_date(tmp_path):
+def test_fr_16_2_calendar_links_each_day_with_its_best_spot(tmp_path):
     out = site_from(tmp_path, [run_covering(MORNING, 6, 7)])
     archive = (out / "days.html").read_text()
-    assert "Friday 6 November" in archive and "Saturday 7 November" in archive
+    assert "<h2>November 2026" in archive
+    assert 'href="days/2026-11-06.html"' in archive and 'href="days/2026-11-07.html"' in archive
+    assert 'title="Arklow South Beach"' in archive
+    assert '<div class="day off"><span class="num">5</span></div>' in archive  # no page
 
 
 def build(tmp_path, issued_list, guides=None):
