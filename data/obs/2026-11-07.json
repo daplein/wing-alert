@@ -175,6 +175,30 @@
     "direction": 290,
     "wave_height": 0,
     "wave_period": null
+   },
+   {
+    "time": "2026-11-07T21:05Z",
+    "wind": 8,
+    "gust": 10,
+    "direction": 283,
+    "wave_height": 0,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-07T22:05Z",
+    "wind": 11,
+    "gust": 14,
+    "direction": 284,
+    "wave_height": 0,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-07T23:05Z",
+    "wind": 10,
+    "gust": 13,
+    "direction": 284,
+    "wave_height": 0.3,
+    "wave_period": 5
    }
   ],
   "east_pier": [
@@ -345,6 +369,30 @@
     "direction": 295.2,
     "wave_height": null,
     "wave_period": null
+   },
+   {
+    "time": "2026-11-07T21:06Z",
+    "wind": 7.9,
+    "gust": 9.9,
+    "direction": 286,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-07T22:07Z",
+    "wind": 11.5,
+    "gust": 14.8,
+    "direction": 304.9,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-07T23:07Z",
+    "wind": 7.9,
+    "gust": 11.1,
+    "direction": 285.8,
+    "wave_height": null,
+    "wave_period": null
    }
   ],
   "m2": [
@@ -507,6 +555,38 @@
     "direction": 331,
     "wave_height": 0.2,
     "wave_period": 3
+   },
+   {
+    "time": "2026-11-07T20:00Z",
+    "wind": 8.2,
+    "gust": 10.4,
+    "direction": 348,
+    "wave_height": 0.2,
+    "wave_period": 3.2
+   },
+   {
+    "time": "2026-11-07T21:00Z",
+    "wind": 6,
+    "gust": 8.7,
+    "direction": 332,
+    "wave_height": 0.2,
+    "wave_period": 2.9
+   },
+   {
+    "time": "2026-11-07T22:00Z",
+    "wind": 7.6,
+    "gust": 9.6,
+    "direction": 352,
+    "wave_height": 0.4,
+    "wave_period": 2.9
+   },
+   {
+    "time": "2026-11-07T23:00Z",
+    "wind": 7.6,
+    "gust": 9.4,
+    "direction": 346,
+    "wave_height": 0.4,
+    "wave_period": 2.8
    }
   ],
   "m5": [
@@ -669,6 +749,38 @@
     "direction": 16,
     "wave_height": 0.4,
     "wave_period": 4.3
+   },
+   {
+    "time": "2026-11-07T20:00Z",
+    "wind": 7.3,
+    "gust": 10,
+    "direction": 15,
+    "wave_height": 0.4,
+    "wave_period": 4.2
+   },
+   {
+    "time": "2026-11-07T21:00Z",
+    "wind": 5.5,
+    "gust": 8.2,
+    "direction": 4,
+    "wave_height": 0.4,
+    "wave_period": 4.1
+   },
+   {
+    "time": "2026-11-07T22:00Z",
+    "wind": 5.6,
+    "gust": 7.9,
+    "direction": 13,
+    "wave_height": 0.4,
+    "wave_period": 3.6
+   },
+   {
+    "time": "2026-11-07T23:00Z",
+    "wind": 5.1,
+    "gust": 7.4,
+    "direction": 29,
+    "wave_height": 0.5,
+    "wave_period": 3.3
    }
   ]
  }
