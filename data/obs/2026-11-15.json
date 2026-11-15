@@ -127,6 +127,54 @@
     "direction": 333,
     "wave_height": 0.7,
     "wave_period": 3
+   },
+   {
+    "time": "2026-11-15T16:05Z",
+    "wind": 19,
+    "gust": 27,
+    "direction": 328,
+    "wave_height": 0.6,
+    "wave_period": 3
+   },
+   {
+    "time": "2026-11-15T17:05Z",
+    "wind": 22,
+    "gust": 31,
+    "direction": 329,
+    "wave_height": 0.7,
+    "wave_period": 3
+   },
+   {
+    "time": "2026-11-15T18:05Z",
+    "wind": 21,
+    "gust": 27,
+    "direction": 325,
+    "wave_height": 0.7,
+    "wave_period": 3
+   },
+   {
+    "time": "2026-11-15T19:05Z",
+    "wind": 19,
+    "gust": 24,
+    "direction": 312,
+    "wave_height": 0.6,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-15T20:05Z",
+    "wind": 18,
+    "gust": 24,
+    "direction": 302,
+    "wave_height": 0.7,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-15T21:05Z",
+    "wind": 15,
+    "gust": 24,
+    "direction": 286,
+    "wave_height": 0.8,
+    "wave_period": 4
    }
   ],
   "east_pier": [
@@ -257,6 +305,54 @@
     "direction": 351.6,
     "wave_height": null,
     "wave_period": null
+   },
+   {
+    "time": "2026-11-15T16:07Z",
+    "wind": 19.2,
+    "gust": 26.2,
+    "direction": 349.5,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-15T17:07Z",
+    "wind": 22.3,
+    "gust": 28.4,
+    "direction": 355.7,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-15T18:07Z",
+    "wind": 17.2,
+    "gust": 24.7,
+    "direction": 343.6,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-15T19:06Z",
+    "wind": 20.6,
+    "gust": 24.5,
+    "direction": 327,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-15T20:07Z",
+    "wind": 18.2,
+    "gust": 23.5,
+    "direction": 324.1,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-15T21:07Z",
+    "wind": 14.2,
+    "gust": 18.9,
+    "direction": 295.3,
+    "wave_height": null,
+    "wave_period": null
    }
   ],
   "m2": [
@@ -379,6 +475,54 @@
     "direction": 0,
     "wave_height": 1.4,
     "wave_period": 4.2
+   },
+   {
+    "time": "2026-11-15T15:00Z",
+    "wind": 24.8,
+    "gust": 29.8,
+    "direction": 352,
+    "wave_height": 1.8,
+    "wave_period": 4.2
+   },
+   {
+    "time": "2026-11-15T16:00Z",
+    "wind": 24.5,
+    "gust": 32.1,
+    "direction": 348,
+    "wave_height": 1.9,
+    "wave_period": 4.5
+   },
+   {
+    "time": "2026-11-15T17:00Z",
+    "wind": 29.5,
+    "gust": 34.3,
+    "direction": 347,
+    "wave_height": 2.1,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-15T18:00Z",
+    "wind": 28.9,
+    "gust": 35.9,
+    "direction": 338,
+    "wave_height": 2.2,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-15T19:00Z",
+    "wind": 27.3,
+    "gust": 34.8,
+    "direction": 339,
+    "wave_height": 2.2,
+    "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-15T20:00Z",
+    "wind": 25.5,
+    "gust": 32,
+    "direction": 337,
+    "wave_height": 2.6,
+    "wave_period": 4.9
    }
   ],
   "m5": [
@@ -501,6 +645,54 @@
     "direction": 329,
     "wave_height": 1.5,
     "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-15T15:00Z",
+    "wind": 17.5,
+    "gust": 24.1,
+    "direction": 328,
+    "wave_height": 1.6,
+    "wave_period": 4.8
+   },
+   {
+    "time": "2026-11-15T16:00Z",
+    "wind": 20.8,
+    "gust": 29,
+    "direction": 351,
+    "wave_height": 1.6,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-15T17:00Z",
+    "wind": 21.1,
+    "gust": 28.5,
+    "direction": 355,
+    "wave_height": 1.8,
+    "wave_period": 4.5
+   },
+   {
+    "time": "2026-11-15T18:00Z",
+    "wind": 18.2,
+    "gust": 26.2,
+    "direction": 347,
+    "wave_height": 1.9,
+    "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-15T19:00Z",
+    "wind": 19.8,
+    "gust": 27.4,
+    "direction": 354,
+    "wave_height": 2.1,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-15T20:00Z",
+    "wind": 19.2,
+    "gust": 27.4,
+    "direction": 354,
+    "wave_height": 2.1,
+    "wave_period": 5.2
    }
   ]
  }
