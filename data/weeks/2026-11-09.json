@@ -1,0 +1,427 @@
+{
+ "start": "2026-11-09",
+ "end": "2026-11-15",
+ "days": [
+  {
+   "date": "2026-11-09",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-09",
+     "start": "2026-11-09T09:00",
+     "end": "2026-11-09T16:00",
+     "wind_min": 12,
+     "wind_max": 15,
+     "gust_max": 19,
+     "direction": "E",
+     "shore_break": 1,
+     "shore_break_reason": "0.8 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "ennereilly",
+     "spot_name": "Ennereilly",
+     "date": "2026-11-09",
+     "start": "2026-11-09T09:00",
+     "end": "2026-11-09T16:00",
+     "wind_min": 12,
+     "wind_max": 14,
+     "gust_max": 19,
+     "direction": "ESE",
+     "shore_break": 1,
+     "shore_break_reason": "0.8 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "buckroney",
+     "spot_name": "Buckroney",
+     "date": "2026-11-09",
+     "start": "2026-11-09T09:00",
+     "end": "2026-11-09T16:00",
+     "wind_min": 12,
+     "wind_max": 14,
+     "gust_max": 18,
+     "direction": "E",
+     "shore_break": 1,
+     "shore_break_reason": "0.8 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "brittas",
+     "spot_name": "Brittas Bay",
+     "date": "2026-11-09",
+     "start": "2026-11-09T09:00",
+     "end": "2026-11-09T16:00",
+     "wind_min": 12,
+     "wind_max": 13,
+     "gust_max": 17,
+     "direction": "ESE",
+     "shore_break": 1,
+     "shore_break_reason": "0.8 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "magheramore",
+     "spot_name": "Magheramore",
+     "date": "2026-11-09",
+     "start": "2026-11-09T09:00",
+     "end": "2026-11-09T16:00",
+     "wind_min": 11,
+     "wind_max": 13,
+     "gust_max": 17,
+     "direction": "ESE",
+     "shore_break": 1,
+     "shore_break_reason": "0.8 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  },
+  {
+   "date": "2026-11-10",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-10",
+     "start": "2026-11-10T09:00",
+     "end": "2026-11-10T16:00",
+     "wind_min": 12,
+     "wind_max": 14,
+     "gust_max": 18,
+     "direction": "E",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "ennereilly",
+     "spot_name": "Ennereilly",
+     "date": "2026-11-10",
+     "start": "2026-11-10T09:00",
+     "end": "2026-11-10T16:00",
+     "wind_min": 12,
+     "wind_max": 12,
+     "gust_max": 16,
+     "direction": "E",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "brittas",
+     "spot_name": "Brittas Bay",
+     "date": "2026-11-10",
+     "start": "2026-11-10T09:00",
+     "end": "2026-11-10T13:00",
+     "wind_min": 10,
+     "wind_max": 12,
+     "gust_max": 15,
+     "direction": "E",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  },
+  {
+   "date": "2026-11-11",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-11",
+     "start": "2026-11-11T09:00",
+     "end": "2026-11-11T16:00",
+     "wind_min": 11,
+     "wind_max": 16,
+     "gust_max": 22,
+     "direction": "NE",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "seapoint",
+     "spot_name": "Seapoint",
+     "date": "2026-11-11",
+     "start": "2026-11-11T09:00",
+     "end": "2026-11-11T16:00",
+     "wind_min": 12,
+     "wind_max": 16,
+     "gust_max": 21,
+     "direction": "ENE",
+     "shore_break": 1,
+     "shore_break_reason": "0.9 m waves at 4 s",
+     "alerted": false
+    },
+    {
+     "spot": "brittas",
+     "spot_name": "Brittas Bay",
+     "date": "2026-11-11",
+     "start": "2026-11-11T09:00",
+     "end": "2026-11-11T16:00",
+     "wind_min": 12,
+     "wind_max": 14,
+     "gust_max": 19,
+     "direction": "NE",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "magheramore",
+     "spot_name": "Magheramore",
+     "date": "2026-11-11",
+     "start": "2026-11-11T09:00",
+     "end": "2026-11-11T16:00",
+     "wind_min": 12,
+     "wind_max": 14,
+     "gust_max": 19,
+     "direction": "NE",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "ennereilly",
+     "spot_name": "Ennereilly",
+     "date": "2026-11-11",
+     "start": "2026-11-11T09:00",
+     "end": "2026-11-11T14:00",
+     "wind_min": 12,
+     "wind_max": 15,
+     "gust_max": 20,
+     "direction": "ENE",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  },
+  {
+   "date": "2026-11-12",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-12",
+     "start": "2026-11-12T09:00",
+     "end": "2026-11-12T16:00",
+     "wind_min": 18,
+     "wind_max": 24,
+     "gust_max": 33,
+     "direction": "NNE",
+     "shore_break": 1,
+     "shore_break_reason": "1.4 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "seapoint",
+     "spot_name": "Seapoint",
+     "date": "2026-11-12",
+     "start": "2026-11-12T09:00",
+     "end": "2026-11-12T16:00",
+     "wind_min": 14,
+     "wind_max": 18,
+     "gust_max": 24,
+     "direction": "N",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "wicklow_harbour",
+     "spot_name": "Wicklow Harbour",
+     "date": "2026-11-12",
+     "start": "2026-11-12T12:00",
+     "end": "2026-11-12T16:00",
+     "wind_min": 17,
+     "wind_max": 19,
+     "gust_max": 30,
+     "direction": "N",
+     "shore_break": 1,
+     "shore_break_reason": "1.4 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "magheramore",
+     "spot_name": "Magheramore",
+     "date": "2026-11-12",
+     "start": "2026-11-12T09:00",
+     "end": "2026-11-12T12:00",
+     "wind_min": 20,
+     "wind_max": 24,
+     "gust_max": 32,
+     "direction": "NNE",
+     "shore_break": 1,
+     "shore_break_reason": "1.4 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "brittas",
+     "spot_name": "Brittas Bay",
+     "date": "2026-11-12",
+     "start": "2026-11-12T09:00",
+     "end": "2026-11-12T12:00",
+     "wind_min": 20,
+     "wind_max": 23,
+     "gust_max": 32,
+     "direction": "NNE",
+     "shore_break": 1,
+     "shore_break_reason": "1.4 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "forecast": true,
+   "windows": []
+  },
+  {
+   "date": "2026-11-14",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-14",
+     "start": "2026-11-14T09:00",
+     "end": "2026-11-14T16:00",
+     "wind_min": 22,
+     "wind_max": 26,
+     "gust_max": 35,
+     "direction": "SSW",
+     "shore_break": 2,
+     "shore_break_reason": "1.5 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "buckroney",
+     "spot_name": "Buckroney",
+     "date": "2026-11-14",
+     "start": "2026-11-14T09:00",
+     "end": "2026-11-14T16:00",
+     "wind_min": 22,
+     "wind_max": 26,
+     "gust_max": 35,
+     "direction": "SSW",
+     "shore_break": 2,
+     "shore_break_reason": "1.5 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "ennereilly",
+     "spot_name": "Ennereilly",
+     "date": "2026-11-14",
+     "start": "2026-11-14T09:00",
+     "end": "2026-11-14T16:00",
+     "wind_min": 22,
+     "wind_max": 26,
+     "gust_max": 36,
+     "direction": "SSW",
+     "shore_break": 2,
+     "shore_break_reason": "1.5 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "magheramore",
+     "spot_name": "Magheramore",
+     "date": "2026-11-14",
+     "start": "2026-11-14T09:00",
+     "end": "2026-11-14T16:00",
+     "wind_min": 24,
+     "wind_max": 26,
+     "gust_max": 36,
+     "direction": "SSW",
+     "shore_break": 2,
+     "shore_break_reason": "1.5 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "brittas",
+     "spot_name": "Brittas Bay",
+     "date": "2026-11-14",
+     "start": "2026-11-14T09:00",
+     "end": "2026-11-14T16:00",
+     "wind_min": 24,
+     "wind_max": 26,
+     "gust_max": 35,
+     "direction": "SSW",
+     "shore_break": 2,
+     "shore_break_reason": "1.5 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  },
+  {
+   "date": "2026-11-15",
+   "forecast": true,
+   "windows": [
+    {
+     "spot": "seapoint",
+     "spot_name": "Seapoint",
+     "date": "2026-11-15",
+     "start": "2026-11-15T11:00",
+     "end": "2026-11-15T15:00",
+     "wind_min": 10,
+     "wind_max": 19,
+     "gust_max": 25,
+     "direction": "NNW",
+     "shore_break": 0,
+     "shore_break_reason": "0.8 m waves at 4 s",
+     "alerted": false
+    },
+    {
+     "spot": "arklow",
+     "spot_name": "Arklow South Beach",
+     "date": "2026-11-15",
+     "start": "2026-11-15T13:00",
+     "end": "2026-11-15T16:00",
+     "wind_min": 15,
+     "wind_max": 20,
+     "gust_max": 27,
+     "direction": "N",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    },
+    {
+     "spot": "wicklow_harbour",
+     "spot_name": "Wicklow Harbour",
+     "date": "2026-11-15",
+     "start": "2026-11-15T13:00",
+     "end": "2026-11-15T15:00",
+     "wind_min": 15,
+     "wind_max": 17,
+     "gust_max": 26,
+     "direction": "NNW",
+     "shore_break": 1,
+     "shore_break_reason": "1.0 m waves at 5 s",
+     "alerted": false
+    }
+   ]
+  }
+ ],
+ "good_days": 6,
+ "missed": 26,
+ "best": {
+  "spot": "arklow",
+  "spot_name": "Arklow South Beach",
+  "date": "2026-11-09",
+  "start": "2026-11-09T09:00",
+  "end": "2026-11-09T16:00",
+  "wind_min": 12,
+  "wind_max": 15,
+  "gust_max": 19,
+  "direction": "E",
+  "shore_break": 1,
+  "shore_break_reason": "0.8 m waves at 5 s",
+  "alerted": false
+ }
+}
