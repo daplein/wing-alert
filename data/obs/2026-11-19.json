@@ -531,6 +531,14 @@
     "direction": 85,
     "wave_height": 2,
     "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-19T23:00Z",
+    "wind": 21.6,
+    "gust": 27,
+    "direction": 84,
+    "wave_height": 1.9,
+    "wave_period": 4.7
    }
   ],
   "m5": [
@@ -716,6 +724,14 @@
     "gust": 7.6,
     "direction": 95,
     "wave_height": 3.8,
+    "wave_period": 8.9
+   },
+   {
+    "time": "2026-11-19T23:00Z",
+    "wind": 4.3,
+    "gust": 9.9,
+    "direction": 45,
+    "wave_height": 3.6,
     "wave_period": 8.9
    }
   ]
