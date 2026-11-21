@@ -47,6 +47,70 @@
     "direction": 174,
     "wave_height": 0.5,
     "wave_period": 3
+   },
+   {
+    "time": "2026-11-21T06:05Z",
+    "wind": 7,
+    "gust": 10,
+    "direction": 164,
+    "wave_height": 0.5,
+    "wave_period": 3
+   },
+   {
+    "time": "2026-11-21T07:02Z",
+    "wind": 7,
+    "gust": 9,
+    "direction": 165,
+    "wave_height": 0.6,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T09:05Z",
+    "wind": 3,
+    "gust": 6,
+    "direction": 160,
+    "wave_height": 0.6,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T10:05Z",
+    "wind": 6,
+    "gust": 9,
+    "direction": 158,
+    "wave_height": 0.7,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T11:05Z",
+    "wind": 11,
+    "gust": 16,
+    "direction": 156,
+    "wave_height": 0.7,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T12:05Z",
+    "wind": 12,
+    "gust": 23,
+    "direction": 135,
+    "wave_height": 1,
+    "wave_period": 3
+   },
+   {
+    "time": "2026-11-21T13:05Z",
+    "wind": 19,
+    "gust": 24,
+    "direction": 137,
+    "wave_height": 0.9,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T14:05Z",
+    "wind": 19,
+    "gust": 25,
+    "direction": 140,
+    "wave_height": 1.2,
+    "wave_period": 4
    }
   ],
   "east_pier": [
@@ -97,6 +161,78 @@
     "direction": 192.8,
     "wave_height": null,
     "wave_period": null
+   },
+   {
+    "time": "2026-11-21T06:06Z",
+    "wind": 6.5,
+    "gust": 8,
+    "direction": 184.4,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T07:06Z",
+    "wind": 6.4,
+    "gust": 8.6,
+    "direction": 197.5,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T08:06Z",
+    "wind": 4.9,
+    "gust": 5.6,
+    "direction": 191.2,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T09:06Z",
+    "wind": 1.6,
+    "gust": 2.5,
+    "direction": 186.3,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T10:06Z",
+    "wind": 5,
+    "gust": 10.7,
+    "direction": 151,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T11:06Z",
+    "wind": 9.4,
+    "gust": 15.6,
+    "direction": 177.7,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T12:06Z",
+    "wind": 12.4,
+    "gust": 20.6,
+    "direction": 169.1,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T13:06Z",
+    "wind": 11.8,
+    "gust": 20.2,
+    "direction": 170.6,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-21T14:06Z",
+    "wind": 14,
+    "gust": 27.4,
+    "direction": 160.7,
+    "wave_height": null,
+    "wave_period": null
    }
   ],
   "m2": [
@@ -139,6 +275,78 @@
     "direction": 139,
     "wave_height": 0.8,
     "wave_period": 3.4
+   },
+   {
+    "time": "2026-11-21T05:00Z",
+    "wind": 18.3,
+    "gust": 21.7,
+    "direction": 144,
+    "wave_height": 0.9,
+    "wave_period": 3.4
+   },
+   {
+    "time": "2026-11-21T06:00Z",
+    "wind": 16.1,
+    "gust": 19.1,
+    "direction": 151,
+    "wave_height": 1.1,
+    "wave_period": 3.5
+   },
+   {
+    "time": "2026-11-21T07:00Z",
+    "wind": 17.8,
+    "gust": 21.2,
+    "direction": 145,
+    "wave_height": 0.9,
+    "wave_period": 3.6
+   },
+   {
+    "time": "2026-11-21T08:00Z",
+    "wind": 16.8,
+    "gust": 20.4,
+    "direction": 138,
+    "wave_height": 1.1,
+    "wave_period": 3.6
+   },
+   {
+    "time": "2026-11-21T09:00Z",
+    "wind": 17.5,
+    "gust": 21.4,
+    "direction": 131,
+    "wave_height": 1.1,
+    "wave_period": 3.8
+   },
+   {
+    "time": "2026-11-21T10:00Z",
+    "wind": 17,
+    "gust": 20.5,
+    "direction": 137,
+    "wave_height": 0.9,
+    "wave_period": 3.8
+   },
+   {
+    "time": "2026-11-21T11:00Z",
+    "wind": 16.1,
+    "gust": 19.7,
+    "direction": 134,
+    "wave_height": 1.1,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T12:00Z",
+    "wind": 15.3,
+    "gust": 21.3,
+    "direction": 144,
+    "wave_height": 0.9,
+    "wave_period": 4
+   },
+   {
+    "time": "2026-11-21T13:00Z",
+    "wind": 14.1,
+    "gust": 18,
+    "direction": 142,
+    "wave_height": 0.9,
+    "wave_period": 4
    }
   ],
   "m5": [
@@ -181,6 +389,78 @@
     "direction": 167,
     "wave_height": 1.9,
     "wave_period": 6.6
+   },
+   {
+    "time": "2026-11-21T05:00Z",
+    "wind": 8.1,
+    "gust": 11.5,
+    "direction": 179,
+    "wave_height": 1.8,
+    "wave_period": 6.6
+   },
+   {
+    "time": "2026-11-21T06:00Z",
+    "wind": 9.7,
+    "gust": 13.4,
+    "direction": 164,
+    "wave_height": 1.8,
+    "wave_period": 6.8
+   },
+   {
+    "time": "2026-11-21T07:00Z",
+    "wind": 10.5,
+    "gust": 13.7,
+    "direction": 154,
+    "wave_height": 1.9,
+    "wave_period": 7
+   },
+   {
+    "time": "2026-11-21T08:00Z",
+    "wind": 11.3,
+    "gust": 15.8,
+    "direction": 139,
+    "wave_height": 1.8,
+    "wave_period": 6.6
+   },
+   {
+    "time": "2026-11-21T09:00Z",
+    "wind": 12.5,
+    "gust": 17.8,
+    "direction": 137,
+    "wave_height": 1.8,
+    "wave_period": 6.2
+   },
+   {
+    "time": "2026-11-21T10:00Z",
+    "wind": 14.8,
+    "gust": 18.3,
+    "direction": 140,
+    "wave_height": 1.6,
+    "wave_period": 5.5
+   },
+   {
+    "time": "2026-11-21T11:00Z",
+    "wind": 15.3,
+    "gust": 20.5,
+    "direction": 142,
+    "wave_height": 1.8,
+    "wave_period": 5.5
+   },
+   {
+    "time": "2026-11-21T12:00Z",
+    "wind": 14.9,
+    "gust": 20.9,
+    "direction": 138,
+    "wave_height": 1.6,
+    "wave_period": 5.2
+   },
+   {
+    "time": "2026-11-21T13:00Z",
+    "wind": 16.6,
+    "gust": 21.7,
+    "direction": 127,
+    "wave_height": 1.6,
+    "wave_period": 5
    }
   ]
  }
