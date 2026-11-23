@@ -4,6 +4,7 @@
 
 - **The westerly spot.** When it's offshore everywhere on the Wicklow coast, Seapoint is the place to go.
 - **The safe option on wild days.** In a strong easterly with a massive shore break elsewhere, the pier gives shelter and makes it a safer, fun alternative.
+- **ESE comes over the harbour.** At Salthill an ESE wind blows over Dún Laoghaire town and the harbour: expect 4–7 kt less than offshore and gusts close to double the lulls. Still worth it on a big day: on 22 Nov 2026 it was 19–26 kt offshore, about 11–15 kt at the beach, with lots of great waves.
 
 ## Videos
 

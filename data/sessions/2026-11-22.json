@@ -1,0 +1,16 @@
+{
+ "day": "2026-11-22",
+ "sessions": [
+  {
+   "id": "2026-11-22-seapoint-dave",
+   "who": "dave",
+   "spot": "seapoint",
+   "start": null,
+   "end": null,
+   "rating": 5,
+   "wing": null,
+   "note": "Awesome day, lots of amazing waves. Launched at Salthill. Not a named storm: Met Éireann had a 1000 hPa low over the west of Ireland driving a strong to gale-force E–SE flow, yellow small-craft warnings on all coasts. High tide Dublin Port 09:15, dropping to low at 15:10. Out at sea 26 kt gusting 32 at 08:00, easing to 19 gusting 24 by 14:00. At Salthill the ESE came over Dún Laoghaire town and the harbour: about 11–15 kt, gusts close to double the lulls. Models were roughly right offshore; the beach just got 4–7 kt less, which is why the bot only rated it 4.5/10 for harbour shadow.",
+   "sent": "2026-11-23T12:14Z"
+  }
+ ]
+}
