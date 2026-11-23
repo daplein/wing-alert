@@ -1,0 +1,211 @@
+{
+ "day": "2026-11-23",
+ "about": [
+  {
+   "id": "east_pier",
+   "name": "East Pier",
+   "lat": 53.3002,
+   "lon": -6.1242,
+   "waves": false
+  },
+  {
+   "id": "dublin_bay",
+   "name": "Dublin Bay Buoy",
+   "lat": 53.3319,
+   "lon": -6.0774,
+   "waves": true
+  },
+  {
+   "id": "m2",
+   "name": "M2 buoy",
+   "lat": 53.4836,
+   "lon": -5.4302,
+   "waves": true
+  },
+  {
+   "id": "m5",
+   "name": "M5 buoy",
+   "lat": 51.6904,
+   "lon": -6.7043,
+   "waves": true
+  }
+ ],
+ "stations": {
+  "dublin_bay": [
+   {
+    "time": "2026-11-23T00:05Z",
+    "wind": 13,
+    "gust": 18,
+    "direction": 169,
+    "wave_height": 1.1,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-23T01:02Z",
+    "wind": 16,
+    "gust": 20,
+    "direction": 175,
+    "wave_height": 1.1,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-23T02:05Z",
+    "wind": 16,
+    "gust": 22,
+    "direction": 161,
+    "wave_height": 1,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-23T03:05Z",
+    "wind": 17,
+    "gust": 23,
+    "direction": 168,
+    "wave_height": 1.2,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-23T05:05Z",
+    "wind": 19,
+    "gust": 25,
+    "direction": 159,
+    "wave_height": 1.2,
+    "wave_period": 5
+   }
+  ],
+  "east_pier": [
+   {
+    "time": "2026-11-23T00:06Z",
+    "wind": 8.8,
+    "gust": 12.1,
+    "direction": 178.2,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-23T01:06Z",
+    "wind": 11.1,
+    "gust": 16.5,
+    "direction": 186.8,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-23T02:07Z",
+    "wind": 12.8,
+    "gust": 17.1,
+    "direction": 193,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-23T03:07Z",
+    "wind": 11.7,
+    "gust": 15.9,
+    "direction": 186.4,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-23T04:07Z",
+    "wind": 14.1,
+    "gust": 18.5,
+    "direction": 184.4,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-23T05:06Z",
+    "wind": 11.4,
+    "gust": 17.3,
+    "direction": 186.3,
+    "wave_height": null,
+    "wave_period": null
+   }
+  ],
+  "m2": [
+   {
+    "time": "2026-11-23T00:00Z",
+    "wind": 14.7,
+    "gust": 18.7,
+    "direction": 145,
+    "wave_height": 1.6,
+    "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-23T01:00Z",
+    "wind": 15.4,
+    "gust": 19.5,
+    "direction": 144,
+    "wave_height": 1.4,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-23T02:00Z",
+    "wind": 17,
+    "gust": 21.5,
+    "direction": 143,
+    "wave_height": 1.4,
+    "wave_period": 4.7
+   },
+   {
+    "time": "2026-11-23T03:00Z",
+    "wind": 17.4,
+    "gust": 21.3,
+    "direction": 146,
+    "wave_height": 1.4,
+    "wave_period": 4.6
+   },
+   {
+    "time": "2026-11-23T04:00Z",
+    "wind": 18.1,
+    "gust": 22.8,
+    "direction": 161,
+    "wave_height": 1.3,
+    "wave_period": 4.3
+   }
+  ],
+  "m5": [
+   {
+    "time": "2026-11-23T00:00Z",
+    "wind": 11.2,
+    "gust": 18.2,
+    "direction": 90,
+    "wave_height": 2.6,
+    "wave_period": 6
+   },
+   {
+    "time": "2026-11-23T01:00Z",
+    "wind": 10.4,
+    "gust": 14.2,
+    "direction": 133,
+    "wave_height": 2.6,
+    "wave_period": 6
+   },
+   {
+    "time": "2026-11-23T02:00Z",
+    "wind": 8.3,
+    "gust": 12,
+    "direction": 143,
+    "wave_height": 2.6,
+    "wave_period": 6.1
+   },
+   {
+    "time": "2026-11-23T03:00Z",
+    "wind": 4.6,
+    "gust": 8.1,
+    "direction": 281,
+    "wave_height": 2.6,
+    "wave_period": 6.2
+   },
+   {
+    "time": "2026-11-23T04:00Z",
+    "wind": 4.1,
+    "gust": 7.2,
+    "direction": 208,
+    "wave_height": 2.6,
+    "wave_period": 6.2
+   }
+  ]
+ }
+}
