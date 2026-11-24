@@ -1,0 +1,123 @@
+{
+ "day": "2026-11-24",
+ "about": [
+  {
+   "id": "east_pier",
+   "name": "East Pier",
+   "lat": 53.3002,
+   "lon": -6.1242,
+   "waves": false
+  },
+  {
+   "id": "dublin_bay",
+   "name": "Dublin Bay Buoy",
+   "lat": 53.3319,
+   "lon": -6.0774,
+   "waves": true
+  },
+  {
+   "id": "m2",
+   "name": "M2 buoy",
+   "lat": 53.4836,
+   "lon": -5.4302,
+   "waves": true
+  },
+  {
+   "id": "m5",
+   "name": "M5 buoy",
+   "lat": 51.6904,
+   "lon": -6.7043,
+   "waves": true
+  }
+ ],
+ "stations": {
+  "dublin_bay": [
+   {
+    "time": "2026-11-24T00:05Z",
+    "wind": 19,
+    "gust": 27,
+    "direction": 156,
+    "wave_height": 2,
+    "wave_period": 6
+   },
+   {
+    "time": "2026-11-24T01:02Z",
+    "wind": 26,
+    "gust": 36,
+    "direction": 159,
+    "wave_height": 1.6,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-24T02:05Z",
+    "wind": 24,
+    "gust": 39,
+    "direction": 136,
+    "wave_height": 1.9,
+    "wave_period": 5
+   }
+  ],
+  "east_pier": [
+   {
+    "time": "2026-11-24T00:06Z",
+    "wind": 16.1,
+    "gust": 21.2,
+    "direction": 187.6,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-24T01:06Z",
+    "wind": 17.7,
+    "gust": 27.2,
+    "direction": 178.8,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-24T02:06Z",
+    "wind": 20.1,
+    "gust": 29.4,
+    "direction": 181.9,
+    "wave_height": null,
+    "wave_period": null
+   }
+  ],
+  "m2": [
+   {
+    "time": "2026-11-24T00:00Z",
+    "wind": 27.1,
+    "gust": 34.5,
+    "direction": 145,
+    "wave_height": 2.2,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-24T01:00Z",
+    "wind": 24.8,
+    "gust": 32.6,
+    "direction": 151,
+    "wave_height": 2.3,
+    "wave_period": 5.5
+   }
+  ],
+  "m5": [
+   {
+    "time": "2026-11-24T00:00Z",
+    "wind": 21.1,
+    "gust": 31.2,
+    "direction": 157,
+    "wave_height": 2.8,
+    "wave_period": 5.7
+   },
+   {
+    "time": "2026-11-24T01:00Z",
+    "wind": 23,
+    "gust": 33,
+    "direction": 156,
+    "wave_height": 2.9,
+    "wave_period": 5.7
+   }
+  ]
+ }
+}
