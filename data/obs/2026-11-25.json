@@ -1,0 +1,91 @@
+{
+ "day": "2026-11-25",
+ "about": [
+  {
+   "id": "east_pier",
+   "name": "East Pier",
+   "lat": 53.3002,
+   "lon": -6.1242,
+   "waves": false
+  },
+  {
+   "id": "dublin_bay",
+   "name": "Dublin Bay Buoy",
+   "lat": 53.3319,
+   "lon": -6.0774,
+   "waves": true
+  },
+  {
+   "id": "m2",
+   "name": "M2 buoy",
+   "lat": 53.4836,
+   "lon": -5.4302,
+   "waves": true
+  },
+  {
+   "id": "m5",
+   "name": "M5 buoy",
+   "lat": 51.6904,
+   "lon": -6.7043,
+   "waves": true
+  }
+ ],
+ "stations": {
+  "dublin_bay": [
+   {
+    "time": "2026-11-25T00:05Z",
+    "wind": 11,
+    "gust": 13,
+    "direction": 320,
+    "wave_height": 0.5,
+    "wave_period": 5
+   },
+   {
+    "time": "2026-11-25T01:05Z",
+    "wind": 9,
+    "gust": 13,
+    "direction": 308,
+    "wave_height": 0.6,
+    "wave_period": 5
+   }
+  ],
+  "east_pier": [
+   {
+    "time": "2026-11-25T00:06Z",
+    "wind": 8,
+    "gust": 11.1,
+    "direction": 300.1,
+    "wave_height": null,
+    "wave_period": null
+   },
+   {
+    "time": "2026-11-25T01:06Z",
+    "wind": 6,
+    "gust": 9.3,
+    "direction": 293,
+    "wave_height": null,
+    "wave_period": null
+   }
+  ],
+  "m2": [
+   {
+    "time": "2026-11-25T00:00Z",
+    "wind": 17.5,
+    "gust": 24.1,
+    "direction": 161,
+    "wave_height": 0.9,
+    "wave_period": 4.6
+   }
+  ],
+  "m5": [
+   {
+    "time": "2026-11-25T00:00Z",
+    "wind": 16.2,
+    "gust": 23.6,
+    "direction": 7,
+    "wave_height": 1.9,
+    "wave_period": 5
+   }
+  ]
+ }
+}
