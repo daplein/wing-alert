@@ -64,7 +64,11 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v5
         continue-on-error: true
-      # Pages sometimes hangs in "updating_pages"; the data is already pushed (FR-2.9).
+      # Pages sometimes hangs in "updating_pages", or can't see the artifact yet right
+      # after the upload. Wait, then try once more; the data is already pushed (FR-2.9).
+      - name: Wait before retrying
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 30
       - name: Retry the Pages deploy
         if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v5
