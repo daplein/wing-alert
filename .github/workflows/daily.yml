@@ -61,18 +61,26 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
-      # GitHub's artifact listing lags the upload by seconds, sometimes ~45 s, so an
-      # immediate deploy can't find "github-pages" (actions/deploy-pages#451).
-      - name: Wait for the artifact to be listed
-        run: sleep 10
+      # Pages can lag: the artifact listing trails the upload by up to ~45 s
+      # (actions/deploy-pages#451), or a deploy hangs in "updating_pages".
+      # Retry with backoff (5 s, 15 s, 45 s); the data is already pushed (FR-2.9).
+      # Actions can't loop over a `uses:` step, so each attempt is spelled out.
       - id: deploy
         uses: actions/deploy-pages@v5
         continue-on-error: true
-      # Pages sometimes hangs in "updating_pages", or the listing is still behind.
-      # Wait, then try once more; the data is already pushed (FR-2.9).
-      - name: Wait before retrying
+      - if: steps.deploy.outcome == 'failure'
+        run: sleep 5
+      - id: deploy2
         if: steps.deploy.outcome == 'failure'
-        run: sleep 60
-      - name: Retry the Pages deploy
-        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - if: steps.deploy2.outcome == 'failure'
+        run: sleep 15
+      - id: deploy3
+        if: steps.deploy2.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - if: steps.deploy3.outcome == 'failure'
+        run: sleep 45
+      - if: steps.deploy3.outcome == 'failure'
         uses: actions/deploy-pages@v5
