@@ -179,6 +179,7 @@ Branch `feat/site`.
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
 - **FR-2.6** The site shows "Forecast from Open-Meteo" with a link (required by their terms).
 - **FR-2.7** **Spots page:** one section per spot, rendered from `docs/spots/<id>.md` (launch points, parking by wind direction, hazards, seasonal notes, map link). The day page links each spot name to its section. Editing a spot's Markdown file is all it takes to update the page.
+- **FR-2.10** **Visitor counter.** Every page loads the site-wide counter `/visitors.js` from daplein.github.io ([daplein/site-visitors](https://github.com/daplein/site-visitors)). It adds a line at the end of the footer with the visitor count and a link to `/stats.html`. No cookies, and raw IPs are never stored.
 
 **Size check:** about 20 KB of JSON per run plus a 150 KB map per day is roughly 70 MB a year. That's far under the 1 GB Pages and repo guidance.
 

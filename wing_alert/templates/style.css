@@ -90,6 +90,7 @@ thead th.now { background: var(--accent); color: var(--bg); font-weight: 700; bo
 .spot { border-top: 1px solid var(--line); margin-top: 24px; }
 .spot table { border-collapse: collapse; } .spot td, .spot th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; min-width: 0; border-radius: 0; }
 footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px; padding-bottom: 24px; }
+#site-visitors { margin: 8px 0 0; }  /* filled by /visitors.js (FR-2.10) */
 /* Day strip: a few days either side, today's page in the middle of the week. */
 .strip { display: flex; gap: 6px; margin: 14px 0 0; overflow-x: auto; }
 .strip a { margin: 0; flex: 1 1 0; min-width: 0; text-align: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; color: var(--fg); }
