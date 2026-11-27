@@ -179,6 +179,14 @@ def test_fr_2_6_site_credits_open_meteo(tmp_path):
     assert 'href="https://open-meteo.com/"' in (out / "index.html").read_text()
 
 
+def test_fr_2_10_every_page_loads_the_visitor_counter(tmp_path):
+    out = build(tmp_path, [MORNING])
+    for page in out.rglob("*.html"):
+        html = page.read_text()
+        assert '<script src="/visitors.js" defer></script>' in html, page
+        assert '<p id="site-visitors"></p>' in html[html.index("<footer>") :], page
+
+
 def test_fr_2_7_spots_page_renders_guides_and_placeholders(tmp_path):
     out = build(tmp_path, [MORNING], {"arklow": "# Arklow\n\n- Watch the **buoys**"})
     page = (out / "spots.html").read_text()
