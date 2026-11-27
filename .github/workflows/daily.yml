@@ -65,22 +65,32 @@ jobs:
       # (actions/deploy-pages#451), or a deploy hangs in "updating_pages".
       # Retry with backoff (5 s, 15 s, 45 s); the data is already pushed (FR-2.9).
       # Actions can't loop over a `uses:` step, so each attempt is spelled out.
+      # Each attempt gives up after 2 min (default 10) so a stuck deploy doesn't hold
+      # the runner; a few deploys queue longer and leave the site one run behind.
       - id: deploy
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 120000
         continue-on-error: true
       - if: steps.deploy.outcome == 'failure'
         run: sleep 5
       - id: deploy2
         if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 120000
         continue-on-error: true
       - if: steps.deploy2.outcome == 'failure'
         run: sleep 15
       - id: deploy3
         if: steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 120000
         continue-on-error: true
       - if: steps.deploy3.outcome == 'failure'
         run: sleep 45
       - if: steps.deploy3.outcome == 'failure'
         uses: actions/deploy-pages@v5
+        with:
+          timeout: 120000
