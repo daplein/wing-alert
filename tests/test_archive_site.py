@@ -78,7 +78,8 @@ def test_fr_9_4_day_strip_shows_peak_wind_and_links_neighbours(tmp_path):
     page = (out / "days/2026-11-08.html").read_text()
     assert 'aria-current="page"' in page and "Sun 8" in page
     assert 'aria-label="Previous day"' in page and 'href="../days/2026-11-07.html"' in page
-    assert page.count('<span class="peak strong">20 kn</span>') == 3  # 6, 7 and 8
+    assert page.count('<span class="peak strong"><span class="dir"') == 3  # 6, 7 and 8
+    assert page.count("↑</span>20 kn</span>") == 3
     assert '<span class="peak none">–</span>' in page  # the 9th is calm
     assert 'href="../days/2026-11-09.html" aria-label="Next day"' in page
 
@@ -95,13 +96,59 @@ def test_fr_9_4_day_strip_names_the_shore_break_and_why():
 
     run = run_covering(MORNING, 6)
     run["windows"][0].update(shore_break=2, shore_break_reason="1.6 m waves at 6 s")
+    summary = _summary(run, "2026-11-06")
+    assert (summary["warning"], summary["reason"]) == (2, "1.6 m waves at 6 s")
+
+
+def test_fr_17_1_strip_describes_the_best_window_not_the_windiest():
+    from wing_alert.site import _summary
+
+    run = run_covering(MORNING, 6)
+    windier = dict(run["windows"][0], spot_name="Seapoint", wind_max=30, direction="S")
+    run["windows"].append(windier)  # ranked second: the best window still comes first
     assert _summary(run, "2026-11-06") == {
         "peak": 20,
         "band": "strong",
-        "warning": 2,
-        "reason": "1.6 m waves at 6 s",
+        "warning": 0,
+        "reason": "",
         "spot_name": "Arklow South Beach",
+        "start": "12:00",
+        "end": "15:00",
+        "direction": "ENE",
+        "arrow": 247.5,  # wind from ENE (67.5°) blows to WSW
     }
+
+
+def test_fr_17_1_strip_tile_shows_spot_hours_and_arrow(tmp_path):
+    run = run_covering(MORNING, 6)
+    run["windows"][0].update(shore_break=1, shore_break_reason="1.1 m waves at 5 s")
+    page = (site_from(tmp_path, [run]) / "index.html").read_text()
+    assert '<span class="where">Arklow South Beach</span>' in page
+    assert '<span class="long">12:00–15:00</span><span class="short">12–15</span>' in page
+    assert 'style="transform: rotate(248deg)">↑</span>20 kn' in page
+    assert (
+        'title="Arklow South Beach 12:00–15:00 · 20 kn ENE'
+        ' · Shore break: watch out · 1.1 m waves at 5 s"'
+    ) in page
+    assert '<span class="icon">⚠️</span> <span class="words">shore break</span>' in page
+
+
+def test_fr_17_2_phone_keeps_the_table_arrows_above_the_wind():
+    from wing_alert.site import TEMPLATES
+
+    css = (TEMPLATES / "style.css").read_text()
+    phone = css[css.index("@media (max-width: 600px)") :]
+    assert "td .arrow { display: block;" in phone
+    assert ".arrow { display: none; }" not in css
+
+
+def test_fr_17_3_magheramore_is_no_longer_a_spot():
+    from pathlib import Path
+
+    from wing_alert.config import load_spots
+
+    spots = load_spots(Path(__file__).parent.parent / "config/spots.yaml")
+    assert "magheramore" not in [spot.id for spot in spots]
 
 
 def test_fr_16_2_calendar_links_each_day_with_its_best_spot(tmp_path):
