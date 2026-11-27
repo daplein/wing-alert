@@ -173,7 +173,7 @@ Branch `feat/site`.
   - the wind map (from slice 3)
   - a table of all spots ranked, with hourly wind and good hours highlighted
   - a day strip to the days around it (FR-9.4)
-- **FR-2.9** Wait 10 seconds after uploading the site before deploying it: GitHub can take that long to list the upload. If the deploy still fails, wait 60 seconds and try once more. The data is already committed by then, so a failed deploy only leaves the site one run behind.
+- **FR-2.9** Deploy as soon as the site is uploaded. If the deploy fails, retry up to three times with backoff (after 5, 15 and 45 seconds): GitHub can take up to about 45 seconds to list a new upload. The data is already committed by then, so a failed deploy only leaves the site one run behind.
 - **FR-2.8** The site works on a phone first. Maps and table: see FR-9.6 and FR-9.7. If the hours don't fit (long summer days), the table scrolls sideways with the spot names pinned on the left.
 - **FR-2.4** **Front page** is today's day page. Each date has its own page (FR-9.3); the list of past days is on the All days page (FR-9.8).
 - **FR-2.5** The WhatsApp alert ends with a link to the day page.
