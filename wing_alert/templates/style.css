@@ -103,6 +103,12 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding-top: 12px;
 .peak.none { color: var(--muted); font-weight: 400; }
 .break { font-size: 0.68rem; font-weight: 600; color: #d97700; line-height: 1.15; margin-top: 2px; }
 .break.level2 { color: #d62828; }
+/* Where and when (FR-17.1): the best window's spot and hours, cut to fit on a phone. */
+.strip .dir { display: inline-block; margin-right: 2px; }
+.strip .where, .strip .when { display: block; font-size: 0.75rem; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip a.current .where { font-weight: 700; }
+.strip .when { color: var(--muted); }
+.strip .when .short { display: none; }
 .strip .step { flex: 0 0 auto; display: flex; align-items: center; font-size: 1.3rem; border: none; color: var(--accent); padding: 0 4px; }
 /* Maps: side by side on a wide screen, in rows of three past four maps (--cols, FR-9.7);
    one at a time with hour buttons on a phone. */
@@ -144,7 +150,8 @@ tbody th { box-shadow: 0 -3px 0 var(--bg); }
   /* 84 + 10 hours x 23 fits a 340 px screen; longer summer days scroll sideways (FR-2.8). */
   table.hours { --name-col: 84px; --cell: 22px; --gap: 1px; font-size: 0.8rem; }
   tbody th { font-size: 0.78rem; line-height: 1.2; padding-right: 4px; }
-  .arrow { display: none; }
+  /* No room beside the wind in a 22 px cell: the arrow gets its own line on top (FR-17.2). */
+  td .arrow { display: block; width: fit-content; margin: 0 auto 1px; font-size: 0.8rem; font-weight: 700; line-height: 1; }
   td small { font-size: 0.65rem; }
   .tide-tag { font-size: 0.5rem; padding: 0 2px; }
   .sea { margin: 2px 1px 0; font-size: 0.65rem; }
@@ -155,6 +162,10 @@ tbody th { box-shadow: 0 -3px 0 var(--bg); }
   .strip a { padding: 5px 1px; font-size: 0.74rem; }
   .strip .peak { font-size: 0.74rem; padding: 0 3px; }
   .strip .step { padding: 0 1px; }
+  .strip .where, .strip .when { font-size: 0.68rem; }
+  .strip .when .long, .strip .break .words { display: none; }
+  .strip .when .short { display: inline; }
+  .strip .peak .dir { margin-right: 1px; }
   .best { font-size: 1rem; }
 }
 /* All days calendar (FR-16): Monday-first month grids, week summary at the end of each row. */

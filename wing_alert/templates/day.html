@@ -4,10 +4,15 @@
 <nav class="strip" aria-label="Days">
   {% if previous %}<a class="step" href="{{ root }}days/{{ previous }}.html" aria-label="Previous day">‹</a>{% else %}<span class="step"></span>{% endif %}
   {% for item in strip %}
-  <a href="{{ root }}days/{{ item.date }}.html"{% if item.current %} class="current" aria-current="page"{% endif %}{% if item.warning %} title="Shore break: {{ 'dangerous' if item.warning == 2 else 'watch out' }} · {{ item.reason }}"{% endif %}>
+  {% set window_title %}{% if item.spot_name %}{{ item.spot_name }} {{ item.start }}–{{ item.end }} · {{ item.peak }} kn {{ item.direction }}{% endif %}{% endset %}
+  {% set break_title %}{% if item.warning %}Shore break: {{ 'dangerous' if item.warning == 2 else 'watch out' }} · {{ item.reason }}{% endif %}{% endset %}
+  {% set tile_title = [window_title, break_title] | select | join(" · ") %}
+  <a href="{{ root }}days/{{ item.date }}.html"{% if item.current %} class="current" aria-current="page"{% endif %}{% if tile_title %} title="{{ tile_title }}"{% endif %}>
     <span class="day">{{ item.date | short_label }}</span>
-    <span class="peak {{ item.band or 'none' }}">{% if item.peak is not none %}{{ item.peak }} kn{% else %}–{% endif %}</span>
-    {% if item.warning %}<span class="break level{{ item.warning }}">⚠️ shore break</span>{% endif %}
+    <span class="peak {{ item.band or 'none' }}">{% if item.peak is not none %}{% if item.arrow is not none %}<span class="dir" style="transform: rotate({{ item.arrow | round | int }}deg)">↑</span>{% endif %}{{ item.peak }} kn{% else %}–{% endif %}</span>
+    {% if item.spot_name %}<span class="where">{{ item.spot_name }}</span>
+    <span class="when"><span class="long">{{ item.start }}–{{ item.end }}</span><span class="short">{{ item.start[:2] }}–{{ item.end[:2] }}</span></span>{% endif %}
+    {% if item.warning %}<span class="break level{{ item.warning }}"><span class="icon">{{ item.warning | warning }}</span> <span class="words">shore break</span></span>{% endif %}
   </a>
   {% endfor %}
   {% if next %}<a class="step" href="{{ root }}days/{{ next }}.html" aria-label="Next day">›</a>{% else %}<span class="step"></span>{% endif %}

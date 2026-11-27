@@ -37,14 +37,6 @@
   wind_at: [52.8831, -5.98]
   tide_station: Arklow  # approx.: halfway to Wicklow
 
-- id: magheramore
-  name: Magheramore
-  lat: 52.9310
-  lon: -6.0225
-  directions: [20, 200] # NNE → E → SSW
-  wind_at: [52.931, -5.97]
-  tide_station: Wicklow_MODELLED
-
 - id: wicklow_harbour
   name: Wicklow Harbour
   lat: 52.982

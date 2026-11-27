@@ -1,6 +1,11 @@
 # wing-alert spec
 
-Status: **draft, in review**. Slices are built one PR at a time, in order.
+Status: **done** (slices 1–16; later slices in their own files). Slices are built one PR at a time, in order.
+
+New work gets its own spec file next to this one, with requirement IDs that carry on from here (unique across all files). This file stays the reference for spots, data sources, setup and future work, and its FRs say when a later spec changed them.
+
+- [session-log.md](session-log.md): slices 14–15, session log
+- [strip-where-when.md](strip-where-when.md): slice 17, where and when at a glance
 
 ## Goal
 
@@ -88,7 +93,7 @@ flowchart LR
 
 Coordinates come from David's spot guide where it has them, otherwise from OpenStreetMap. Wicklow Harbour is approximate. Good wind directions are where the wind blows **from**, read clockwise round the compass (N → E → S → W). Degrees are for the config: N = 0°, E = 90°, S = 180°, W = 270°.
 
-> **To confirm.** Arklow, Buckroney and Seapoint come from David. Ennereilly, Brittas and Magheramore are proposed from the OpenStreetMap coastline: the range runs from cross-shore on one side, through onshore, to cross-shore on the other. Ennereilly faces SE (no northerly, per David); Brittas and Magheramore face ESE.
+> **To confirm.** Arklow, Buckroney and Seapoint come from David. Ennereilly and Brittas are proposed from the OpenStreetMap coastline: the range runs from cross-shore on one side, through onshore, to cross-shore on the other. Ennereilly faces SE (no northerly, per David); Brittas faces ESE. Magheramore was dropped in slice 17 (FR-17.3).
 
 | ID | Spot | Lat, Lon | Wind read at (FR-1.11) | Tide station | Good directions (wind from) | Notes |
 |---|---|---|---|---|---|---|
@@ -96,7 +101,6 @@ Coordinates come from David's spot guide where it has them, otherwise from OpenS
 | `ennereilly` | Ennereilly | 52.837, -6.105 (approx.) | 52.837, -6.05 | Arklow | NE → E → SW (45–225°) | Just south of Buckroney. No northerly |
 | `buckroney` | Buckroney | 52.8462, -6.0931 | 52.8462, -6.04 | Arklow | E → S → WSW (90–248°) | Faces WSW-ish: WSW is cross-shore. No northerly. Rocks to the north |
 | `brittas` | Brittas Bay | 52.8831, -6.0575 | 52.8831, -5.98 | Arklow (approx., halfway to Wicklow) | NNE → E → SSW (20–200°) | |
-| `magheramore` | Magheramore | 52.9310, -6.0225 | 52.931, -5.97 | Wicklow | NNE → E → SSW (20–200°) | Tricky, on the wish list |
 | `wicklow_harbour` | Wicklow Harbour | 52.982, -6.035 (approx.) | 52.982, -6.00 | Wicklow | NW → N (280–20°) | Launch from the harbour |
 | `seapoint` | Seapoint, Dún Laoghaire | 53.2972, -6.1589 | 53.31, -6.12 | Dublin Port | W → N → E (260–90°) | **Sheltered**: the westerly spot, and the safe option on wild easterly days |
 
@@ -289,9 +293,9 @@ The old day page stacked today and tomorrow, and each block had its own width (b
 - **FR-9.1** The daily run fetches wind, sea and tides for `forecast_days` (default 4: today + 3) from `config/settings.yaml`. The archive, the maps and the site cover all of them.
 - **FR-9.2** Alerts only cover `alert_days` (default 2: today and tomorrow). Forecasts further out move too much: FR-1.7 would re-alert on every shift.
 - **FR-9.3** **One page per date.** A date's page comes from the latest run that covers it: the newest run for today and the days ahead, the last run issued that day once it has passed. So the same link starts as an outlook and ends as the record. Days after tomorrow say "Outlook: may still change".
-- **FR-9.4** **Day strip** at the top of every day page: 2 days back and 3 ahead, with ‹ › to the next ones. Each day shows the peak wind of its windows (a number in the table's wind colours, or "–" with no window), not a go/no-go light: a marginal 11 kn day must not look like "go". A shore break warning is said in words under it, "⚠️ shore break", orange for watch out and red for dangerous, with the reason on mouseover. The day page itself gives the reason on a phone.
+- **FR-9.4** **Day strip** at the top of every day page: 2 days back and 3 ahead, with ‹ › to the next ones. Each day shows the peak wind of its windows (a number in the table's wind colours, or "–" with no window), not a go/no-go light: a marginal 11 kn day must not look like "go". A shore break warning is said in words under it, "⚠️ shore break", orange for watch out and red for dangerous, with the reason on mouseover. The day page itself gives the reason on a phone. *Slice 17 adds where and when, and the number becomes the best window's top wind (FR-17.1).*
 - **FR-9.5** **Order:** day strip, date, best spot, maps, then the table.
-- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows, short name column, and each spot's window, waves and tide times on a thin line under its row. *That line is replaced by slice 12.*
+- **FR-9.6** **One column.** The best box, maps and table all fill the same width. The tide chart is a row of the table, over the same hours as the table's columns, so the shaded rideable hours sit right over the outlined cells. It stretches to the width, so its labels are written by the page, not drawn in it. Moving the mouse or dragging a finger along it shows a line and each station's height at that time in the Tide cell on the left (not under the finger). Hovering or tapping a table cell grows it a little, lights up its hour, and moves the tide reading to that hour. No zoom when the device asks for reduced motion. On a phone the table fits the screen: no wind arrows (back in slice 17, FR-17.2), short name column, and each spot's window, waves and tide times on a thin line under its row. *That line is replaced by slice 12.*
 - **FR-9.7** **Maps:** the day's map hours (FR-3.1) side by side on a wide screen, wrapping into rows of three when there are more than four; on a phone one map at a time with hour buttons, opening on the next hour still to come today (12:00 on other days). Without JavaScript there are no maps (FR-3.4). On a wide screen a click opens a map large over the page, with hour buttons and ← → to step through the hours; Esc or a click outside closes it. On a phone, pinch-zoom does that job.
   - **Across days:** stepping past the last hour goes on to the next day's first map, and back from the first hour to the previous day's last, both in the large map and with the phone's hour buttons. Its title says the day. Each page keeps only its own day's map data (FR-3.4): crossing a day opens that day's page with the same map view already open, on its first or last map (`days/2026-11-07.html#map-first`, `#map-last`: a page doesn't know the other day's map hours). This must not flicker: the tab keeps the coastline (session storage), so the new page opens its large map before it first shows, and page changes cross-fade where the browser can (CSS view transitions; not when the device asks for reduced motion). There's no step past the first or last day the site has.
 - **FR-9.8** **All days page**, linked from the header: every date with its peak wind and shore break, and the weekly reports. *Laid out as a calendar since slice 16.*
@@ -360,7 +364,7 @@ M2          ...
 M5          ...
 ```
 
-- **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (no arrow on a phone, as for spots). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
+- **FR-11.1** **Measured rows** at the bottom of the day table, under a "Measured" heading, one per station with readings that day (Europe/Dublin), over the table's hours. A cell shows the last reading in that hour: wind in the table's colours, gust small, an arrow for the direction (on a phone above the wind, as for spots, FR-17.2). It's never outlined: rideable is a forecast idea. An hour with no reading is empty.
 - **FR-11.2** Under the station's name, how far it is from the nearest spot, e.g. `7 km NE of Seapoint`, so nobody reads it as a reading at the spot. The **waves** from the same reading sit in the same cell, under the wind, as for the spots (FR-12.2). The buoys measure waves, not swell on its own (the Dublin Bay Buoy has a swell field, but it's empty). A station without a wave sensor (East Pier) just has no waves in its cells; an hour with waves but no wind shows the waves alone. The footer credits the sources (FR-11.6), and the legend says the readings are not at the spot.
 - **FR-11.3** Past days are built from `data/obs/` (FR-10.6), so the comparison stays on the page for good.
 - **FR-11.4** **Today's page fetches the latest readings** from the Worker (`/obs`, FR-10.5) when it opens, and fills in the measured wind and waves since the last build. If the Worker doesn't answer, the page keeps what was built.
@@ -453,9 +457,13 @@ November 2026 · 5 rideable days · mostly Arklow
 ```
 
 - **FR-16.1** **One month grid per month with a day page**, newest month first, weeks Monday to Sunday (like the weekly reports). A month with no day page isn't shown. In a shown month, a day with no page is greyed out and isn't a link.
-- **FR-16.2** **Each day** links to its page and shows, as in the day strip (FR-9.4), the peak wind of its windows (or "–") and the shore break warning, plus the **best spot**: the spot of its top-ranked window (FR-1.5), full name on mouseover. Today is outlined, and days after tomorrow (outlooks, FR-9.3) have a dashed border. On a phone there's no spot name and the warning is just ⚠️ or 🚨.
+- **FR-16.2** **Each day** links to its page and shows, as in the day strip (FR-9.4), the peak wind of its windows (or "–") and the shore break warning, plus the **best spot**: the spot of its top-ranked window (FR-1.5), full name on mouseover. Today is outlined, and days after tomorrow (outlooks, FR-9.3) have a dashed border. On a phone there's no spot name and the warning is just ⚠️ or 🚨. *Since slice 17 the number is the best window's top wind (FR-17.1).*
 - **FR-16.3** **Week summary** at the end of each week row, from its weekly report (FR-5.4): good days, missed, the best session's spot and day, and a link to the report. It sits on the row with the week's Sunday, so a week split across two months shows once. This week, until its report comes, says "Report on Sunday". On a phone the summary is a thin line under the week.
 - **FR-16.4** **Month heading** with its rideable days: days up to today with at least one window, and the spot that was best most often (a tie goes to the one seen first), e.g. `November 2026 · 5 rideable days · mostly Arklow`. With none, just the month.
+
+## Slice 17: Where and when at a glance
+
+The day strip names the best spot, its hours and the wind direction; the phone table gets its wind arrows back; Magheramore goes. Spec in its own file: [strip-where-when.md](strip-where-when.md).
 
 ## Non-goals
 

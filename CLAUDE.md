@@ -1,10 +1,11 @@
 # wing-alert
 
-Personal, open-source project: a scheduled GitHub Action that checks wingfoiling conditions on the Wicklow coast, alerts David on WhatsApp and publishes a daily report to GitHub Pages. The spec is [docs/specs/wing-alert.md](docs/specs/wing-alert.md). It is the source of truth; requirement IDs look like `FR-1.2`.
+Personal, open-source project: a scheduled GitHub Action that checks wingfoiling conditions on the Wicklow coast, alerts David on WhatsApp and publishes a daily report to GitHub Pages. The specs in `docs/specs/` are the source of truth: [docs/specs/wing-alert.md](docs/specs/wing-alert.md) is the main one (done; spots, data sources, setup, future work) and links each later spec. Requirement IDs look like `FR-1.2` and are unique across all files.
 
 ## How we work
 
 - **Spec first.** Behaviour changes go into the spec (and get agreed) before code. If the code needs to differ from the spec, say so and update the spec in the same PR.
+- **One spec file per new feature** in `docs/specs/`, slice numbers and FR IDs carrying on from the last. Link it from the main spec's list, and add a one-line note to any older FR it changes. Ideas still go to the main spec's "Future work".
 - **One branch and one PR per slice** (see the spec's slice table). Merge with a merge commit, not squash.
 - **Merge as you go.** David gave standing approval (2026-11-01): once a PR's work is done and tests pass, merge it (merge commit) without asking. Say what was merged in the wrap-up.
 - **Keep it simple.** Build what the spec asks; put ideas in the spec's "Future work" instead of building them.
